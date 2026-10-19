@@ -170,7 +170,12 @@ async function callGemini(req, env, signal) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const status = res.status === 429 ? 429 : 502;
-    throw Object.assign(new Error(status === 429 ? "AI is busy (free quota). Try again in a minute." : "Gemini didn't respond."), { status, detail: data?.error?.message });
+    const detail = String(data?.error?.message ?? `HTTP ${res.status}`).slice(0, 500);
+    console.warn("gemini error", res.status, model, detail);
+    throw Object.assign(
+      new Error(status === 429 ? "Gemini's free quota is used up for now. Try again in a minute." : "Gemini didn't respond. Try again."),
+      { status, detail },
+    );
   }
   const parts = data?.candidates?.[0]?.content?.parts ?? [];
   return parts.map((p) => (p.thought ? "" : p.text ?? "")).join("");
@@ -230,6 +235,7 @@ export async function handleAI(request, env) {
   } catch (e) {
     const status = /** @type {{status?: number}} */ (e).status ?? 500;
     if (status >= 500) console.error("ai error", e);
-    return json(status, { error: /** @type {Error} */ (e).message || "AI request failed" }, h);
+    const detail = /** @type {{detail?: string}} */ (e).detail;
+    return json(status, { error: /** @type {Error} */ (e).message || "AI request failed", ...(detail ? { detail } : {}) }, h);
   }
 }

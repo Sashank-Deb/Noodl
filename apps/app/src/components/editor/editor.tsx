@@ -995,7 +995,10 @@ function countItems(items: { children?: unknown[] }[]): number {
 }
 export function aiErrorMessage(e: unknown) {
   const m = String((e as Error)?.message ?? e);
-  if (/rate|429|quota/i.test(m)) return "AI is busy (free quota). Try again in a minute.";
+  const status = (e as { status?: number })?.status ?? 0;
+  // Messages from our AI function are already written for people.
+  if (status && status !== 502 && m) return m;
+  if (/rate|429|quota/i.test(m)) return "AI is busy. Try again in a minute.";
   if (/network|fetch|offline/i.test(m)) return "You're offline. AI needs a connection.";
   if (/sign in|session/i.test(m)) return m;
   return "Gemini didn't respond. Try again.";

@@ -37,27 +37,27 @@ export const useAIAvailable = () => useAIStatus((s) => supabaseConfigured && s.s
 // --- Client-side rate limiting (the server enforces its own limit too) -------
 const SUGGEST_PER_MIN = 12;
 let suggestTimes: number[] = [];
-let cooldownUntil = 0;
+/** Typeahead backs off after a 429; bigger generations never wait on it. */
+let suggestCooldownUntil = 0;
 
 function allowSuggest(now = Date.now()) {
-  if (now < cooldownUntil) return false;
+  if (now < suggestCooldownUntil) return false;
   suggestTimes = suggestTimes.filter((t) => now - t < 60_000);
   if (suggestTimes.length >= SUGGEST_PER_MIN) return false;
   suggestTimes.push(now);
   return true;
 }
 
-class AIError extends Error {
+export class AIError extends Error {
   constructor(message: string, public status = 0) {
     super(message);
   }
 }
 
-function handleError(e: unknown): never {
+function handleError(e: unknown, kind: "suggest" | "generate" = "generate"): never {
   const status = (e as AIError)?.status ?? 0;
-  const msg = String((e as Error)?.message ?? e);
-  if (status === 429 || /rate|quota/i.test(msg)) {
-    cooldownUntil = Date.now() + 60_000;
+  if (status === 429) {
+    if (kind === "suggest") suggestCooldownUntil = Date.now() + 30_000;
     useAIStatus.getState().set("rate-limited");
   } else if (typeof navigator !== "undefined" && !navigator.onLine) {
     useAIStatus.getState().set("offline");
@@ -78,7 +78,11 @@ async function callAI<T>(body: Record<string, unknown>, signal?: AbortSignal): P
     signal,
   });
   const data = (await res.json().catch(() => ({}))) as { error?: string } & T;
-  if (!res.ok) throw new AIError(data.error || `AI request failed (${res.status})`, res.status);
+  if (!res.ok) {
+    const detail = (data as { detail?: string }).detail;
+    if (detail) console.warn("[noodl AI]", res.status, detail);
+    throw new AIError(data.error || `AI request failed (${res.status})`, res.status);
+  }
   return data;
 }
 
@@ -124,16 +128,12 @@ export async function suggest(c: SuggestContext, signal?: AbortSignal): Promise<
       useAIStatus.getState().set("idle");
       throw e;
     }
-    handleError(e);
+    handleError(e, "suggest");
   }
 }
 
 // --- Bigger generations (prompts are built on the server) ----------------------
 async function generateText(body: Record<string, unknown>): Promise<string> {
-  if (Date.now() < cooldownUntil) {
-    useAIStatus.getState().set("rate-limited");
-    throw new Error("AI is rate-limited. Try again in a minute.");
-  }
   useAIStatus.getState().set("loading");
   try {
     const res = await callAI<{ text?: string }>(body);
