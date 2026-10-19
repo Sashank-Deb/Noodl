@@ -17,6 +17,14 @@
 .dark {
   color-scheme: dark;
 }
+/* Local fix: the shared light --ghost-text (oklch 0.58) measures 4.28:1 on white,
+   short of the 4.5:1 DESIGN.md §12 promises. 0.56 gives 4.65:1. Reported upstream;
+   remove once @noodl/tokens is corrected. */
+@media (prefers-color-scheme: light) {
+  :root {
+    --ghost-text: oklch(0.56 0.012 262);
+  }
+}
 
 @layer base {
   html {
