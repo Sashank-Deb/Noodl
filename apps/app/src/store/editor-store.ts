@@ -22,11 +22,17 @@ interface EditorState {
   view: ViewMode;
   /** Bumped on every content change; autosave listens to it. */
   revision: number;
+  /** Revision last written to IndexedDB. */
+  savedRevision: number;
+  /** updatedAt of the stored version this editor copy is based on. */
+  baseUpdatedAt: number;
   /** Increments to ask the map view to re-fit ("Restore view"). */
   fitRequest: number;
   lastCoalesce: { key: string; at: number } | null;
 
   load: (note: Note | null, view?: ViewMode) => void;
+  /** Swap in a newer stored version (e.g. from sync) without resetting the view. */
+  reload: (note: Note) => void;
   apply: (recipe: (n: Draft<Note>) => void, coalesceKey?: string) => void;
   undo: () => void;
   redo: () => void;
@@ -58,6 +64,8 @@ export const useEditor = create<EditorState>((set, get) => ({
   editingId: null,
   view: "map",
   revision: 0,
+  savedRevision: 0,
+  baseUpdatedAt: 0,
   fitRequest: 0,
   lastCoalesce: null,
 
@@ -71,6 +79,21 @@ export const useEditor = create<EditorState>((set, get) => ({
       view: view ?? s.view,
       lastCoalesce: null,
       fitRequest: s.fitRequest + 1,
+      savedRevision: s.revision,
+      baseUpdatedAt: note?.updatedAt ?? 0,
+    })),
+
+  reload: (note) =>
+    set((s) => ({
+      note,
+      past: [],
+      future: [],
+      selectedId: s.selectedId && note.nodes[s.selectedId] ? s.selectedId : note.rootId,
+      editingId: s.editingId && note.nodes[s.editingId] ? s.editingId : null,
+      lastCoalesce: null,
+      revision: s.revision + 1,
+      savedRevision: s.revision + 1,
+      baseUpdatedAt: note.updatedAt,
     })),
 
   apply: (recipe, coalesceKey) => {
@@ -97,7 +120,8 @@ export const useEditor = create<EditorState>((set, get) => ({
   undo: () => {
     const { past, note, future, revision, selectedId } = get();
     if (!past.length || !note) return;
-    const prev = past[past.length - 1];
+    // A restored snapshot is a new edit: give it a fresh timestamp so it syncs.
+    const prev = { ...past[past.length - 1], updatedAt: Date.now(), syncedAt: note.syncedAt };
     set({
       note: prev,
       past: past.slice(0, -1),
@@ -112,7 +136,7 @@ export const useEditor = create<EditorState>((set, get) => ({
   redo: () => {
     const { past, note, future, revision, selectedId } = get();
     if (!future.length || !note) return;
-    const next = future[0];
+    const next = { ...future[0], updatedAt: Date.now(), syncedAt: note.syncedAt };
     set({
       note: next,
       past: [...past, note],
@@ -201,3 +225,32 @@ export const useEditor = create<EditorState>((set, get) => ({
 
 /** Convenience selector hooks. */
 export const useNode = (id: string) => useEditor((s) => s.note?.nodes[id]);
+
+/**
+ * Writes the editor's note to IndexedDB if it has unsaved changes. If the
+ * stored copy changed underneath us (sync merged a newer version from another
+ * device), that version is kept as a conflict copy instead of being overwritten.
+ */
+export async function persistEditor(): Promise<boolean> {
+  const st = useEditor.getState();
+  const n = st.note;
+  if (!n || st.revision === st.savedRevision) return false;
+  const rev = st.revision;
+  const { getNote, saveNote } = await import("@/lib/db");
+  const cur = await getNote(n.id);
+  if (cur && cur.updatedAt > st.baseUpdatedAt && cur.updatedAt !== n.updatedAt && !cur.deletedAt) {
+    await saveNote({
+      ...cur,
+      id: T.newId(),
+      title: `${cur.title} (conflict copy)`,
+      conflictOf: n.id,
+      syncedAt: null,
+      updatedAt: Date.now(),
+    });
+  }
+  // Keep the stored syncedAt (the editor's copy may be stale) and deletion state.
+  await saveNote({ ...n, syncedAt: cur?.syncedAt ?? n.syncedAt ?? null, deletedAt: cur?.deletedAt ?? n.deletedAt ?? null });
+  const now = useEditor.getState();
+  if (now.note?.id === n.id) useEditor.setState({ savedRevision: Math.max(now.savedRevision, rev), baseUpdatedAt: n.updatedAt });
+  return true;
+}

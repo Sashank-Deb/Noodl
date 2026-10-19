@@ -46,10 +46,74 @@ export interface OutlineItem {
   table?: string[][];
 }
 
+const NODE_TYPES: NodeType[] = ["text", "link", "image", "table"];
+
+/** Only http(s) and mailto links are allowed anywhere (import, edit, export). */
+export function safeUrl(url: unknown): string | undefined {
+  if (typeof url !== "string") return undefined;
+  const u = url.trim();
+  if (!u) return undefined;
+  try {
+    const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(u) ? u : `https://${u}`;
+    const parsed = new URL(withScheme);
+    return ["http:", "https:", "mailto:"].includes(parsed.protocol) ? withScheme : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function sanitizeTable(t: unknown): string[][] | undefined {
+  if (!Array.isArray(t) || !t.length) return undefined;
+  return t.slice(0, 100).map((row) => (Array.isArray(row) ? row.slice(0, 30).map((c) => String(c ?? "")) : [String(row ?? "")]));
+}
+
+/** Coerces untrusted outline data (imports, AI output) into a valid shape. */
+export function sanitizeOutline(raw: unknown, depth = 0): OutlineItem {
+  const o = (raw && typeof raw === "object" ? raw : { text: raw }) as Record<string, unknown>;
+  const item: OutlineItem = { text: typeof o.text === "string" ? o.text.slice(0, 5000) : o.text == null ? "" : String(o.text) };
+  const type = NODE_TYPES.includes(o.type as NodeType) ? (o.type as NodeType) : "text";
+  if (type === "link") {
+    const url = safeUrl(o.url);
+    if (url) {
+      item.type = "link";
+      item.url = url;
+    }
+  } else if (type === "table") {
+    const table = sanitizeTable(o.table);
+    if (table) {
+      item.type = "table";
+      item.table = table;
+    }
+  }
+  if (Array.isArray(o.children) && depth < 50) item.children = o.children.map((c) => sanitizeOutline(c, depth + 1));
+  return item;
+}
+
+/** Validates a stored note (e.g. from a backup) node by node. */
+export function sanitizeNote(n: Note): Note {
+  const nodes: Record<string, MindNode> = {};
+  for (const [id, node] of Object.entries(n.nodes ?? {})) {
+    const clean = sanitizeOutline(node);
+    nodes[id] = {
+      id,
+      parentId: typeof node.parentId === "string" ? node.parentId : null,
+      children: Array.isArray(node.children) ? node.children.filter((c) => typeof c === "string") : [],
+      text: clean.text,
+      type: node.type === "image" && typeof node.assetId === "string" ? "image" : clean.type ?? "text",
+      ...(clean.url ? { url: clean.url } : {}),
+      ...(clean.table ? { table: clean.table } : {}),
+      ...(node.type === "image" && typeof node.assetId === "string" ? { assetId: node.assetId } : {}),
+      ...(node.collapsed ? { collapsed: true } : {}),
+    };
+  }
+  return { ...n, nodes };
+}
+
 export function noteFromOutline(
-  outline: OutlineItem,
+  rawOutline: OutlineItem,
   opts: { folderId?: string | null; mapStyle?: MapStyle } = {},
 ): Note {
+  const outline = sanitizeOutline(rawOutline);
   const note = createNote(outline.text || "Untitled", opts);
   const root = note.nodes[note.rootId];
   if (outline.type) root.type = outline.type;

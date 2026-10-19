@@ -17,7 +17,7 @@ const TemplatesDialog = dynamic(() => import("@/components/dialogs/templates-dia
 const SettingsDialog = dynamic(() => import("@/components/dialogs/settings-dialog").then((m) => m.SettingsDialog), { ssr: false });
 const SearchDialog = dynamic(() => import("@/components/dialogs/search-dialog").then((m) => m.SearchDialog), { ssr: false });
 import { Mark } from "@/components/mark";
-import { useEditor } from "@/store/editor-store";
+import { persistEditor, useEditor } from "@/store/editor-store";
 import { useSettings } from "@/context/settings";
 import { db, getNote, kvGet, kvSet, purgeRecycleBin, saveNote } from "@/lib/db";
 import { schedulePush } from "@/lib/sync";
@@ -66,8 +66,7 @@ export function AppShell() {
 
   const open = useCallback(
     async (id: string, nodeId?: string) => {
-      const cur = useEditor.getState().note;
-      if (cur) await saveNote(cur);
+      await persistEditor();
       const n = await getNote(id);
       if (!n || n.deletedAt) {
         toast.error("That note isn't available.");
@@ -176,14 +175,21 @@ export function AppShell() {
     }
   }, []);
 
-  // Close the editor if the open note gets moved to the Recycle Bin.
-  const activeDeleted = useLiveQuery(async () => (activeId ? !!(await db().notes.get(activeId))?.deletedAt : false), [activeId]);
+  // Follow the stored copy of the open note: close it if it was moved to the
+  // Recycle Bin, and swap in newer versions that arrive via sync.
+  const stored = useLiveQuery(() => (activeId ? db().notes.get(activeId) : undefined), [activeId]);
   useEffect(() => {
-    if (activeDeleted) {
-      useEditor.getState().load(null);
+    if (!stored) return;
+    const st = useEditor.getState();
+    if (st.note?.id !== stored.id) return;
+    if (stored.deletedAt) {
+      st.load(null);
       setUrlNote(null);
+      return;
     }
-  }, [activeDeleted]);
+    const clean = st.revision === st.savedRevision;
+    if (clean && stored.updatedAt > st.note.updatedAt) st.reload(stored);
+  }, [stored]);
 
   // Local typeahead index over all notes (rebuilt lazily).
   const allNotes = useLiveQuery(() => db().notes.toArray(), []);

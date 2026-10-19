@@ -263,6 +263,7 @@ export function MindMapView({
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.current.size === 1) {
+      containerRef.current?.focus({ preventScroll: true });
       panStart.current = {
         x: e.clientX,
         y: e.clientY,
@@ -371,7 +372,7 @@ export function MindMapView({
   return (
     <div
       ref={containerRef}
-      className="map-canvas relative h-full w-full touch-none overflow-hidden select-none"
+      className="map-canvas relative h-full w-full touch-none overflow-hidden outline-none select-none"
       style={{
         backgroundPosition: `${viewport.x}px ${viewport.y}px`,
         backgroundSize: `${22 * viewport.k}px ${22 * viewport.k}px`,
@@ -385,6 +386,8 @@ export function MindMapView({
           fit();
       }}
       role="application"
+      tabIndex={0}
+      data-editor-surface
       aria-label="Mind map canvas. Use arrow keys to move between nodes, Tab to add a child, Enter to add a sibling, Space to edit."
     >
       <div
@@ -578,6 +581,7 @@ const MapNode = memo(function MapNode({
       onPointerDown={(e) => {
         if (e.button !== 0 || editing) return;
         e.stopPropagation();
+        (e.currentTarget.closest("[data-editor-surface]") as HTMLElement | null)?.focus({ preventScroll: true });
         useEditor.getState().select(id);
         if (!isRoot) onDragStart(id, e);
       }}

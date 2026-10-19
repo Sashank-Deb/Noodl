@@ -6,6 +6,7 @@
 import Dexie, { type EntityTable } from "dexie";
 import type { Asset, Folder, Note, Settings } from "./types";
 import { DEFAULT_SETTINGS } from "./types";
+import { sanitizeNote } from "./tree";
 
 interface KV {
   key: string;
@@ -60,6 +61,15 @@ export async function hardDeleteNote(id: string) {
   });
 }
 
+/** Removes every note, folder and image from this device (used on sign-out). */
+export async function clearLocalData() {
+  await db().transaction("rw", db().notes, db().folders, db().assets, async () => {
+    await db().notes.clear();
+    await db().folders.clear();
+    await db().assets.clear();
+  });
+}
+
 /** Removes recycle-bin items older than the retention window. */
 export async function purgeRecycleBin(now = Date.now()) {
   const old = await db()
@@ -74,10 +84,12 @@ export async function saveFolder(folder: Folder) {
 }
 
 export async function deleteFolder(id: string) {
-  // Notes in a deleted folder move to the root ("All notes") rather than vanish.
+  // Notes in a deleted folder move to "All notes" rather than vanish. The folder
+  // becomes a tombstone so the delete syncs to other devices.
+  const now = Date.now();
   await db().transaction("rw", db().folders, db().notes, async () => {
-    await db().notes.where("folderId").equals(id).modify({ folderId: null, updatedAt: Date.now() });
-    await db().folders.delete(id);
+    await db().notes.where("folderId").equals(id).modify({ folderId: null, updatedAt: now });
+    await db().folders.update(id, { deletedAt: now, updatedAt: now });
   });
 }
 
@@ -145,13 +157,14 @@ export async function exportBackup(): Promise<Backup> {
 export async function importBackup(b: Backup) {
   if (b?.app !== "mindnote-web" || !Array.isArray(b.notes)) throw new Error("Not a MindNote backup file");
   await db().transaction("rw", db().notes, db().folders, async () => {
+    // syncedAt is reset so restored data is uploaded if sync is on.
     for (const f of b.folders ?? []) {
       const cur = await db().folders.get(f.id);
-      if (!cur || cur.updatedAt < f.updatedAt) await db().folders.put(f);
+      if (!cur || cur.updatedAt < f.updatedAt) await db().folders.put({ ...f, syncedAt: null });
     }
     for (const n of b.notes) {
       const cur = await db().notes.get(n.id);
-      if (!cur || cur.updatedAt < n.updatedAt) await db().notes.put(n);
+      if (!cur || cur.updatedAt < n.updatedAt) await db().notes.put({ ...sanitizeNote(n), syncedAt: null });
     }
   });
   return b.notes.length;

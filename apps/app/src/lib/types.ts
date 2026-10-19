@@ -39,7 +39,9 @@ export interface Folder {
   name: string;
   createdAt: number;
   updatedAt: number;
+  /** Tombstone so deletes reach other devices. */
   deletedAt?: number | null;
+  syncedAt?: number | null;
 }
 
 export interface Asset {

@@ -1,6 +1,6 @@
 /** Import / export: Markdown, HTML, JSON, plain text. Image/PDF export lives in export-image.ts. */
 import type { Note } from "./types";
-import { noteFromOutline, toOutline, type OutlineItem } from "./tree";
+import { noteFromOutline, safeUrl, toOutline, type OutlineItem } from "./tree";
 
 function nodeLine(item: OutlineItem): string {
   if (item.type === "link" && item.url) return `[${item.text || item.url}](${item.url})`;
@@ -49,7 +49,8 @@ export function toHTML(note: Note): string {
   const root = toOutline(note);
   const li = (it: OutlineItem): string => {
     let body = esc(it.text);
-    if (it.type === "link" && it.url) body = `<a href="${esc(it.url)}">${esc(it.text || it.url)}</a>`;
+    const url = it.type === "link" ? safeUrl(it.url) : undefined;
+    if (url) body = `<a href="${esc(url)}" rel="noopener noreferrer">${esc(it.text || url)}</a>`;
     if (it.type === "table" && it.table)
       body += `<table>${it.table.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</table>`;
     const kids = it.children?.length ? `<ul>${it.children.map(li).join("")}</ul>` : "";

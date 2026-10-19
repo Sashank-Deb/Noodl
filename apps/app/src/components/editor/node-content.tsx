@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ExternalLink, ImageOff } from "lucide-react";
 import { db } from "@/lib/db";
+import { safeUrl } from "@/lib/tree";
 import type { MindNode } from "@/lib/types";
 import { useEditor } from "@/store/editor-store";
 
@@ -11,9 +12,9 @@ export function NodeBody({ node, placeholder = "Untitled" }: { node: MindNode; p
   return (
     <>
       {node.type === "image" && node.assetId && <NodeImage assetId={node.assetId} />}
-      {node.type === "link" && node.url ? (
+      {node.type === "link" && safeUrl(node.url) ? (
         <a
-          href={node.url}
+          href={safeUrl(node.url)}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 underline decoration-1 underline-offset-2 hover:text-primary"

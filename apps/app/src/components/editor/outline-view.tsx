@@ -57,7 +57,7 @@ export function OutlineView({ onAction }: { onAction: (id: string, a: NodeAction
   const rows = flattenVisible(note);
 
   return (
-    <div className="h-full overflow-auto" onPointerDown={(e) => {
+    <div className="h-full overflow-auto outline-none" tabIndex={-1} data-editor-surface onPointerDown={(e) => {
       if (e.target === e.currentTarget) useEditor.getState().edit(null);
     }}>
       <div role="tree" aria-label="Outline" className="mx-auto w-full max-w-3xl px-4 pt-8 pb-40 sm:px-8">

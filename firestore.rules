@@ -15,7 +15,8 @@ service cloud.firestore {
         && request.resource.data.rootId is string
         && request.resource.data.nodes is map
         && request.resource.data.updatedAt is number
-        && request.resource.data.updatedAt <= request.time.toMillis() + 300000;
+        // Server timestamp drives incremental pulls (immune to device clock skew).
+        && request.resource.data.serverUpdatedAt == request.time;
     }
 
     match /users/{uid}/folders/{folderId} {
@@ -23,7 +24,8 @@ service cloud.firestore {
       allow create, update: if isOwner(uid)
         && request.resource.data.id == folderId
         && request.resource.data.name is string
-        && request.resource.data.name.size() <= 200;
+        && request.resource.data.name.size() <= 200
+        && request.resource.data.serverUpdatedAt == request.time;
     }
 
     match /{document=**} {

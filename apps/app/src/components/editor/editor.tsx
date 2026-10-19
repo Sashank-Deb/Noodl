@@ -37,11 +37,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { useEditor } from "@/store/editor-store";
+import { persistEditor, useEditor } from "@/store/editor-store";
 import { useSettings } from "@/context/settings";
-import { saveNote, saveImageAsset } from "@/lib/db";
+import { saveImageAsset } from "@/lib/db";
 import { schedulePush } from "@/lib/sync";
-import { ancestorsText, flattenVisible, newId, toOutline } from "@/lib/tree";
+import { ancestorsText, flattenVisible, newId, safeUrl, toOutline } from "@/lib/tree";
 import { download, fromIndentedText, safeFilename, toHTML, toJSON, toMarkdown, toPlainText } from "@/lib/io";
 import { aiAvailable, expandNode, rewriteNode, type RewriteMode } from "@/lib/ai/ai";
 import type { MapStyle } from "@/lib/types";
@@ -75,20 +75,15 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
   // ---- Autosave (debounced) → IndexedDB → optional cloud push ------------
   useEffect(() => {
     if (!revision) return;
-    const n = useEditor.getState().note;
-    if (!n) return;
     const t = setTimeout(() => {
-      void saveNote(n).then(() => schedulePush());
+      void persistEditor().then((saved) => saved && schedulePush());
     }, 400);
     return () => clearTimeout(t);
   }, [revision]);
 
-  // Flush on tab hide / unload.
+  // Flush on tab hide / unload (only if there are unsaved changes).
   useEffect(() => {
-    const flush = () => {
-      const n = useEditor.getState().note;
-      if (n) void saveNote(n);
-    };
+    const flush = () => void persistEditor();
     window.addEventListener("pagehide", flush);
     document.addEventListener("visibilitychange", flush);
     return () => {
@@ -147,7 +142,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
         st.outdent(id);
         return;
       case "deleteEmpty":
-        if (isRoot) return;
+        if (isRoot || n.nodes[id].children.length) return;
         st.remove(id);
         st.edit(order[idx - 1] ?? n.rootId);
         return;
@@ -221,6 +216,9 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
         return;
       }
       if (typing || st.editingId) return;
+      // Node shortcuts only apply when the canvas/outline (or nothing) has focus,
+      // so Enter/Space/Delete keep working on buttons, menus and dialogs.
+      if (!inEditorSurface(e.target)) return;
 
       const sel = st.selectedId;
       const order = flattenVisible(n).map((r) => r.id);
@@ -407,7 +405,8 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
     if (type === "link") {
       const url = window.prompt("Link URL", n.nodes[id].url ?? "https://");
       if (!url) return;
-      const safe = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+      const safe = safeUrl(url);
+      if (!safe) return toast.error("Use an http(s) or mailto link");
       st.updateNode(id, { type: "link", url: safe });
       return;
     }
@@ -740,6 +739,13 @@ async function addImage(parentId: string, file: File) {
   } catch {
     toast.error("Couldn't read that image");
   }
+}
+
+function inEditorSurface(t: EventTarget | null) {
+  const el = t as HTMLElement | null;
+  if (!el || el === document.body || el === document.documentElement) return true;
+  if (!el.closest?.("[data-editor-surface]")) return false;
+  return !el.closest("button, a, input, textarea, select, [role=menuitem], [role=option], [role=dialog], [role=switch]");
 }
 
 function isTyping(t: EventTarget | null) {

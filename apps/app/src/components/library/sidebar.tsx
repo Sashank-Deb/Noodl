@@ -44,7 +44,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { db, deleteFolder, hardDeleteNote, restoreNote, saveFolder, saveNote, softDeleteNote } from "@/lib/db";
-import { recordHardDelete, deleteRemoteFolder, schedulePush } from "@/lib/sync";
+import { recordHardDelete, schedulePush } from "@/lib/sync";
 import { cloneNote, countNodes, newId } from "@/lib/tree";
 import { download, safeFilename, toJSON } from "@/lib/io";
 import type { Folder as FolderT, Note } from "@/lib/types";
@@ -79,7 +79,7 @@ export function relativeTime(t: number) {
 
 export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSearch, onSettings, onCollapse }: Props) {
   const notes = useLiveQuery(() => db().notes.toArray(), []);
-  const folders = useLiveQuery(() => db().folders.orderBy("updatedAt").toArray(), []);
+  const folders = useLiveQuery(async () => (await db().folders.toArray()).filter((f) => !f.deletedAt).sort((a, b) => a.createdAt - b.createdAt), []);
   const [section, setSection] = useState<Section>("all");
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [renaming, setRenaming] = useState<string | null>(null);
@@ -371,10 +371,7 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
               onClick={() => {
                 if (!confirmFolder) return;
                 const id = confirmFolder.id;
-                void deleteFolder(id).then(() => {
-                  void deleteRemoteFolder(id);
-                  schedulePush();
-                });
+                void deleteFolder(id).then(() => schedulePush());
                 setConfirmFolder(null);
               }}
             >
@@ -422,6 +419,7 @@ function RenameInput({ initial, onDone: done }: { initial: string; onDone: (v: s
       autoFocus
       value={v}
       aria-label="Name"
+      maxLength={200}
       onChange={(e) => setV(e.target.value)}
       onFocus={(e) => e.currentTarget.select()}
       onBlur={() => onDone(v)}

@@ -48,3 +48,13 @@ describe("sync merge", () => {
     expect(all.find((n) => n.conflictOf === l.id)?.title).toBe("Remote edit (conflict copy)");
   });
 });
+
+describe("firestore encoding", () => {
+  it("round-trips tables through tableJson (no nested arrays)", async () => {
+    const { toRemote, fromRemote } = await import("../sync");
+    const n = noteFromOutline({ text: "T", children: [{ text: "tbl", type: "table", table: [["a", "b"], ["1", "2"]] }] });
+    const remote = toRemote(n) as { nodes: Record<string, Record<string, unknown>> };
+    expect(Object.values(remote.nodes).some((x) => Array.isArray(x.table))).toBe(false);
+    expect(fromRemote({ ...remote, serverUpdatedAt: {} })).toEqual({ ...n, syncedAt: undefined, nodes: n.nodes });
+  });
+});
