@@ -9,6 +9,8 @@ import {
   Network,
   PanelLeft,
   Redo2,
+  Check,
+  Save,
   RotateCcw,
   Sparkles,
   Undo2,
@@ -75,6 +77,20 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
   const revision = useEditor((s) => s.revision);
   const canUndo = useEditor((s) => s.past.length > 0);
   const canRedo = useEditor((s) => s.future.length > 0);
+  const dirty = useEditor((s) => s.revision !== s.savedRevision);
+  const [saving, setSaving] = useState(false);
+  const saveNow = useCallback(async () => {
+    setSaving(true);
+    try {
+      await persistEditor();
+      schedulePush(0);
+      toast.success("Saved");
+    } catch {
+      toast.error("Couldn't save. Your changes are still here; try again.");
+    } finally {
+      setSaving(false);
+    }
+  }, []);
   const { settings } = useSettings();
   const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, k: 1 });
   const contentRef = useRef<HTMLDivElement>(null);
@@ -240,6 +256,11 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
       const mod = e.metaKey || e.ctrlKey;
       const typing = isTyping(e.target);
 
+      if (mod && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        void saveNow();
+        return;
+      }
       // Undo/redo work in both modes (the text is controlled by our history).
       if (mod && e.key.toLowerCase() === "z") {
         if (typing && !st.editingId) return;
@@ -402,7 +423,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [copySubtree]);
+  }, [copySubtree, saveNow]);
 
   // ---- AI node actions -------------------------------------------------------
   // Rewrite shows a preview first: Replace / Insert below / Discard.
@@ -574,6 +595,24 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
 
         <div className="flex items-center justify-end gap-0.5">
           <SyncChip />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={dirty ? "default" : "ghost"}
+                size="sm"
+                className="h-8 gap-1.5 px-2.5"
+                onClick={() => void saveNow()}
+                disabled={saving}
+                aria-label={dirty ? "Save" : "Saved"}
+              >
+                {dirty ? <Save className="size-4" /> : <Check className="size-4" />}
+                <span className="hidden sm:inline">{dirty ? "Save" : "Saved"}</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              Save <kbd className="kbd ml-1">{MOD}S</kbd>
+            </TooltipContent>
+          </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="hidden size-8 sm:inline-flex" disabled={!canUndo} onClick={() => useEditor.getState().undo()} aria-label="Undo">

@@ -45,13 +45,26 @@ const toUser = (u: User): AuthUser => ({
 });
 
 /**
- * Where Supabase sends people back after Google sign-in. Must match an entry in
- * Supabase → Authentication → URL Configuration → Redirect URLs.
- * Local runs (localhost) return to themselves so testing keeps working.
+ * Where Supabase sends people back after Google sign-in: the exact page they
+ * clicked "Sign in" on (e.g. https://noodl.tech/app/?n=<note>), on whatever
+ * domain they're using. Supabase → Authentication → URL Configuration →
+ * Redirect URLs must allow it (e.g. https://noodl.tech/**).
  */
-const AUTH_REDIRECT_URL = process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL || "https://noodl-iota.vercel.app/app/";
-const redirectTo = () =>
-  /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? `${window.location.origin}/app/` : AUTH_REDIRECT_URL;
+const redirectTo = () => {
+  const url = new URL(window.location.href);
+  ["code", "error", "error_code", "error_description"].forEach((k) => url.searchParams.delete(k));
+  url.hash = "";
+  if (!url.pathname.startsWith("/app")) url.pathname = "/app/";
+  return url.toString();
+};
+
+/** True if supabase-js has a stored session on this device. */
+const hasStoredSession = () => {
+  try {
+    for (let i = 0; i < localStorage.length; i++) if (/^sb-.+-auth-token$/.test(localStorage.key(i) ?? "")) return true;
+  } catch {}
+  return false;
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -78,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
     const url = new URL(window.location.href);
     if (url.searchParams.has("code") || url.hash.includes("access_token")) {
-      url.searchParams.delete("code");
+      ["code", "error", "error_code", "error_description"].forEach((k) => url.searchParams.delete(k));
       url.hash = "";
       window.history.replaceState(null, "", url.toString());
     }
@@ -90,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       should =
         localStorage.getItem(WAS_SIGNED_IN) === "1" ||
+        hasStoredSession() ||
         new URLSearchParams(window.location.search).has("code") ||
         window.location.hash.includes("access_token");
     } catch {}

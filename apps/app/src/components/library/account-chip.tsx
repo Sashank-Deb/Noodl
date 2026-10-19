@@ -47,6 +47,43 @@ function GoogleG() {
   );
 }
 
+const AVATAR_HUES = [12, 38, 145, 175, 200, 225, 260, 290, 330];
+
+function initials(name: string | null, email: string | null) {
+  const src = (name || email?.split("@")[0] || "?").trim();
+  const parts = src.split(/[\s._-]+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? "?") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+}
+
+/** Google profile photo; falls back to coloured initials if missing or it fails to load. */
+function UserAvatar({ user, size = "size-8" }: { user: NonNullable<ReturnType<typeof useAuth>["user"]>; size?: string }) {
+  const [failed, setFailed] = useState<string | null>(null);
+  const photo = user.photoURL && failed !== user.photoURL ? user.photoURL : null;
+  if (photo)
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={photo}
+        alt=""
+        referrerPolicy="no-referrer"
+        onError={() => setFailed(photo)}
+        className={`${size} shrink-0 rounded-full object-cover`}
+      />
+    );
+  let h = 0;
+  for (const c of user.uid) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const hue = AVATAR_HUES[h % AVATAR_HUES.length];
+  return (
+    <span
+      aria-hidden
+      className={`${size} grid shrink-0 place-items-center rounded-full text-[12px] font-semibold text-white`}
+      style={{ background: `oklch(0.62 0.14 ${hue})` }}
+    >
+      {initials(user.name, user.email)}
+    </span>
+  );
+}
+
 export function AccountChip() {
   const {
     user,
@@ -110,23 +147,11 @@ export function AccountChip() {
             type="button"
             className="flex w-full min-w-0 items-center gap-2.5 rounded-[10px] px-2 py-1.5 text-left hover:bg-sidebar-accent"
           >
-            {user?.photoURL ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={user.photoURL}
-                alt=""
-                referrerPolicy="no-referrer"
-                className="size-8 rounded-full"
-              />
+            {user ? (
+              <UserAvatar user={user} />
             ) : (
               <span className="grid size-8 shrink-0 place-items-center rounded-full border border-dashed border-input bg-secondary text-secondary-foreground">
-                {loading ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : user ? (
-                  (user.name ?? user.email ?? "?").slice(0, 1).toUpperCase()
-                ) : (
-                  <HardDrive className="size-4" />
-                )}
+                {loading ? <Loader2 className="size-4 animate-spin" /> : <HardDrive className="size-4" />}
               </span>
             )}
             <span className="flex min-w-0 flex-col">
@@ -135,8 +160,10 @@ export function AccountChip() {
               </span>
               <span className="truncate text-xs font-medium text-primary">
                 {user
-                  ? "Synced with Google"
-                  : configured
+                  ? (user.email ?? "Signed in")
+                  : loading
+                    ? "Signing in…"
+                    : configured
                     ? "Sign in with Google to sync"
                     : "Saved in this browser"}
               </span>
@@ -146,9 +173,12 @@ export function AccountChip() {
         <PopoverContent side="top" align="start" className="w-80 rounded-xl">
           {user ? (
             <div className="space-y-3 text-sm">
-              <div>
-                <p className="font-medium">{user.name}</p>
-                <p className="text-muted-foreground">{user.email}</p>
+              <div className="flex items-center gap-3">
+                <UserAvatar user={user} size="size-10" />
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{user.name ?? user.email}</p>
+                  <p className="truncate text-muted-foreground">{user.email}</p>
+                </div>
               </div>
               <p className="text-muted-foreground">
                 {lastSyncedAt
