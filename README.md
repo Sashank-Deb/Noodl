@@ -118,4 +118,4 @@ Without any environment variables the app runs fully local: no sign-in, no sync,
 ## Not yet built (good next steps)
 
 - Multi-select and marquee selection; "Sketch" / "Monochrome" map styles
-- Brand theme pass (UI colours still use the original blue + marigold tokens)
+- Redraw design/mockups.html in the brand colours (layout is still accurate)

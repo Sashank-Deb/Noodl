@@ -152,7 +152,7 @@ Done: everything described in section 3, plus a code review pass that fixed 12 d
    - Set GitHub repo variables and the `FIREBASE_SERVICE_ACCOUNT` secret for `deploy.yml`.
    - Then test sign-in, two-device sync, conflicts, the email link and real Gemini suggestions.
 2. **Run the Firestore rules tests** (`pnpm test:rules`, or let CI run them) and fix anything they catch.
-3. **Brand alignment.** The noodl logo and icons are applied, but the UI theme still uses the original "ballpoint blue + marigold AI" tokens. Decide whether to move the primary/accent colours to the brand palette (ink #151515, butter #FFF4CC, noodle gold #FFB83D, warm white #FFFDF7). If so, update `packages/tokens/tokens.css` and check AA contrast.
+3. **Colours are decided:** the owner chose to keep the current UI palette (ballpoint blue primary, marigold reserved for AI). The noodl brand colours are used only for the logo and icons (`--brand-*` tokens). Don't re-theme the UI.
 4. **Privacy page** (`apps/marketing/src/app/privacy/page.tsx`) is a draft with `[Reviewer: …]` placeholders: the Gemini data-use terms and a contact address. It needs legal review before launch.
 5. **Not built yet** from DESIGN.md: multi-select / marquee selection, extra map styles (Monochrome, Highlighter, Sketch), ⌥→ accept-next-word, inline bold/italic marks, animated layout transitions.
 6. **Performance.** The app's initial JS is about 300 KB gzipped, mostly React and Next. The Firebase SDKs are already lazy-loaded. Possible next steps: more code-splitting of the export libraries (they're already dynamic), and measuring the app itself with Lighthouse.

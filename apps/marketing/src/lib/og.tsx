@@ -11,12 +11,12 @@ export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
 
 const C = {
-  paper: "#f8fafc",
-  dot: "#ccd0d4",
-  ink: "#161b24",
-  muted: "#5e636d",
-  primary: "#2858cd",
-  ai: "#d48f00",
+  paper: "#fffdf7",
+  dot: "#ddd5c2",
+  ink: "#151515",
+  muted: "#6c675d",
+  primary: "#151515",
+  ai: "#a43fb0",
   b1: "#3065cc",
   b2: "#cc3f2f",
   b3: "#1e8347",

@@ -26,13 +26,13 @@ export default function Post() {
       <h2>What you see</h2>
       <p>
         Type at least two characters into a node and pause. The most likely ending appears after your caret in grey:
-        that is <strong>ghost text</strong>. Next to it is a small marigold <Kbd ai>Tab</Kbd> chip. Below the node, a
+        that is <strong>ghost text</strong>. Next to it is a small grape <Kbd ai>Tab</Kbd> chip. Below the node, a
         dropdown lists up to five suggestions. Suggestions made by the AI come first; matches from your own notes fill
         the rest and are marked with a file icon and the note they came from.
       </p>
       <TypeaheadDemo />
       <p>
-        Marigold is reserved for AI throughout the app. If something is yellow, Gemini made it or is offering it. Your
+        Grape purple is reserved for AI throughout the app. If something is purple, Gemini made it or is offering it. Your
         own words are never shown in that colour.
       </p>
 

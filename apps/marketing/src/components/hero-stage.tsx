@@ -4,7 +4,7 @@ import { MapIcon, OutlineIcon } from "./icons";
 /**
  * Hero product visual, pure HTML/CSS/SVG: the same note as an outline card and
  * as a mind map (DESIGN.md §6 node anatomy, §7 layout), with an editing node
- * showing ghost text and the marigold Tab chip. Mobile: swipeable pair.
+ * showing ghost text and the grape Tab chip. Mobile: swipeable pair.
  */
 
 const b = (n: number) => ({ "--b": `var(--branch-${n})` }) as CSSProperties;

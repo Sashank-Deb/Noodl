@@ -202,7 +202,7 @@ export default function FeaturesPage() {
             <div className="prose-mn mt-6">
               <p>
                 Start typing in any node, in either view. After two characters and a short pause (350 ms), the most
-                likely ending appears as ghost text, with a marigold <Kbd ai>Tab</Kbd> chip to show that Tab will
+                likely ending appears as ghost text, with a grape <Kbd ai>Tab</Kbd> chip to show that Tab will
                 accept it. A dropdown offers up to five suggestions. In an empty node, wait a moment and it offers
                 ideas for the branch instead.
               </p>
@@ -239,7 +239,7 @@ export default function FeaturesPage() {
           AI that drafts, then waits for you
         </h2>
         <p className="lede mt-6 max-w-[60ch]">
-          AI features use Google Gemini through Firebase and are marked in marigold. Typeahead, generated maps and
+          AI features use Google Gemini through Firebase and are marked in grape. Typeahead, generated maps and
           rewrites wait for you to accept them. Expanding a node into ideas applies at once, with Undo and a version
           snapshot taken first, so you can always go back.
         </p>

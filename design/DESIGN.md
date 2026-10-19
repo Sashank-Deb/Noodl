@@ -10,17 +10,18 @@ Product name: **noodl**. It replicates the UX of the iOS app *MindNote – Mind 
 
 ---
 
-## 1. Design concept: ballpoint and highlighter
+## 1. Design concept: the noodl brand
 
-A note-taking tool should feel like a good pen on clean paper, not like a dashboard.
+> Updated after the brand kit (`packages/brand`) arrived. The original "ballpoint and highlighter" palette (blue primary, marigold AI) was replaced; `mockups.html` still shows the old colours, but layout and anatomy are unchanged. `packages/tokens/tokens.css` is the source of truth for colour.
 
 | Role | Token | Meaning |
 |---|---|---|
-| Paper | `--canvas`, `--canvas-dot` | A cool off-white infinite canvas with a 22 px dot grid. Calm and empty by default, never cream. |
-| Ink | `--foreground`, `--node-root-bg` | Graphite text; the root node is a solid ink pill. |
-| Pen | `--primary` (ballpoint blue) | The one interactive colour: primary buttons, selection, focus, links, caret. |
-| Highlighter | `--ai`, `--ai-soft`, `--ai-strong` | Marigold, used **only** for AI. If something is yellow, Gemini made it or is offering it. Users learn this in one session and it keeps AI output attributable. |
-| Branches | `--branch-1 … --branch-8` | Hue per first-level branch, inherited by all descendants. |
+| Paper | `--background` #FFFDF7, `--canvas` #FBF8EF, `--canvas-dot` | Warm white page and a warm dotted canvas. |
+| Ink | `--foreground`, `--primary` #151515, `--node-root-bg` | Text, primary buttons and the root node. In dark mode the primary flips to noodle gold and the root to butter. |
+| Butter | `--accent` #FFF4CC | Hover and active rows, the active note in the library. |
+| Noodle gold | `--node-selected`, `--ring` (#FFB83D, darkened to oklch 0.56–0.6 in light mode for 3:1) | Selection, focus and drop targets. |
+| Grape | `--ai`, `--ai-soft`, `--ai-strong` (oklch hue 315) | Used **only** for AI: sparkles, the Tab chip, suggestion rows, AI buttons. Chosen so AI never collides with the gold selection colour. |
+| Branches | `--branch-1 … --branch-8` | Hue per first-level branch (branch 6 is olive so it doesn't read as AI). |
 
 Principles:
 
