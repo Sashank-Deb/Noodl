@@ -42,7 +42,7 @@ describe("sanitising", () => {
     const n = fromMarkdown("# T\n- [x](javascript:void)\n- [y](javascript:alert(1))");
     expect(Object.values(n.nodes).every((x) => x.type === "text")).toBe(true);
     expect(toHTML(n)).not.toContain('href="javascript');
-    const j = fromJSON(JSON.stringify({ app: "mindnote-web", kind: "note", version: 1, outline: { text: 5, children: [{ text: "t", type: "table", table: "nope" }] } }));
+    const j = fromJSON(JSON.stringify({ app: "noodl", kind: "note", version: 1, outline: { text: 5, children: [{ text: "t", type: "table", table: "nope" }] } }));
     expect(j.nodes[j.rootId].text).toBe("5");
     expect(Object.values(j.nodes).every((x) => typeof x.text === "string" && x.type === "text")).toBe(true);
   });

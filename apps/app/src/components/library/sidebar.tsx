@@ -132,7 +132,7 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
       <div
         draggable={!opts.inTrash}
         onDragStart={(e) => {
-          e.dataTransfer.setData("application/x-mindnote-note", n.id);
+          e.dataTransfer.setData("application/x-noodl-note", n.id);
           e.dataTransfer.effectAllowed = "move";
         }}
         className={cn(
@@ -189,7 +189,7 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
                   ))}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
-              <DropdownMenuItem onSelect={() => download(`${safeFilename(n.title)}.mindnote.json`, toJSON(n), "application/json")}>Export JSON</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => download(`${safeFilename(n.title)}.noodl.json`, toJSON(n), "application/json")}>Export JSON</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onSelect={() => void deleteNote(n)}>
                 <Trash2 /> Delete
@@ -221,7 +221,7 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
     <aside className="flex h-full w-full flex-col bg-sidebar text-sidebar-foreground" aria-label="Library">
       <div className="flex items-center gap-2 px-3 pt-3 pb-2">
         <Mark size={24} />
-        <span className="flex-1 truncate text-[15px] font-semibold tracking-tight">MindNote Web</span>
+        <span className="flex-1 truncate text-[17px] font-extrabold tracking-[-0.04em]">noodl</span>
         <Button variant="ghost" size="icon" className="size-8 text-muted-foreground" onClick={onSettings} aria-label="Settings">
           <Settings2 className="size-4" />
         </Button>
@@ -275,7 +275,7 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
                   <div
                     className={cn("group flex h-[34px] items-center gap-1 rounded-lg pr-1 pl-1 hover:bg-sidebar-accent", dropFolder === f.id && "bg-(--node-drop)")}
                     onDragOver={(e) => {
-                      if (e.dataTransfer.types.includes("application/x-mindnote-note")) {
+                      if (e.dataTransfer.types.includes("application/x-noodl-note")) {
                         e.preventDefault();
                         setDropFolder(f.id);
                       }
@@ -283,7 +283,7 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
                     onDragLeave={() => setDropFolder(null)}
                     onDrop={(e) => {
                       setDropFolder(null);
-                      const id = e.dataTransfer.getData("application/x-mindnote-note");
+                      const id = e.dataTransfer.getData("application/x-noodl-note");
                       const n = live.find((x) => x.id === id);
                       if (n) void moveNote(n, f.id);
                     }}

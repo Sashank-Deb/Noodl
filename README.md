@@ -1,11 +1,12 @@
-# MindNote Web
+# noodl
 
-A web version of the iOS app *MindNote – Mind Map & Notes*: every note is both an **outline** and a **mind map**, every node has **AI typeahead**, and everything works **offline, free, with no account**. Sign in with Google only if you want sync across devices.
+**noodl** is a playful, local-first mind-mapping app for the web, modelled on the UX of the iOS app *MindNote – Mind Map & Notes*: every note is both an **outline** and a **mind map**, every node has **AI typeahead**, and everything works **offline, free, with no account**. Sign in with Google only if you want sync across devices.
 
 ```
 apps/app         The web app (Next.js static export, served at /app)
 apps/marketing   The marketing site (pre-rendered, SEO-first, served at /)
 packages/tokens  Shared design tokens (shadcn / Tailwind v4 CSS variables)
+packages/brand   noodl brand kit: logos, app icons, favicons, social preview
 design/          Design spec (DESIGN.md), tokens and mockups
 ```
 

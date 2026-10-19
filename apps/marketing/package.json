@@ -5,14 +5,14 @@
   "scripts": {
     "tokens": "node scripts/gen-dark-tokens.mjs",
     "dev": "node scripts/gen-dark-tokens.mjs && next dev --port 3001",
-    "build": "node scripts/gen-dark-tokens.mjs && next build && node scripts/strip-js.mjs",
+    "build": "node scripts/gen-dark-tokens.mjs && next build && node scripts/postexport.mjs",
     "build:keep-js": "KEEP_NEXT_JS=1 pnpm run build",
     "serve": "npx -y serve@14 out -l 4321",
     "lint": "eslint",
     "lhci": "npx -y @lhci/cli@0.15 autorun"
   },
   "dependencies": {
-    "@mindnote/tokens": "workspace:*",
+    "@noodl/tokens": "workspace:*",
     "next": "16.4.2",
     "react": "19.3.0",
     "react-dom": "19.3.0"

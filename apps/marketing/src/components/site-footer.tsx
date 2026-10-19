@@ -8,7 +8,7 @@ export function SiteFooter() {
         <div className="col-span-2 md:col-span-1">
           <a className="site-brand" href="/">
             <Mark size={26} />
-            <span>MindNote Web</span>
+            <span>noodl</span>
           </a>
           <p className="muted mt-3 max-w-[34ch] text-[15px] leading-relaxed">
             Free in your browser. Works offline. No account until you want sync.

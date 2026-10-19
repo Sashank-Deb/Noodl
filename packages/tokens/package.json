@@ -1,5 +1,5 @@
 {
-  "name": "@mindnote/tokens",
+  "name": "@noodl/tokens",
   "version": "0.1.0",
   "private": true,
   "description": "Shared design tokens (shadcn / Tailwind v4 CSS variables) for the app and marketing site.",

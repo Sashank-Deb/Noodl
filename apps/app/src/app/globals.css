@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@mindnote/tokens/tokens.css";
+@import "@noodl/tokens/tokens.css";
 
 /* Next/font exposes Onest as --font-onest (see layout.tsx). */
 

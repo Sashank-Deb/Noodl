@@ -7,7 +7,7 @@ const PATH = "/use-cases/students/";
 export const metadata = pageMetadata({
   title: "Mind maps and outlines for students",
   description:
-    "Take lecture notes as a fast outline, revise them as a mind map, and quiz yourself by collapsing branches. A practical study method using MindNote Web, free and offline.",
+    "Take lecture notes as a fast outline, revise them as a mind map, and quiz yourself by collapsing branches. A practical study method using noodl, free and offline.",
   path: PATH,
 });
 
@@ -76,8 +76,9 @@ export default function StudentsPage() {
       </ol>
       <p>
         With AI on, <strong>Rewrite › Make it a question</strong> (⌘J) turns a statement like{" "}
-        <em>“Entropy of an isolated system never decreases”</em> into a prompt you can answer from memory. It shows you
-        the new wording first; nothing changes until you choose Replace or Insert below.
+        <em>“Entropy of an isolated system never decreases”</em> into a prompt you can answer from memory. The new
+        wording replaces the node straight away; if you liked the original better, Undo in the toast brings it back,
+        and a version snapshot is taken first in any case.
       </p>
 
       <h2>Readings: summarise, then check</h2>
@@ -95,16 +96,17 @@ export default function StudentsPage() {
       <h2>Exam week and group study</h2>
       <ul>
         <li>
-          <strong>Print it.</strong> Export the map as PDF, fitted to one page or tiled across A4, or as a PNG for your
-          phone&apos;s lock screen.
+          <strong>Print it.</strong> Export the map as a PDF on one A4 page, or as a PNG for your phone&apos;s
+          lock screen.
         </li>
         <li>
           <strong>Share it.</strong> Export Markdown and paste it into your group chat or shared doc. Anyone can import
           it back into a map.
         </li>
         <li>
-          <strong>Library computers.</strong> Notes are saved in that browser. Before you leave, export JSON or sign in
-          with Google so the note syncs to your account, then use Settings › Data to delete local data.
+          <strong>Library computers.</strong> Notes are saved in that browser. Before you leave, sign in with Google so the
+          note syncs to your account, then sign out and choose to remove the notes from that computer. No account?
+          Export the note as JSON and import it on your own device.
         </li>
         <li>
           <strong>No Wi-Fi.</strong> Once the app has loaded, everything keeps working offline, and suggestions come

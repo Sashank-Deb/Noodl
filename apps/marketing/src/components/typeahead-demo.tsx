@@ -38,7 +38,8 @@ function Node() {
 
 export function TypeaheadDemo() {
   return (
-    <div className="stage canvas-surface ta-stage" aria-hidden="true">
+    <div className="ta-wrap" aria-hidden="true">
+    <div className="stage canvas-surface ta-stage">
       <div className="ta-col">
         <p className="ta-label">Online, AI on</p>
         <Node />
@@ -64,8 +65,10 @@ export function TypeaheadDemo() {
           </div>
           <div className="ta-item">
             <FileIcon size={14} />
-            <span>Park cooling study</span>
-            <span className="ta-src">Geography 2</span>
+            <span>
+              Pocket par<b>ks pilot</b>
+            </span>
+            <span className="ta-src">From your notes</span>
           </div>
           <Foot />
         </div>
@@ -83,18 +86,19 @@ export function TypeaheadDemo() {
             <span>
               Pocket par<b>ks</b>
             </span>
-            <span className="ta-src">City trip</span>
+            <span className="ta-src">From your notes</span>
           </div>
           <div className="ta-item">
             <FileIcon size={14} />
             <span>
               Pocket par<b>k survey</b>
             </span>
-            <span className="ta-src">Geography 2</span>
+            <span className="ta-src">From your notes</span>
           </div>
           <Foot />
         </div>
       </div>
+    </div>
     </div>
   );
 }

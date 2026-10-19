@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, absoluteUrl } from "./site";
 
 /**
- * Per-page metadata. Titles go through the root template "%s · MindNote Web".
+ * Per-page metadata. Titles go through the root template "%s · noodl".
  * OG/Twitter images come from the nearest `opengraph-image.tsx` file.
  */
 export function pageMetadata({
@@ -67,7 +67,7 @@ export function organizationLd(): Json {
     "@id": ORG_ID,
     name: SITE_NAME,
     url: absoluteUrl("/"),
-    logo: absoluteUrl("/icon.svg"),
+    logo: absoluteUrl("/icon-512.png"),
   };
 }
 

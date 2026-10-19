@@ -182,7 +182,7 @@ export async function expandNode(path: string[], text: string, siblings: string[
   return fromIndentedText(raw.replace(/```[a-z]*\n?|```/g, ""));
 }
 
-export type RewriteMode = "shorter" | "expand" | "grammar" | "clearer" | "custom";
+export type RewriteMode = "shorter" | "expand" | "grammar" | "clearer" | "question" | "custom";
 
 export async function rewriteNode(text: string, mode: RewriteMode, path: string[], custom?: string): Promise<string> {
   const instruction = {
@@ -190,6 +190,7 @@ export async function rewriteNode(text: string, mode: RewriteMode, path: string[
     expand: "Make it a bit more specific and descriptive (max ~15 words).",
     grammar: "Fix grammar and spelling only.",
     clearer: "Make it clearer.",
+    question: "Turn it into a short question that this node answers or raises.",
     custom: custom || "Improve it.",
   }[mode];
   const raw = await generateText(

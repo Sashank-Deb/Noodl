@@ -1,10 +1,10 @@
 @import "tailwindcss";
-@import "@mindnote/tokens/tokens.css";
+@import "@noodl/tokens/tokens.css";
 /* Dark theme follows the OS (no JS, no flash): generated from tokens.css `.dark`. */
 @import "./dark-tokens.generated.css";
 
 /* ==========================================================================
-   MindNote Web marketing site
+   noodl marketing site
    90% paper, ink type, ballpoint blue only for primary CTA + links,
    marigold only where AI appears in product imagery (DESIGN.md §13).
    ========================================================================== */
@@ -16,6 +16,14 @@
 }
 .dark {
   color-scheme: dark;
+}
+/* Local fix: the shared light --ghost-text (oklch 0.58) measures 4.28:1 on white,
+   short of the 4.5:1 DESIGN.md §12 promises. 0.56 gives 4.65:1. Reported upstream;
+   remove once @noodl/tokens is corrected. */
+@media (prefers-color-scheme: light) {
+  :root {
+    --ghost-text: oklch(0.56 0.012 262);
+  }
 }
 
 @layer base {
@@ -64,7 +72,18 @@
   padding-block: clamp(40px, 6vw, 72px);
 }
 .rule-top {
+  position: relative;
+}
+.rule-top::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--gutter);
+  right: var(--gutter);
   border-top: 1px solid var(--border);
+}
+main:focus {
+  outline: none;
 }
 
 .skip-link {
@@ -244,9 +263,9 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-weight: 650;
-  font-size: 17px;
-  letter-spacing: -0.01em;
+  font-weight: 800;
+  font-size: 21px;
+  letter-spacing: -0.045em;
   margin-right: auto;
   min-height: 44px;
 }
@@ -341,6 +360,11 @@
   gap: 10px;
   margin-top: 28px;
 }
+@media (max-width: 479px) {
+  .hero-cta .btn {
+    width: 100%;
+  }
+}
 .hero-fine {
   margin-top: 16px;
   font-size: 14px;
@@ -373,6 +397,7 @@
   border-radius: 8px;
   font-size: 13.5px;
   font-weight: 550;
+  white-space: nowrap;
   color: var(--muted-foreground);
 }
 .seg-item.on {
@@ -607,7 +632,10 @@
 }
 @media (min-width: 1200px) {
   .hero-stage .map-frame {
-    left: 460px;
+    left: 470px;
+  }
+  .hero-arrow {
+    left: 345px;
   }
 }
 
@@ -650,6 +678,8 @@
   }
 }
 .step {
+  display: flex;
+  flex-direction: column;
   padding: 24px;
   border-radius: 18px;
   background: var(--card);
@@ -695,15 +725,22 @@
 }
 
 /* ---- typeahead demo -------------------------------------------------------- */
+.ta-wrap {
+  container-type: inline-size;
+}
 .ta-stage {
   padding: clamp(20px, 4vw, 40px);
   display: grid;
-  gap: 24px;
+  gap: 32px;
 }
-@media (min-width: 640px) {
+@container (min-width: 680px) {
   .ta-stage {
     grid-template-columns: 1fr 1fr;
+    gap: 24px;
   }
+}
+.ta-pop {
+  max-width: 400px;
 }
 .ta-col {
   min-width: 0;
@@ -830,6 +867,9 @@
   white-space: nowrap;
   width: 1%;
 }
+.ktable .keys {
+  flex-wrap: nowrap;
+}
 .ktable tbody th {
   font-weight: 600;
 }
@@ -847,7 +887,7 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  min-height: 170px;
+  height: 270px;
   border-bottom: 1px solid var(--border);
 }
 .card-body {
@@ -1062,6 +1102,7 @@
 /* ---- breadcrumbs ------------------------------------------------------------------ */
 .crumbs ol {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 6px;
   font-size: 14px;
@@ -1072,7 +1113,8 @@
   margin-right: 6px;
   color: var(--border);
 }
-.crumbs a {
+.crumbs a,
+.crumbs span {
   display: inline-block;
   padding-block: 4px;
 }

@@ -62,7 +62,7 @@ export function toHTML(note: Note): string {
 }
 
 export interface NoteExport {
-  app: "mindnote-web";
+  app: "noodl";
   kind: "note";
   version: 1;
   outline: OutlineItem;
@@ -71,7 +71,7 @@ export interface NoteExport {
 
 export function toJSON(note: Note): string {
   const data: NoteExport = {
-    app: "mindnote-web",
+    app: "noodl",
     kind: "note",
     version: 1,
     outline: toOutline(note),
@@ -83,7 +83,7 @@ export function toJSON(note: Note): string {
 /** Accepts our own export, a bare outline `{text, children}`, or an array of items. */
 export function fromJSON(text: string): Note {
   const data = JSON.parse(text);
-  if (data?.app === "mindnote-web" && data.kind === "note") {
+  if ((data?.app === "noodl" || data?.app === "mindnote-web") && data.kind === "note") {
     return noteFromOutline(data.outline, { mapStyle: data.mapStyle });
   }
   if (Array.isArray(data)) return noteFromOutline({ text: "Imported", children: normalise(data) });
@@ -192,5 +192,5 @@ export function download(filename: string, data: Blob | string, type = "text/pla
 }
 
 export function safeFilename(s: string) {
-  return (s || "mindnote").replace(/[\\/:*?"<>|]+/g, "-").slice(0, 80).trim() || "mindnote";
+  return (s || "noodl").replace(/[\\/:*?"<>|]+/g, "-").slice(0, 80).trim() || "noodl";
 }

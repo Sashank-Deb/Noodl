@@ -13,7 +13,7 @@
  * Deletes are tombstones (deletedAt) so they reach every device; permanent
  * deletes remove the document and other devices apply the removal.
  * Conflicts (edited on two devices while offline) keep the newer version and
- * save the other as a "conflict copy" note, like MindNote's recovery page.
+ * save the other as a "conflict copy" note, for review.
  */
 import type { Firestore, Unsubscribe } from "firebase/firestore";
 import { create } from "zustand";

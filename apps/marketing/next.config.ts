@@ -10,8 +10,11 @@ const nextConfig: NextConfig = {
   // build-time generated PNGs (OG images / icons), so nothing needs optimising.
   images: { unoptimized: true },
   reactStrictMode: true,
-  cacheComponents: true,
-  partialPrefetching: true,
+  // cacheComponents / partialPrefetching (scaffold defaults) are intentionally off:
+  // with `output: "export"`, metadata image routes (opengraph-image, apple-icon)
+  // must declare `dynamic = "force-static"`, which Cache Components rejects. Partial
+  // prefetching is a client-router feature, and this site ships no client router
+  // (see scripts/postexport.mjs), so neither would do anything here.
   turbopack: {
     // pnpm monorepo: let Turbopack resolve hoisted packages from the workspace root.
     root: path.join(__dirname, "..", ".."),

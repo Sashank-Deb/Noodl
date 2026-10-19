@@ -47,6 +47,14 @@ const SHORTCUTS: [string, string][] = [
   [`${MOD} D`, "Duplicate branch"],
   [`⇧${MOD} M`, "Switch outline / mind map"],
   [`${MOD} K`, "Search"],
+  ["⌥ N", "New note"],
+  [`⇧${MOD} G`, "Generate a map with AI"],
+  [`${MOD} J`, "AI rewrite / ideas for the selected node"],
+  [`⇧${MOD} E`, "Export menu"],
+  [`${MOD} \\`, "Show / hide the library"],
+  [`${MOD} .`, "Focus mode"],
+  [`${MOD} ,`, "Settings"],
+  ["?", "This list"],
   ["⇧ 1", "Restore view (fit)"],
   [`${MOD} = / ${MOD} −`, "Zoom in / out"],
   ["Double-click canvas", "Reset view"],
@@ -113,7 +121,7 @@ export function SettingsDialog({ open, onOpenChange, initialTab = "general" }: {
                   size="sm"
                   onClick={async () => {
                     const b = await exportBackup();
-                    download(`mindnote-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(b), "application/json");
+                    download(`noodl-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(b), "application/json");
                   }}
                 >
                   Export all
@@ -135,7 +143,7 @@ export function SettingsDialog({ open, onOpenChange, initialTab = "general" }: {
                       schedulePush();
                       toast(`Restored ${n} notes`);
                     } catch (err) {
-                      toast.error((err as Error).message || "That file isn't a MindNote backup");
+                      toast.error((err as Error).message || "That file isn't a noodl backup");
                     }
                   }}
                 />

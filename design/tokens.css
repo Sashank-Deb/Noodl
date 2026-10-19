@@ -1,5 +1,5 @@
 /* ==========================================================================
-   MindNote Web: design tokens
+   noodl: design tokens
    Tailwind v4 + shadcn/ui compatible. Drop into app/globals.css after
    `@import "tailwindcss";` (and `@import "tw-animate-css";` if used).
 
@@ -70,7 +70,7 @@
   --node-selected: oklch(0.55 0.19 264);       /* 2px ring + 4px halo at 18% */
   --node-selected-halo: oklch(0.55 0.19 264 / 0.18);
   --node-drop: oklch(0.55 0.19 264 / 0.35);    /* drag insertion line / drop target */
-  --ghost-text: oklch(0.58 0.012 262);         /* 4.5:1 on --node-bg */
+  --ghost-text: oklch(0.56 0.012 262);         /* 4.65:1 on --node-bg */
 
   /* ---- AI ------------------------------------------------------------- */
   --ai: oklch(0.7 0.16 78);                    /* sparkle icon, AI ring (non-text 3:1 vs card via 1px darker edge) */
@@ -95,6 +95,11 @@
   --branch-6: oklch(0.52 0.17 302);  /* plum */
   --branch-7: oklch(0.56 0.18 356);  /* rose */
   --branch-8: oklch(0.52 0.07 55);   /* walnut */
+
+  /* ---- noodl brand (packages/brand) ----------------------------------- */
+  --brand-tile: #fff4cc;   /* butter */
+  --brand-ink: #151515;
+  --brand-gold: #ffb83d;   /* noodle gold */
 
   /* ---- fonts ---------------------------------------------------------- */
   --font-sans: "Onest", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -175,6 +180,10 @@
   --branch-6: oklch(0.74 0.14 302);
   --branch-7: oklch(0.74 0.15 356);
   --branch-8: oklch(0.74 0.07 60);
+
+  --brand-tile: #252525;
+  --brand-ink: #fffdf7;
+  --brand-gold: #ffc34d;
 }
 
 /* ---- Tailwind v4 theme mapping (shadcn convention) -------------------- */

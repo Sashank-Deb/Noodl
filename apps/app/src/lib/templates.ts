@@ -90,7 +90,7 @@ export const TEMPLATES: Template[] = [
 
 /** The note new users see first — doubles as a quick tutorial. */
 export const WELCOME: OutlineItem = {
-  text: "Welcome to MindNote",
+  text: "Welcome to noodl",
   children: kids(
     {
       text: "Build your map",

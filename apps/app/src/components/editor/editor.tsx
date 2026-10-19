@@ -18,6 +18,10 @@ import {
   Table2,
   Type,
   Loader2,
+  Ellipsis,
+  History,
+  Focus,
+  Keyboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -39,7 +43,7 @@ import {
 import { cn } from "@/lib/utils";
 import { persistEditor, useEditor } from "@/store/editor-store";
 import { useSettings } from "@/context/settings";
-import { saveImageAsset } from "@/lib/db";
+import { saveImageAsset, takeSnapshot } from "@/lib/db";
 import { schedulePush } from "@/lib/sync";
 import { ancestorsText, flattenVisible, newId, safeUrl, toOutline } from "@/lib/tree";
 import { download, fromIndentedText, safeFilename, toHTML, toJSON, toMarkdown, toPlainText } from "@/lib/io";
@@ -59,9 +63,13 @@ interface EditorProps {
   onToggleSidebar: () => void;
   onOpenGenerate: () => void;
   onImport: () => void;
+  focusMode: boolean;
+  onToggleFocus: () => void;
+  onOpenHistory: () => void;
+  onShortcuts: () => void;
 }
 
-export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerate, onImport }: EditorProps) {
+export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerate, onImport, focusMode, onToggleFocus, onOpenHistory, onShortcuts }: EditorProps) {
   const note = useEditor((s) => s.note);
   const view = useEditor((s) => s.view);
   const revision = useEditor((s) => s.revision);
@@ -71,6 +79,40 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
   const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, k: 1 });
   const contentRef = useRef<HTMLDivElement>(null);
   const [aiBusy, setAiBusy] = useState(false);
+  const [aiMenuOpen, setAiMenuOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+
+  // ⌘J → AI menu, ⌘⇧E → export menu.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod || (e.target as HTMLElement | null)?.closest?.("[role=dialog]")) return;
+      const k = e.key.toLowerCase();
+      if (k === "j" && !e.shiftKey && settings.aiEnabled && aiAvailable()) {
+        e.preventDefault();
+        useEditor.getState().edit(null);
+        setAiMenuOpen(true);
+      } else if (k === "e" && e.shiftKey) {
+        e.preventDefault();
+        setExportOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [settings.aiEnabled]);
+
+  // Version history: a snapshot every 5 minutes while the note is being edited.
+  const snapRev = useRef(0);
+  useEffect(() => {
+    const t = setInterval(() => {
+      const st = useEditor.getState();
+      if (st.note && st.revision !== snapRev.current) {
+        snapRev.current = st.revision;
+        void takeSnapshot(st.note, "While editing");
+      }
+    }, 5 * 60_000);
+    return () => clearInterval(t);
+  }, []);
 
   // ---- Autosave (debounced) → IndexedDB → optional cloud push ------------
   useEffect(() => {
@@ -356,6 +398,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
     const id = st.selectedId;
     if (!n || !id || !n.nodes[id].text.trim()) return toast("Select a node with text first");
     setAiBusy(true);
+    await takeSnapshot(n, "Before AI rewrite");
     try {
       const text = await rewriteNode(n.nodes[id].text, mode, ancestorsText(n, id));
       if (!text) throw new Error("Empty response");
@@ -376,6 +419,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
     const id = st.selectedId ?? n?.rootId;
     if (!n || !id) return;
     setAiBusy(true);
+    await takeSnapshot(n, "Before AI ideas");
     try {
       const items = await expandNode(ancestorsText(n, id), n.nodes[id].text, n.nodes[id].children.map((c) => n.nodes[c].text));
       if (!items.length) throw new Error("No ideas came back. Try again.");
@@ -426,7 +470,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
     try {
       if (kind === "md") download(`${name}.md`, toMarkdown(n), "text/markdown");
       else if (kind === "html") download(`${name}.html`, toHTML(n), "text/html");
-      else if (kind === "json") download(`${name}.mindnote.json`, toJSON(n), "application/json");
+      else if (kind === "json") download(`${name}.noodl.json`, toJSON(n), "application/json");
       else if (kind === "txt") download(`${name}.txt`, toPlainText(n));
       else {
         if (useEditor.getState().view !== "map") {
@@ -443,7 +487,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
         if (kind === "pdf") await mod.exportPDF(el, n);
         else await mod.exportImage(el, n, kind);
       }
-      toast(`Exported ${name}.${kind === "jpeg" ? "jpg" : kind === "json" ? "mindnote.json" : kind}`);
+      toast(`Exported ${name}.${kind === "jpeg" ? "jpg" : kind === "json" ? "noodl.json" : kind}`);
     } catch (e) {
       console.error(e);
       toast.error("Export failed. Try again.");
@@ -520,7 +564,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
               Redo <kbd className="kbd ml-1">⇧{MOD}Z</kbd>
             </TooltipContent>
           </Tooltip>
-          <DropdownMenu>
+          <DropdownMenu open={exportOpen} onOpenChange={setExportOpen}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 gap-1.5 px-2.5" aria-label="Export">
                 <Download className="size-4" />
@@ -544,6 +588,26 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
               <DropdownMenuItem onSelect={onImport}>Import…</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="size-8" aria-label="More">
+                <Ellipsis className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onSelect={onOpenHistory}>
+                <History /> Version history
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={onToggleFocus}>
+                <Focus /> {focusMode ? "Exit focus mode" : "Focus mode"}
+                <DropdownMenuShortcut>{MOD}.</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={onShortcuts}>
+                <Keyboard /> Keyboard shortcuts
+                <DropdownMenuShortcut>?</DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
@@ -561,6 +625,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
           data-map-ui
           className={cn(
             "float-bar z-10 flex max-w-[calc(100%-24px)] items-center gap-1 overflow-x-auto p-1",
+            focusMode && "hidden",
             view === "map" ? "absolute top-3 left-1/2 -translate-x-1/2" : "order-1 mx-auto mt-3 w-fit shrink-0",
           )}
         >
@@ -585,7 +650,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
           <Sep />
           <NodeTypeMenu onPick={turnInto} />
           {ai && (
-            <DropdownMenu>
+            <DropdownMenu open={aiMenuOpen} onOpenChange={setAiMenuOpen}>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-[30px] gap-1.5 px-2.5 text-[13px] text-(--ai-strong)" disabled={aiBusy} aria-label="AI actions">
                   {aiBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5 text-(--ai)" />}
@@ -605,6 +670,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
                     <DropdownMenuItem onSelect={() => runRewrite("expand")}>Make more specific</DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => runRewrite("grammar")}>Fix spelling and grammar</DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => runRewrite("clearer")}>Make it clearer</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => runRewrite("question")}>Make it a question</DropdownMenuItem>
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
                 <DropdownMenuSeparator />

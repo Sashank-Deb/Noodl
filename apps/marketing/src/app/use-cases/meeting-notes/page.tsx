@@ -26,9 +26,9 @@ export default function MeetingNotesPage() {
         items. Rename the root to the meeting and date, for example <em>“Design review, 14 Oct”</em>.
       </p>
       <p>
-        If the agenda already exists as a list in an email or doc, copy it and paste it onto the Agenda node. Pasting
-        multi-line text creates one node per line, and indentation becomes nesting, so a bulleted agenda arrives already
-        structured.
+        If the agenda already exists as a list in an email or doc, copy it, select the Agenda node and press{" "}
+        <strong>⌘V</strong>. Indented text pastes in as branches, one node per line, so a bulleted agenda arrives
+        already structured.
       </p>
 
       <h2>During: one node per point</h2>

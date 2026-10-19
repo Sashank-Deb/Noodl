@@ -7,7 +7,7 @@ import { TEMPLATES, countNodes } from "@/lib/templates";
 export const metadata = pageMetadata({
   title: "Templates",
   description:
-    "Six free mind map templates: Blank, Project plan, Lecture notes, Meeting notes, SWOT analysis and Story outline. Open one in MindNote Web and start typing.",
+    "Six free mind map templates: Blank, Project plan, Lecture notes, Meeting notes, SWOT analysis and Story outline. Open one in noodl and start typing.",
   path: "/templates/",
 });
 
@@ -18,7 +18,7 @@ export default function TemplatesPage() {
         data={{
           "@context": "https://schema.org",
           "@type": "ItemList",
-          name: "MindNote Web templates",
+          name: "noodl templates",
           itemListElement: TEMPLATES.map((t, i) => ({
             "@type": "ListItem",
             position: i + 1,

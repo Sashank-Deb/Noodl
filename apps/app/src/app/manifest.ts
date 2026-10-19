@@ -4,8 +4,8 @@ export const dynamic = "force-static";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "MindNote Web",
-    short_name: "MindNote",
+    name: "noodl",
+    short_name: "noodl",
     description: "Mind maps and outline notes with AI suggestions. Works offline.",
     start_url: "/app/",
     scope: "/app/",

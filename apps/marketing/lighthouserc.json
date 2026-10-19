@@ -1,0 +1,67 @@
+{
+  "ci": {
+    "collect": {
+      "staticDistDir": "./out",
+      "numberOfRuns": 3,
+      "url": [
+        "http://localhost/",
+        "http://localhost/features/",
+        "http://localhost/templates/",
+        "http://localhost/use-cases/students/",
+        "http://localhost/use-cases/meeting-notes/",
+        "http://localhost/use-cases/writers/",
+        "http://localhost/privacy/",
+        "http://localhost/blog/",
+        "http://localhost/blog/outline-or-mind-map/",
+        "http://localhost/blog/how-ai-typeahead-works/"
+      ],
+      "settings": {
+        "chromeFlags": "--headless=new --no-sandbox"
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:performance": [
+          "error",
+          {
+            "minScore": 0.95
+          }
+        ],
+        "categories:accessibility": [
+          "error",
+          {
+            "minScore": 0.95
+          }
+        ],
+        "categories:best-practices": [
+          "error",
+          {
+            "minScore": 0.95
+          }
+        ],
+        "categories:seo": [
+          "error",
+          {
+            "minScore": 0.95
+          }
+        ],
+        "cumulative-layout-shift": [
+          "error",
+          {
+            "maxNumericValue": 0.05
+          }
+        ],
+        "total-byte-weight": [
+          "warn",
+          {
+            "maxNumericValue": 250000
+          }
+        ]
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": ".lighthouseci/reports"
+    }
+  }
+}

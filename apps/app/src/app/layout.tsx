@@ -13,7 +13,7 @@ const onest = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "MindNote Web — mind maps and outline notes",
+  title: "noodl — mind maps and outline notes",
   description: "Write an outline, flip it into a mind map. AI suggestions on every node. Works offline, free.",
   robots: { index: false }, // the marketing site is the indexable surface
 };

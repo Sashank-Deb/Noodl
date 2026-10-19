@@ -4,7 +4,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata = pageMetadata({
   title: "Privacy",
   description:
-    "What MindNote Web stores and where: notes in your browser's IndexedDB, optional sync to Google Firestore when you sign in, and AI requests to Google Gemini only while AI is on. No ads, no tracking cookies.",
+    "What noodl stores and where: notes in your browser's IndexedDB, optional sync to Google Firestore when you sign in, and AI requests to Google Gemini only while AI is on. No ads, no tracking cookies.",
   path: "/privacy/",
 });
 
@@ -64,14 +64,14 @@ export default function PrivacyPage() {
 
           <h2>Notes stored on your device</h2>
           <p>
-            MindNote Web works without an account. Everything you create in guest mode (notes, folders, the Recycle Bin,
-            version snapshots and settings) is saved in your browser&apos;s <strong>IndexedDB</strong> storage on this
+            noodl works without an account. Everything you create in guest mode (notes, folders, images, the
+            Recycle Bin, version snapshots and settings) is saved in your browser&apos;s <strong>IndexedDB</strong> storage on this
             device. We do not receive a copy.
           </p>
           <p>
             That data is controlled by your browser. Clearing site data, using a private window, or a browser deciding
-            to free up space can remove it. Export a JSON backup from Settings › Data if a note matters to you. You can
-            delete all local data at any time from the same place.
+            to free up space can remove it. Make a backup from Settings › Data if a note matters to you. To remove
+            everything from a device, clear this site&apos;s data in your browser settings.
           </p>
 
           <h2>Sign-in and sync (optional)</h2>
@@ -84,10 +84,12 @@ export default function PrivacyPage() {
             While you are signed in, your notes are synced to <strong>Google Cloud Firestore</strong>, stored under your
             account&apos;s user ID so that only you can read or change them, and copied back to IndexedDB on each device
             where you sign in. When you first sign in, notes made in guest mode on that device are merged into your
-            account.
+            account. Two things are never synced and stay only on the device that created them: images you add to
+            notes, and version snapshots.
           </p>
           <p>
-            Signing out stops syncing; the notes already on that device stay there until you delete them. To have
+            Signing out stops syncing. You are asked whether to keep a copy of your notes on that device or remove
+            them from it. To have
             synced notes deleted from Firestore, delete them in the app while signed in (they are removed for good after
             30 days in the Recycle Bin), or contact us.
           </p>
@@ -104,14 +106,18 @@ export default function PrivacyPage() {
               from the root (the note&apos;s title) down to its parent, and the texts of its sibling nodes.
             </li>
             <li>
-              <strong>Generate a map:</strong> the prompt you write and the options you choose.
+              <strong>Generate a map:</strong> the prompt you write and the depth you choose.
             </li>
             <li>
               <strong>Summarize pasted text:</strong> the text you paste.
             </li>
             <li>
-              <strong>Rewrite node:</strong> the node&apos;s text, the path of node texts above it, and your
-              instruction.
+              <strong>Rewrite node:</strong> the node&apos;s text, the path of node texts above it, and the kind of
+              rewrite you picked.
+            </li>
+            <li>
+              <strong>Expand into ideas:</strong> the node&apos;s text, the path of node texts above it, and the texts
+              of its existing children.
             </li>
           </ul>
           <p>
@@ -144,7 +150,7 @@ export default function PrivacyPage() {
 
           <h2>Children</h2>
           <p>
-            MindNote Web is a general-purpose tool and is not directed at children under 13. Signing in requires a
+            noodl is a general-purpose tool and is not directed at children under 13. Signing in requires a
             Google account, which is subject to Google&apos;s own age requirements.
           </p>
 

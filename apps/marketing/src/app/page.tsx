@@ -9,7 +9,7 @@ import { APP_LINKS } from "@/lib/site";
 import { TEMPLATES, countNodes, type TreeNode } from "@/lib/templates";
 
 export const metadata = pageMetadata({
-  title: "MindNote Web: every note is a list and a map",
+  title: "noodl: every note is a list and a map",
   absoluteTitle: true,
   description:
     "Write an outline, flip it into a mind map, flip it back. Free in your browser, works offline, no account until you want sync. Suggestions on every node follow what your map is about.",
@@ -79,7 +79,7 @@ export default function Home() {
               Start with one idea. Enter commits it and opens the next line at the same level, so a list comes out as
               fast as you can type it.
             </p>
-            <p className="keys mt-5">
+            <p className="keys mt-auto pt-5">
               <Kbd lg>Enter</Kbd>
             </p>
           </li>
@@ -90,7 +90,7 @@ export default function Home() {
               Tab turns the next line into a child of the one above. Shift Tab moves it back out. Structure happens
               while you write, not afterwards.
             </p>
-            <p className="keys mt-5">
+            <p className="keys mt-auto pt-5">
               <Kbd lg>Tab</Kbd>
               <Kbd lg>⇧ Tab</Kbd>
             </p>
@@ -102,7 +102,7 @@ export default function Home() {
               The same note, laid out as branches with a colour each. Your selection and caret stay where they were.
               On Windows and Linux, use Ctrl for ⌘.
             </p>
-            <p className="keys mt-5">
+            <p className="keys mt-auto pt-5">
               <Kbd lg>⌘</Kbd>
               <Kbd lg>⇧</Kbd>
               <Kbd lg>M</Kbd>
@@ -155,6 +155,8 @@ export default function Home() {
               tree={HEAT_ISLANDS}
               title="The Heat islands note as a mind map: Causes, Effects and Fixes branch from the root in blue, red and green."
               className="mx-auto"
+              scale={1.6}
+              maxHeight={320}
             />
           </div>
         </div>
@@ -174,31 +176,31 @@ export default function Home() {
             </p>
             <ul className="checks">
               <li>
-                <SparkleIcon size={18} />
+                <CheckIcon size={18} />
                 <span>
                   <Kbd ai>Tab</Kbd> accepts the ghost text. Press Tab again and it adds a child, as usual: Tab accepts,
                   Tab again branches.
                 </span>
               </li>
               <li>
-                <SparkleIcon size={18} />
+                <CheckIcon size={18} />
                 <span>
                   <Kbd>↑</Kbd> <Kbd>↓</Kbd> pick another suggestion, <Kbd>Enter</Kbd> inserts it, <Kbd>Esc</Kbd>{" "}
-                  dismisses them for this edit.
+                  hides them until you change the text.
                 </span>
               </li>
               <li>
-                <SparkleIcon size={18} />
+                <CheckIcon size={18} />
                 <span>
                   Suggestions come from the node&apos;s parents and siblings, so “Pocket par…” under <em>Fixes</em>{" "}
                   finishes differently than it would under <em>Budget</em>.
                 </span>
               </li>
               <li>
-                <SparkleIcon size={18} />
+                <CheckIcon size={18} />
                 <span>
-                  Offline, or with AI switched off, it falls back to matches from your own notes, labelled with the note
-                  they came from.
+                  Offline, or with AI switched off, it falls back to phrases and words from your own notes,
+                  labelled “From your notes”.
                 </span>
               </li>
             </ul>
@@ -330,7 +332,7 @@ function OutlineMini() {
     ["Pocket parks", 2],
   ];
   return (
-    <div className="outline-card w-[210px]">
+    <div className="outline-card" style={{ width: 200 }}>
       <div className="ho-title">Heat islands</div>
       {rows.map(([t, depth, branch]) => (
         <div key={t} className={`ho-row${depth === 2 ? " ho-2" : ""}`}>

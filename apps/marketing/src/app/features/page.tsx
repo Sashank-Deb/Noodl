@@ -7,7 +7,7 @@ import { APP_LINKS } from "@/lib/site";
 export const metadata = pageMetadata({
   title: "Features",
   description:
-    "Outline and mind map views of one note, typeahead suggestions on every node, AI map generation, summaries and rewrites, offline guest mode, Google sync, six export formats and a full keyboard shortcut list.",
+    "Outline and mind map views of one note, typeahead suggestions on every node, AI map generation, summaries and rewrites, offline guest mode, Google sync, seven export formats and a full keyboard shortcut list.",
   path: "/features/",
 });
 
@@ -19,9 +19,10 @@ const GLOBAL: Row[] = [
   [["⌘", "⇧", "G"], "Generate a map with AI"],
   [["⌘", "⇧", "M"], "Switch between outline and mind map"],
   [["⌘", "\\"], "Show or hide the sidebar"],
-  [["⌘", "."], "Focus mode (hide sidebar and toolbars)"],
+  [["⌘", "."], "Focus mode (hides the sidebar and toolbar)"],
   [["⌘", "⇧", "E"], "Export menu"],
   [["⌘", "Z"], "Undo (⌘⇧Z to redo)"],
+  [["⌘", ","], "Settings"],
   [["?"], "Show all shortcuts"],
 ];
 
@@ -33,25 +34,26 @@ const SELECT: Row[] = [
   [["↑", "↓"], "Previous or next node"],
   [["←", "→"], "Parent or first child (outline: collapse or expand first)"],
   [["⌥", "↑"], "Move the node up among its siblings (⌥↓ moves it down)"],
-  [["⇧", "Tab"], "Outdent"],
+  [["⇧", "Tab"], "Outdent (⌘[ also works; ⌘] indents)"],
   [["⌘", ";"], "Collapse or expand"],
   [["⌥", "1"], "Show the map to level 1 (⌥2, ⌥3; ⌥0 shows all)"],
   [["⌘", "J"], "Rewrite with AI"],
   [["⌘", "D"], "Duplicate the branch"],
-  [["Delete"], "Delete the node and its branch (with Undo)"],
-  [["⇧", "1"], "Fit the whole map in view"],
+  [["⌘", "C"], "Copy the branch as indented text (⌘X cuts, ⌘V pastes)"],
+  [["Delete"], "Delete the node and its branch, with Undo (Backspace also works)"],
+  [["⇧", "1"], "Fit the whole map in view (⌘0 also works)"],
+  [["⌘", "="], "Zoom in (⌘− zooms out)"],
 ];
 
 const EDIT: Row[] = [
   [["Tab"], "Accept the ghost text if it is showing, otherwise add a child"],
   [["→"], "Accept the ghost text (caret at end of text)"],
-  [["⌥", "→"], "Accept the next word of the ghost text"],
   [["↑", "↓"], "Choose another suggestion"],
   [["Enter"], "Insert the chosen suggestion, or commit and add a sibling"],
   [["⇧", "Enter"], "New line inside the node"],
-  [["Esc"], "Dismiss suggestions; press again to stop editing"],
-  [["⌘", "B"], "Bold (⌘I for italic)"],
-  [["⌘", "L"], "Turn the selected text into a link"],
+  [["⇧", "Tab"], "Outdent"],
+  [["Esc"], "Hide suggestions until the text changes; press again to stop editing"],
+  [["Backspace"], "On an empty node without children: delete it"],
 ];
 
 function KeyTable({ caption, rows, id }: { caption: string; rows: Row[]; id: string }) {
@@ -87,19 +89,20 @@ function KeyTable({ caption, rows, id }: { caption: string; rows: Row[]; id: str
 }
 
 const EXPORTS: [string, string, string][] = [
-  ["PNG", "Image of the map", "1×, 2× or 3× scale; canvas, white or transparent background."],
-  ["JPEG", "Image of the map", "1×, 2× or 3× scale; smaller files for chat and email."],
-  ["PDF", "Document", "Fit the map to one page, or tile it across A4 pages for printing."],
+  ["PNG", "Image of the map", "Sharp image for slides, documents and chat."],
+  ["JPEG", "Image of the map", "Smaller files for email and messaging."],
+  ["PDF", "Document", "The map on one A4 page, ready to print."],
   ["Markdown", "Document", "A nested bullet list. Opens in any editor and imports back in."],
   ["HTML", "Document", "A self-contained page you can open in a browser or attach to an email."],
-  ["JSON", "Data", "Lossless and versioned: every node, style and setting. Ideal for backups."],
+  ["Plain text", "Document", "An indented outline for anywhere that doesn't render Markdown."],
+  ["JSON", "Data", "Lossless: every node and its structure. Imports back in exactly."],
 ];
 
 const AI_TOOLS: { title: string; body: string; how: string }[] = [
   {
     title: "Generate a map from a prompt",
-    body: "Describe a topic, choose a depth (2, 3 or 4 levels) and how many main branches you want. The draft streams in as an outline you can read before you keep it.",
-    how: "⌘⇧G, or the Generate button in the sidebar",
+    body: "Describe a topic (or start from an example) and choose a depth of 2, 3 or 4 levels. You get a preview outline to read first, then Open map to keep it or Try again for another take.",
+    how: "⌘⇧G",
   },
   {
     title: "Summarize pasted text into a map",
@@ -108,8 +111,13 @@ const AI_TOOLS: { title: string; body: string; how: string }[] = [
   },
   {
     title: "Rewrite a node",
-    body: "Make it shorter, fix spelling and grammar, turn it into a question, expand it into children, or give your own instruction. You see the old and new text side by side and choose Replace, Insert below or Discard.",
-    how: "⌘J on a selected node",
+    body: "Make it shorter, more specific or clearer, fix spelling and grammar, or turn it into a question. The new text replaces the old straight away, with Undo in the toast and a version snapshot taken first.",
+    how: "⌘J, or the AI menu on a selected node",
+  },
+  {
+    title: "Expand into ideas",
+    body: "Ask for ideas under a node and AI-suggested children are added to it directly. Keep the ones you like, delete the rest, or undo the lot.",
+    how: "AI menu on a selected node",
   },
 ];
 
@@ -121,7 +129,7 @@ export default function FeaturesPage() {
         crumbs={[{ name: "Features", path: "/features/" }]}
         eyebrow="Features"
         title="Everything a note needs, nothing it doesn't."
-        lede="MindNote Web is an outliner and a mind map in one. It runs in your browser, works offline, and keeps your notes on your device unless you choose to sync."
+        lede="noodl is an outliner and a mind map in one. It runs in your browser, works offline, and keeps your notes on your device unless you choose to sync."
       />
 
       <nav aria-label="On this page" className="container-site">
@@ -158,14 +166,17 @@ export default function FeaturesPage() {
               </p>
               <ul>
                 <li>Each first-level branch gets its own colour, and its children inherit it in both views.</li>
-                <li>Drag nodes to reorder or re-parent them. In the outline, horizontal position picks the depth.</li>
-                <li>Collapse any branch, or expand the whole map to a level with ⌥1, ⌥2, ⌥3 and ⌥0.</li>
                 <li>
-                  Five map styles: Ballpoint (default), Index card, Monochrome for printing, Highlighter, and an opt-in
-                  hand-drawn Sketch style.
+                  Drag nodes to reorder or re-parent them. In the outline, drop on the top, middle or bottom of a row to
+                  place it before, inside or after that row.
                 </li>
-                <li>Nodes can hold text, links, images or small tables.</li>
-                <li>Right-side or balanced layout; double-click the canvas to reset the zoom and centre the root.</li>
+                <li>Collapse any branch, or expand the whole map to a level with ⌥1, ⌥2, ⌥3 and ⌥0.</li>
+                <li>Three map styles: Ballpoint (curved branches, the default), Elbow, and Index card.</li>
+                <li>
+                  Nodes can hold text, links, images or small tables you edit inline. Paste an image to add it as a
+                  node; images stay on the device that added them.
+                </li>
+                <li>Zoom with ⌘= and ⌘−, and fit the whole map in view with ⇧1.</li>
               </ul>
             </div>
           </div>
@@ -189,9 +200,10 @@ export default function FeaturesPage() {
             </h2>
             <div className="prose-mn mt-6">
               <p>
-                Start typing in any node, in either view. After a short pause the most likely ending appears as ghost
-                text, with a marigold <Kbd ai>Tab</Kbd> chip to show that Tab will accept it. A dropdown offers up to
-                five alternatives.
+                Start typing in any node, in either view. After two characters and a short pause (350 ms), the most
+                likely ending appears as ghost text, with a marigold <Kbd ai>Tab</Kbd> chip to show that Tab will
+                accept it. A dropdown offers up to five suggestions. In an empty node, wait a moment and it offers
+                ideas for the branch instead.
               </p>
               <ul>
                 <li>
@@ -203,15 +215,16 @@ export default function FeaturesPage() {
                   dropped, and Esc hides suggestions until you change the text.
                 </li>
                 <li>
-                  <strong>Offline fallback.</strong> Without a connection, or with AI off, you get fuzzy matches from
-                  node text across your own notes, each labelled with its source note.
+                  <strong>Offline fallback.</strong> Without a connection, or with AI off, you get matches from phrases
+                  and words you have written in any of your notes, labelled “From your notes”.
                 </li>
                 <li>
-                  <strong>Adjustable.</strong> Change the suggestion delay (150–600 ms), stop Tab from accepting (→
-                  still works), or switch typeahead off.
+                  <strong>Your call.</strong> One switch in Settings turns AI off entirely; local suggestions keep
+                  working.
                 </li>
                 <li>
-                  <strong>On phones</strong>, suggestions appear as chips above the keyboard; tap one to use it.
+                  <strong>On phones and tablets</strong>, the same dropdown appears under the node; tap a suggestion
+                  to use it.
                 </li>
               </ul>
             </div>
@@ -225,11 +238,11 @@ export default function FeaturesPage() {
           AI that drafts, then waits for you
         </h2>
         <p className="lede mt-6 max-w-[60ch]">
-          AI features use Google Gemini through Firebase. Anything AI produces is shown in marigold as a preview, and
-          nothing is written into a note until you accept it. Every AI change takes a snapshot first, so you can go
-          back.
+          AI features use Google Gemini through Firebase and are marked in marigold. Typeahead and generated maps wait
+          for you to accept them; rewrites and expansions apply at once, with Undo and a version snapshot taken first,
+          so you can always go back.
         </p>
-        <ul className="grid-cards grid-cards-3 mt-10">
+        <ul className="grid-cards mt-10">
           {AI_TOOLS.map((t) => (
             <li key={t.title} className="card">
               <div className="card-body">
@@ -264,15 +277,19 @@ export default function FeaturesPage() {
             <p>
               <strong>Sign in with Google to sync.</strong> Your notes are then stored in Google Firestore under your
               account and stay in step across devices. Notes you made as a guest are merged into your account. A status
-              chip always tells you which state you are in: Local only, Synced, Syncing, Offline, or Needs review.
+              chip always tells you which state you are in: Local only, Syncing, Synced, Offline, or Needs review.
+              Images stay on the device that added them and are not synced.
             </p>
             <p>
-              <strong>Conflicts are shown, not hidden.</strong> If the same note changed on two devices, you see both
-              versions side by side and keep one, the other, or both.
+              <strong>Conflicts never lose work.</strong> If the same note changed on two devices, the newer version
+              is kept and the other is saved next to it as a separate “(conflict copy)” note, and the sync chip shows
+              Needs review until you have looked.
             </p>
             <p>
               <strong>Safety nets.</strong> Deleted notes stay in the Recycle Bin for 30 days. Each note keeps its last
-              20 snapshots on the device, taken as you edit and before any AI change, and you can restore any of them.
+              20 snapshots on this device, taken when you open it, every 5 minutes while you edit, and before an AI
+              rewrite or expansion. Version history restores any of them, in place or as a copy. Snapshots are not
+              synced.
             </p>
           </div>
         </div>
@@ -283,8 +300,8 @@ export default function FeaturesPage() {
           Export and import
         </h2>
         <p className="lede mt-6 max-w-[60ch]">
-          Six formats from the Export menu (<Kbd>⌘</Kbd> <Kbd>⇧</Kbd> <Kbd>E</Kbd>). Map exports use your current map
-          style and theme. Import Markdown outlines or MindNote JSON, or drop a .md or .json file onto the window.
+          Seven formats from the Export menu (<Kbd>⌘</Kbd> <Kbd>⇧</Kbd> <Kbd>E</Kbd>). Import Markdown outlines or
+          noodl JSON, or drag a .md or .json file onto the window.
         </p>
         <div className="table-wrap mt-10">
           <table className="ktable">
@@ -308,7 +325,7 @@ export default function FeaturesPage() {
           </table>
         </div>
         <p className="muted mt-4 text-[15px]">
-          Settings › Data › Export all downloads every note as JSON in one zip file.
+          Settings › Data › Export all saves every note and folder as one backup file; Restore brings it back.
         </p>
       </section>
 
@@ -322,17 +339,17 @@ export default function FeaturesPage() {
               "Search everything",
               "⌘K searches note titles and the text inside every node, shows where each match lives, and jumps straight to it.",
             ],
-            ["Folders", "Group notes into folders (two levels), drag notes between them, and rename or move from the row menu."],
+            ["Folders", "Group notes into folders, drag notes between them, and rename, duplicate or move notes from the row menu."],
             [
               "Templates",
               "Start from Blank, Project plan, Lecture notes, Meeting notes, SWOT analysis or Story outline.",
             ],
-            ["Light and dark", "Follows your system theme, or pick one. Both meet WCAG AA contrast."],
+            ["Light and dark", "Follows your system theme, or pick one in Settings."],
             [
               "Accessible",
-              "Full keyboard control, visible focus, screen-reader tree semantics in both views, and reduced motion.",
+              "Full keyboard control in both views, visible focus rings, a screen-reader tree in the outline, and reduced motion respected.",
             ],
-            ["Any screen", "Phone, tablet and desktop layouts, with 44 px touch targets and a keyboard accessory bar on phones."],
+            ["Any screen", "Layouts for phone, tablet and desktop, with touch-sized controls on small screens."],
           ].map(([t, d]) => (
             <li key={t} className="card">
               <div className="card-body">

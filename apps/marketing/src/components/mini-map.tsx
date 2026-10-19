@@ -70,7 +70,20 @@ function anchorIn(n: Placed) {
   return n.depth >= 2 ? { x: n.x, y: n.cy + n.h / 2 } : { x: n.x, y: n.cy };
 }
 
-export function MiniMap({ tree, title, className }: { tree: TreeNode; title: string; className?: string }) {
+export function MiniMap({
+  tree,
+  title,
+  className,
+  scale = 1.25,
+  maxHeight = 236,
+}: {
+  tree: TreeNode;
+  title: string;
+  className?: string;
+  /** Display size relative to the layout units (text is 8px at scale 1). */
+  scale?: number;
+  maxHeight?: number;
+}) {
   const { nodes, minY, maxY, maxX } = layout(tree);
   const pad = 10;
   const vbX = -pad;
@@ -86,7 +99,7 @@ export function MiniMap({ tree, title, className }: { tree: TreeNode; title: str
       role="img"
       aria-label={title}
       className={className}
-      style={{ maxWidth: "100%", height: "auto" }}
+      style={{ width: Math.round(vbW * scale), maxWidth: "100%", height: "auto", maxHeight }}
     >
       <g fill="none" strokeLinecap="round">
         {nodes

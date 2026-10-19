@@ -1,8 +1,8 @@
 /** Home page FAQ. Plain-text answers are reused verbatim in FAQPage JSON-LD. */
 export const FAQ: { q: string; a: string }[] = [
   {
-    q: "Is MindNote Web free?",
-    a: "Yes. MindNote Web is free to use in your browser. There is no paid plan, no trial and no feature locked behind an upgrade.",
+    q: "Is noodl free?",
+    a: "Yes. noodl is free to use in your browser. There is no paid plan, no trial and no feature locked behind an upgrade.",
   },
   {
     q: "Do I need an account?",
@@ -18,18 +18,18 @@ export const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "What does the AI see?",
-    a: "Only when AI is turned on. For a typeahead suggestion: what you have typed in the node, the chain of node texts from the root (the note's title) down to its parent, and the texts of its sibling nodes. For Generate, Summarize and Rewrite: your prompt, the text you pasted, or the node you chose and its path. It is sent to Google Gemini through Firebase. Your other notes are never sent.",
+    a: "Only when AI is turned on. For a typeahead suggestion: what you have typed in the node, the chain of node texts from the root (the note's title) down to its parent, and the texts of its sibling nodes. For Generate, Summarize, Rewrite and Expand: your prompt, the text you pasted, or the node you chose and its path. It is sent to Google Gemini through Firebase. Your other notes are never sent.",
   },
   {
     q: "Can I turn the AI off?",
-    a: "Yes. Settings › AI has a master switch. With AI off, the sparkle buttons disappear, nothing is sent to Gemini, and typeahead still offers matches from your own notes.",
+    a: "Yes. Settings › AI has a single on/off switch. With AI off, nothing is sent to Gemini, and typeahead still suggests phrases and words from your own notes.",
   },
   {
     q: "What can I export?",
-    a: "PNG and JPEG images of the map, PDF, Markdown, HTML, and lossless JSON. You can import Markdown outlines and MindNote JSON files back in.",
+    a: "PNG and JPEG images of the map, PDF (one A4 page), Markdown, HTML, plain text and lossless JSON. You can import Markdown outlines and noodl JSON files back in, and Settings › Data makes a full backup of every note that you can restore later.",
   },
   {
     q: "Does it work on phones and tablets?",
-    a: "Yes. The layout adapts from phone to desktop, every action has a touch target, and on phones suggestions appear as chips above the keyboard.",
+    a: "Yes. The layout adapts from phone to desktop, controls are sized for touch on small screens, and typeahead works the same way, with suggestions in a dropdown under the node.",
   },
 ];

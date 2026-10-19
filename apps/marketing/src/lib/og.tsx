@@ -11,17 +11,15 @@ export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
 
 const C = {
-  paper: "#fbfcfe",
-  dot: "#d3d8df",
-  ink: "#1c2433",
-  muted: "#626a7a",
-  primary: "#2f4fd0",
-  ai: "#e5a21c",
-  b1: "#3c5ccf",
-  b2: "#d4573d",
-  b3: "#2f8a5a",
-  rootBg: "#232c40",
-  border: "#dfe3ea",
+  paper: "#f8fafc",
+  dot: "#ccd0d4",
+  ink: "#161b24",
+  muted: "#5e636d",
+  primary: "#2858cd",
+  ai: "#d48f00",
+  b1: "#3065cc",
+  b2: "#cc3f2f",
+  b3: "#1e8347",
 };
 
 const fontDir = (pkg: string) => join(process.cwd(), "node_modules", "@fontsource", pkg, "files");
@@ -41,16 +39,18 @@ async function fonts() {
 
 function MarkSvg({ size }: { size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32">
-      <g fill="none" stroke={C.primary} strokeWidth="2.6" strokeLinecap="round">
-        <path d="M11 16.5C16 16.5 16 7 24.5 7" />
-        <path d="M11 16.5C16.5 16.5 18 15.6 26.5 15.6" />
-        <path d="M11 16.5C16 16.5 16.5 24.6 22.5 24.6" />
-      </g>
-      <circle cx="8" cy="16.5" r="4.6" fill={C.primary} />
-      <circle cx="25.2" cy="7" r="2.9" fill={C.ai} />
-      <circle cx="27" cy="15.6" r="2.1" fill={C.primary} />
-      <circle cx="23" cy="24.6" r="2.1" fill={C.primary} />
+<svg width={size} height={size} viewBox="0 0 128 128">
+      <rect width="128" height="128" rx="28" fill="#FFF4CC" />
+      <path
+        d="M24 69C28 53 40 29 55 30C69 31 70 49 76 58C81 66 91 65 96 57C103 45 91 39 79 43C62 48 48 62 39 77"
+        stroke="#151515"
+        strokeWidth="8.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <path d="M78 22C78 18 79 14 80 11" stroke="#FFB83D" strokeWidth="5.5" strokeLinecap="round" />
+      <path d="M87 28C91 24 94 22 98 20" stroke="#FFB83D" strokeWidth="5.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -75,7 +75,7 @@ export async function renderOg({ title, eyebrow }: { title: string; eyebrow?: st
       >
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <MarkSvg size={52} />
-          <div style={{ fontSize: 32, fontWeight: 600, letterSpacing: "-0.01em" }}>MindNote Web</div>
+          <div style={{ fontSize: 32, fontWeight: 600, letterSpacing: "-0.01em" }}>noodl</div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", maxWidth: 860 }}>

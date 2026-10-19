@@ -27,8 +27,9 @@ export default function WritersPage() {
         shape, not a rule. Rename the acts, split Act II in two, or delete the whole structure and use chapters instead.
       </p>
       <p>
-        If you already have notes in a text file, paste the indented list onto the root. Each line becomes a node and
-        the indentation becomes the structure.
+        If you already have notes in a text file, copy the indented list, select the root and press{" "}
+        <strong>⌘V</strong>, or import the file as Markdown. Each line becomes a node and the indentation becomes the
+        structure.
       </p>
 
       <h2>Draft scene lists in the outline</h2>
@@ -63,7 +64,8 @@ export default function WritersPage() {
       </ul>
       <p>
         Before a big restructure, you don&apos;t need to make a copy by hand. Each note keeps its last 20 snapshots on
-        your device, and you can restore any of them, or restore one as a separate note to compare.
+        your device (taken when you open it and every five minutes while you work), and Version history restores any
+        of them, in place or as a separate note to compare.
       </p>
 
       <h2>Use AI as a sparring partner, or not at all</h2>
@@ -73,22 +75,22 @@ export default function WritersPage() {
       </p>
       <ul>
         <li>
-          <strong>Rewrite › Expand into children</strong> (⌘J) proposes possible next beats for a scene as ghost nodes.
-          Keep one, rewrite it in your own voice, or discard them all.
+          <strong>Expand into ideas</strong> (in the AI menu) adds a few possible next beats under a scene as child
+          nodes. Keep one, rewrite it in your own voice, and delete the rest, or undo the lot.
         </li>
         <li>
           <strong>Rewrite › Make it a question</strong> turns a plot point into the dramatic question it raises, which
           is a useful check on whether a scene has stakes.
         </li>
         <li>
-          <strong>AI off</strong> (Settings › AI) removes every AI button and sends nothing to Gemini. Typeahead keeps
+          <strong>AI off</strong> (Settings › AI) sends nothing to Gemini. Typeahead keeps
           working from your own notes, which is handy for invented names and places: they autocomplete with the
           spelling you chose.
         </li>
       </ul>
       <p>
-        Nothing AI suggests is written into your note until you accept it, and AI suggestions are always shown in
-        marigold so you can tell them apart from your own words.
+        AI only acts when you ask: typeahead waits for Tab, and a rewrite or expansion happens only when you choose it
+        from the menu. Every one can be undone, and a version snapshot is taken before it runs.
       </p>
 
       <h2>Unpublished work stays yours</h2>

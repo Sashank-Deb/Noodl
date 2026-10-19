@@ -13,26 +13,39 @@ interface KV {
   value: unknown;
 }
 
-class MindNoteDB extends Dexie {
+export interface Snapshot {
+  id?: number;
+  noteId: string;
+  at: number;
+  reason: string;
+  title: string;
+  rootId: string;
+  nodes: Note["nodes"];
+  nodeCount: number;
+}
+
+class NoodlDB extends Dexie {
   notes!: EntityTable<Note, "id">;
   folders!: EntityTable<Folder, "id">;
   assets!: EntityTable<Asset, "id">;
   kv!: EntityTable<KV, "key">;
+  snapshots!: EntityTable<Snapshot, "id">;
 
   constructor() {
-    super("mindnote");
+    super("noodl");
     this.version(1).stores({
       notes: "id, folderId, updatedAt, deletedAt",
       folders: "id, updatedAt, deletedAt",
       assets: "id, noteId",
       kv: "key",
     });
+    this.version(2).stores({ snapshots: "++id, noteId, at" });
   }
 }
 
-let _db: MindNoteDB | null = null;
-export function db(): MindNoteDB {
-  if (!_db) _db = new MindNoteDB();
+let _db: NoodlDB | null = null;
+export function db(): NoodlDB {
+  if (!_db) _db = new NoodlDB();
   return _db;
 }
 
@@ -55,18 +68,47 @@ export async function restoreNote(id: string) {
 }
 
 export async function hardDeleteNote(id: string) {
-  await db().transaction("rw", db().notes, db().assets, async () => {
+  await db().transaction("rw", db().notes, db().assets, db().snapshots, async () => {
     await db().notes.delete(id);
     await db().assets.where("noteId").equals(id).delete();
+    await db().snapshots.where("noteId").equals(id).delete();
   });
+}
+
+// ---------------------------------------------------------------------------
+// Version history: last 20 snapshots per note, on this device only.
+// ---------------------------------------------------------------------------
+export const SNAPSHOT_LIMIT = 20;
+
+export async function takeSnapshot(note: Note, reason: string) {
+  const list = await db().snapshots.where("noteId").equals(note.id).sortBy("at");
+  const last = list[list.length - 1];
+  const body = JSON.stringify(note.nodes);
+  if (last && JSON.stringify(last.nodes) === body) return; // nothing changed
+  await db().snapshots.add({
+    noteId: note.id,
+    at: Date.now(),
+    reason,
+    title: note.title,
+    rootId: note.rootId,
+    nodes: note.nodes,
+    nodeCount: Object.keys(note.nodes).length,
+  });
+  const extra = list.length + 1 - SNAPSHOT_LIMIT;
+  if (extra > 0) await db().snapshots.bulkDelete(list.slice(0, extra).map((s) => s.id!));
+}
+
+export async function listSnapshots(noteId: string) {
+  return (await db().snapshots.where("noteId").equals(noteId).sortBy("at")).reverse();
 }
 
 /** Removes every note, folder and image from this device (used on sign-out). */
 export async function clearLocalData() {
-  await db().transaction("rw", db().notes, db().folders, db().assets, async () => {
+  await db().transaction("rw", [db().notes, db().folders, db().assets, db().snapshots], async () => {
     await db().notes.clear();
     await db().folders.clear();
     await db().assets.clear();
+    await db().snapshots.clear();
   });
 }
 
@@ -137,7 +179,7 @@ async function compressImage(file: Blob, maxSide = 1280, quality = 0.82) {
 // Full backup (Settings → Export backup) — also the "raw backup" for recovery.
 // ---------------------------------------------------------------------------
 export interface Backup {
-  app: "mindnote-web";
+  app: "noodl";
   version: 1;
   exportedAt: number;
   notes: Note[];
@@ -146,7 +188,7 @@ export interface Backup {
 
 export async function exportBackup(): Promise<Backup> {
   return {
-    app: "mindnote-web",
+    app: "noodl",
     version: 1,
     exportedAt: Date.now(),
     notes: await db().notes.toArray(),
@@ -155,7 +197,7 @@ export async function exportBackup(): Promise<Backup> {
 }
 
 export async function importBackup(b: Backup) {
-  if (b?.app !== "mindnote-web" || !Array.isArray(b.notes)) throw new Error("Not a MindNote backup file");
+  if (!["noodl", "mindnote-web"].includes(b?.app) || !Array.isArray(b.notes)) throw new Error("Not a noodl backup file");
   await db().transaction("rw", db().notes, db().folders, async () => {
     // syncedAt is reset so restored data is uploaded if sync is on.
     for (const f of b.folders ?? []) {

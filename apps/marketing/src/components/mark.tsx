@@ -1,28 +1,18 @@
-/**
- * "Sprig" logo mark (DESIGN.md §13). Seed circle with three shoots; the
- * highest bud is marigold (the idea being suggested).
- * `--mark-ink` can be overridden for a monochrome version.
- */
+/** The noodl mark (packages/brand/app-icon.svg): a looping noodle on a butter tile. Colours follow the theme via --brand-* tokens. */
 export function Mark({ size = 28, className }: { size?: number; className?: string }) {
-  const ink = { fill: "var(--mark-ink, var(--primary))" };
   return (
-    <svg
-      className={className}
-      width={size}
-      height={size}
-      viewBox="0 0 32 32"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <g fill="none" strokeWidth="2.6" strokeLinecap="round" style={{ stroke: "var(--mark-ink, var(--primary))" }}>
-        <path d="M11 16.5C16 16.5 16 7 24.5 7" />
-        <path d="M11 16.5C16.5 16.5 18 15.6 26.5 15.6" />
-        <path d="M11 16.5C16 16.5 16.5 24.6 22.5 24.6" />
-      </g>
-      <circle cx="8" cy="16.5" r="4.6" style={ink} />
-      <circle cx="25.2" cy="7" r="2.9" style={{ fill: "var(--ai)" }} />
-      <circle cx="27" cy="15.6" r="2.1" style={ink} />
-      <circle cx="23" cy="24.6" r="2.1" style={ink} />
+    <svg className={className} width={size} height={size} viewBox="0 0 128 128" aria-hidden="true" focusable="false">
+      <rect width="128" height="128" rx="28" style={{ fill: "var(--brand-tile)" }} />
+      <path
+        d="M24 69C28 53 40 29 55 30C69 31 70 49 76 58C81 66 91 65 96 57C103 45 91 39 79 43C62 48 48 62 39 77"
+        strokeWidth="8.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+        style={{ stroke: "var(--brand-ink)" }}
+      />
+      <path d="M78 22C78 18 79 14 80 11" strokeWidth="5.5" strokeLinecap="round" style={{ stroke: "var(--brand-gold)" }} />
+      <path d="M87 28C91 24 94 22 98 20" strokeWidth="5.5" strokeLinecap="round" style={{ stroke: "var(--brand-gold)" }} />
     </svg>
   );
 }

@@ -6,7 +6,7 @@ import { USE_CASES } from "@/lib/site";
 export const metadata = pageMetadata({
   title: "Use cases",
   description:
-    "How students, people running meetings and writers use MindNote Web: outlines for capture, mind maps for review, and typeahead that knows the rest of the note.",
+    "How students, people running meetings and writers use noodl: outlines for capture, mind maps for review, and typeahead that knows the rest of the note.",
   path: "/use-cases/",
 });
 

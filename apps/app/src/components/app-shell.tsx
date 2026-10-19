@@ -15,11 +15,12 @@ import dynamic from "next/dynamic";
 const GenerateDialog = dynamic(() => import("@/components/dialogs/generate-dialog").then((m) => m.GenerateDialog), { ssr: false });
 const TemplatesDialog = dynamic(() => import("@/components/dialogs/templates-dialog").then((m) => m.TemplatesDialog), { ssr: false });
 const SettingsDialog = dynamic(() => import("@/components/dialogs/settings-dialog").then((m) => m.SettingsDialog), { ssr: false });
+const HistoryDialog = dynamic(() => import("@/components/dialogs/history-dialog").then((m) => m.HistoryDialog), { ssr: false });
 const SearchDialog = dynamic(() => import("@/components/dialogs/search-dialog").then((m) => m.SearchDialog), { ssr: false });
 import { Mark } from "@/components/mark";
 import { persistEditor, useEditor } from "@/store/editor-store";
 import { useSettings } from "@/context/settings";
-import { db, getNote, kvGet, kvSet, purgeRecycleBin, saveNote } from "@/lib/db";
+import { db, getNote, kvGet, kvSet, purgeRecycleBin, saveNote, takeSnapshot } from "@/lib/db";
 import { schedulePush } from "@/lib/sync";
 import { createNote, noteFromOutline, type OutlineItem } from "@/lib/tree";
 import { TEMPLATES, WELCOME } from "@/lib/templates";
@@ -27,6 +28,11 @@ import { fromJSON, fromMarkdown } from "@/lib/io";
 import { localIndex } from "@/lib/ai/local-suggest";
 import { aiAvailable } from "@/lib/ai/ai";
 import type { Note } from "@/lib/types";
+
+function isTypingTarget(t: EventTarget | null) {
+  const el = t as HTMLElement | null;
+  return !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+}
 
 function useIsDesktop() {
   const [desktop, setDesktop] = useState(true);
@@ -58,6 +64,9 @@ export function AppShell() {
   const [tplOpen, setTplOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
+  const [settingsTab, setSettingsTab] = useState("general");
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const note = useEditor((s) => s.note);
@@ -73,6 +82,7 @@ export function AppShell() {
         return;
       }
       useEditor.getState().load(n, settings.defaultView);
+      void takeSnapshot(n, "Opened");
       if (nodeId && n.nodes[nodeId]) {
         // Expand ancestors so the node is visible, then select it.
         useEditor.getState().apply((d) => {
@@ -128,7 +138,7 @@ export function AppShell() {
           await createAndOpen(n);
           toast(`Imported ${n.title}`);
         } catch {
-          toast.error(`${f.name} isn't a MindNote JSON or Markdown outline.`);
+          toast.error(`${f.name} isn't a noodl JSON or Markdown outline.`);
         }
       }
     },
@@ -222,6 +232,14 @@ export function AppShell() {
         setGenOpen(true);
       } else if (mod && e.key === ",") {
         e.preventDefault();
+        setSettingsTab("general");
+        setSettingsOpen(true);
+      } else if (mod && e.key === ".") {
+        e.preventDefault();
+        setFocusMode((f) => !f);
+      } else if (e.key === "?" && !mod && !isTypingTarget(e.target)) {
+        e.preventDefault();
+        setSettingsTab("keys");
         setSettingsOpen(true);
       }
     };
@@ -239,7 +257,10 @@ export function AppShell() {
       onGenerate={() => setGenOpen(true)}
       onTemplates={() => setTplOpen(true)}
       onSearch={() => setSearchOpen(true)}
-      onSettings={() => setSettingsOpen(true)}
+      onSettings={() => {
+        setSettingsTab("general");
+        setSettingsOpen(true);
+      }}
       onCollapse={toggleSidebar}
     />
   );
@@ -267,7 +288,7 @@ export function AppShell() {
       <a href="#editor" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-2 focus:rounded-md focus:bg-background focus:px-3 focus:py-2">
         Skip to editor
       </a>
-      {desktop && sidebarPinned && <div className="w-[272px] shrink-0 border-r border-sidebar-border xl:w-[288px]">{sidebar}</div>}
+      {desktop && sidebarPinned && !focusMode && <div className="w-[272px] shrink-0 border-r border-sidebar-border xl:w-[288px]">{sidebar}</div>}
       {!desktop && (
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetContent side="left" className="w-[min(86vw,340px)] gap-0 p-0 [&>button]:hidden">
@@ -285,6 +306,13 @@ export function AppShell() {
             onToggleSidebar={toggleSidebar}
             onOpenGenerate={() => setGenOpen(true)}
             onImport={() => fileRef.current?.click()}
+            focusMode={focusMode}
+            onToggleFocus={() => setFocusMode((f) => !f)}
+            onOpenHistory={() => setHistoryOpen(true)}
+            onShortcuts={() => {
+              setSettingsTab("keys");
+              setSettingsOpen(true);
+            }}
           />
         ) : (
           <EmptyState onNew={() => newNote()} onGenerate={() => setGenOpen(true)} onImport={() => fileRef.current?.click()} onMenu={toggleSidebar} />
@@ -305,7 +333,8 @@ export function AppShell() {
 
       {genOpen && <GenerateDialog open={genOpen} onOpenChange={setGenOpen} onCreate={fromOutline} />}
       {tplOpen && <TemplatesDialog open={tplOpen} onOpenChange={setTplOpen} onPick={(t) => (t.id === "blank" ? (setTplOpen(false), newNote()) : fromOutline(t.outline))} />}
-      {settingsOpen && <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />}
+      {settingsOpen && <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} initialTab={settingsTab} />}
+      {historyOpen && <HistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} onOpenNote={(id) => void open(id)} />}
       {searchOpen && <SearchDialog
         open={searchOpen}
         onOpenChange={setSearchOpen}
@@ -315,7 +344,10 @@ export function AppShell() {
           generate: () => setGenOpen(true),
           templates: () => setTplOpen(true),
           importFile: () => fileRef.current?.click(),
-          settings: () => setSettingsOpen(true),
+          settings: () => {
+            setSettingsTab("general");
+            setSettingsOpen(true);
+          },
           toggleTheme: () => setTheme(resolvedTheme === "dark" ? "light" : "dark"),
         }}
       />}
@@ -325,7 +357,7 @@ export function AppShell() {
           <div className="rounded-2xl border-2 border-dashed border-primary px-10 py-8 text-center">
             <Upload className="mx-auto mb-2 size-6 text-primary" />
             <p className="font-medium">Drop to import as a new note</p>
-            <p className="text-sm text-muted-foreground">Markdown or MindNote JSON</p>
+            <p className="text-sm text-muted-foreground">Markdown or noodl JSON</p>
           </div>
         </div>
       )}

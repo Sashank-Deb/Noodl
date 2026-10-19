@@ -1,4 +1,4 @@
-# MindNote Web: design spec v1
+# noodl: design spec v1
 
 Files in this folder:
 
@@ -6,7 +6,7 @@ Files in this folder:
 - `mockups.html`: static frames A to F. Open in a browser; tokens are inlined, so it matches `tokens.css` exactly.
 - `DESIGN.md`: this file. Where the mockups and this file disagree, this file wins.
 
-Working name is "MindNote Web". It replicates the UX of the iOS app *MindNote – Mind Map & Notes*, but the brand, mark and artwork are our own.
+Product name: **noodl**. It replicates the UX of the iOS app *MindNote – Mind Map & Notes*. The official brand kit (logo, icons, colours) lives in `packages/brand/` and supersedes the "Sprig" mark proposed in §13.
 
 ---
 
@@ -410,7 +410,7 @@ Voice: plain, short, active. Name what will happen. Errors say what went wrong a
 | Recycle Bin empty | Recycle Bin is empty. | Deleted notes stay here for 30 days. | none |
 | Recovery, no snapshots | No earlier versions yet. | Versions are saved every few minutes while you edit. | none |
 | AI error (generate) | — | Gemini didn't respond. Your prompt is still here. | **Try again** |
-| Import failed | — | That file isn't a MindNote JSON or Markdown outline. | Choose another file |
+| Import failed | — | That file isn't a noodl JSON or Markdown outline. | Choose another file |
 | Storage nearly full | — | This browser is almost out of space for notes. Export a backup or sign in to sync. | Export all |
 
 Toasts (Sonner) follow verb consistency: "Moved to Recycle Bin" (Undo), "Restored Community garden", "Exported Community garden.png", "Copied 6 nodes", "Synced", "Signed in as rosa@…".
@@ -441,7 +441,7 @@ Toasts (Sonner) follow verb consistency: "Moved to Recycle Bin" (Undo), "Restore
 
 ## 12. Accessibility
 
-- Contrast: all text tokens ≥ 4.5:1 on their surfaces in both themes (muted-foreground 5.3:1 light / 6.5:1 dark; ghost text 4.5:1 / 4.6:1; `--ai-strong` 6.2:1 on white). Branch strokes and `--ring` ≥ 3:1 against `--canvas`. Text never sits on a branch colour; L1 tints are 13 % mixes so `--node-fg` stays > 12:1.
+- Contrast: all text tokens ≥ 4.5:1 on their surfaces in both themes (muted-foreground 5.3:1 light / 6.5:1 dark; ghost text 4.65:1 / 4.6:1; `--ai-strong` 6.2:1 on white). Branch strokes and `--ring` ≥ 3:1 against `--canvas`. Text never sits on a branch colour; L1 tints are 13 % mixes so `--node-fg` stays > 12:1.
 - Focus: 2 px `--ring` outline, 2 px offset, on every interactive element (`:focus-visible`). Canvas nodes use the selection ring as their focus indicator.
 - The map is a `role="tree"` with `role="treeitem"`, `aria-level`, `aria-expanded`, `aria-setsize/posinset`, roving tabindex (one tab stop for the whole map). The outline uses the same tree semantics. Visual map and outline share one accessibility tree so screen-reader users can work fully in either view.
 - Typeahead: node input has `role="combobox"`, `aria-autocomplete="both"`, `aria-controls` the listbox, `aria-activedescendant` for the highlighted option.

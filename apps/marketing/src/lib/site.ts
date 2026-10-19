@@ -5,10 +5,10 @@
  */
 
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || "https://mindnote-web.web.app"
+  process.env.NEXT_PUBLIC_SITE_URL || "https://noodl.web.app"
 ).replace(/\/+$/, "");
 
-export const SITE_NAME = "MindNote Web";
+export const SITE_NAME = "noodl";
 
 export const SITE_DESCRIPTION =
   "A free, local-first outliner and mind map in your browser. Write a list, flip it into a map, and let suggestions follow what your map is about. Works offline, no account needed.";

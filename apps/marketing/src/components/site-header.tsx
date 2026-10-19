@@ -4,7 +4,7 @@ import { Mark } from "./mark";
 
 /**
  * Plain <a> links on purpose: the site ships no client router (see
- * scripts/strip-js.mjs), so every navigation is a fast static page load.
+ * scripts/postexport.mjs), so every navigation is a fast static page load.
  * The mobile menu is a native <details> element, so it needs no JS.
  */
 export function SiteHeader() {
@@ -13,7 +13,7 @@ export function SiteHeader() {
       <div className="container-site site-nav">
         <a className="site-brand" href="/">
           <Mark size={30} />
-          <span>MindNote Web</span>
+          <span>noodl</span>
         </a>
         <nav aria-label="Main" className="site-links">
           {NAV_LINKS.map((l) => (
