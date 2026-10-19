@@ -37,6 +37,14 @@ Without Firebase config the app runs in **local mode**: no sign-in, no sync, and
 - [ ] Turn into → Link / Image / Table; edit table cells while editing the node
 - [ ] Reload the page: everything is still there. Turn off Wi-Fi and reload (production build): the app still opens
 
+## New in this round
+- [ ] Settings → General → Map layout: Balanced puts branches on both sides; ← / → navigate outward on each side
+- [ ] Settings → AI: suggestion delay slider, "Tab accepts suggestions" off → Tab always adds a child (→ still accepts)
+- [ ] Phone (devtools device mode with touch): while editing, a bar above the keyboard shows suggestion chips + indent / outdent / new sibling / Done
+- [ ] Conflict review: appears as "Needs review" in the top bar when sync finds edits from two devices (needs Firebase); Keep this / Keep the other / Keep both
+- [ ] AI rewrite (needs Firebase AI): ⌘J → Rewrite → preview with Replace / Insert below / Discard; Custom instruction…
+- [ ] Big maps (import a large JSON/Markdown outline): panning stays smooth
+
 ## Other
 - [ ] ⌘. focus mode, ? shortcut list, ⌘, settings, theme light/dark/system
 - [ ] Phone width (devtools device mode): library opens as a sheet, map starts readable
