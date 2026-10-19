@@ -101,7 +101,7 @@ Without environment variables the app runs fully local: no sign-in, no sync, typ
 
 **Vercel**
 1. *Add New → Project* → import `Sashank-Deb/Noodl`. Root directory: the repo root. `vercel.json` sets the build (`./scripts/build-site.sh`), output (`dist`) and the `/api/ai` function.
-2. Environment variables (Production + Preview): `NEXT_PUBLIC_Noodl_NOODLSUPABASE_URL`, `NEXT_PUBLIC_Noodl_NOODLSUPABASE_PUBLISHABLE_KEY`, `GEMINI_API_KEY`, optional `GEMINI_MODEL`, `NEXT_PUBLIC_SITE_URL` (your production URL).
+2. Environment variables (Production + Preview): `NEXT_PUBLIC_Noodl_NOODLSUPABASE_URL`, `NEXT_PUBLIC_Noodl_NOODLSUPABASE_PUBLISHABLE_KEY`, `GROQ_API_KEY` (main AI), optional `GEMINI_API_KEY` (backup), optional `GROQ_MODEL` / `GROQ_FAST_MODEL` / `GEMINI_MODEL`, `NEXT_PUBLIC_SITE_URL` (your production URL).
 3. Deploy. Every push to `main` deploys to production; pull requests get preview URLs (add their domains to Supabase redirect URLs if you test sign-in there).
 
 ### CI

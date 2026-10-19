@@ -49,7 +49,7 @@ import { saveImageAsset, takeSnapshot } from "@/lib/db";
 import { schedulePush } from "@/lib/sync";
 import { ancestorsText, flattenVisible, newId, safeUrl, toOutline } from "@/lib/tree";
 import { download, fromIndentedText, safeFilename, toHTML, toJSON, toMarkdown, toPlainText } from "@/lib/io";
-import { expandNode, rewriteNode, useAIAvailable, type RewriteMode } from "@/lib/ai/ai";
+import { AI_LIMITS, expandNode, rewriteNode, useAIAvailable, type RewriteMode } from "@/lib/ai/ai";
 import type { MapStyle } from "@/lib/types";
 import { MindMapView, getLastLayout, type Viewport } from "./mindmap-view";
 import { OutlineView } from "./outline-view";
@@ -823,7 +823,8 @@ function RewritePanel({
           <input
             autoFocus
             value={instruction}
-            onChange={(e) => setInstruction(e.target.value)}
+            onChange={(e) => setInstruction(e.target.value.slice(0, AI_LIMITS.custom))}
+            maxLength={AI_LIMITS.custom}
             placeholder="e.g. Make it sound friendlier"
             aria-label="Rewrite instruction"
             className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
@@ -1001,5 +1002,5 @@ export function aiErrorMessage(e: unknown) {
   if (/rate|429|quota/i.test(m)) return "AI is busy. Try again in a minute.";
   if (/network|fetch|offline/i.test(m)) return "You're offline. AI needs a connection.";
   if (/sign in|session/i.test(m)) return m;
-  return "Gemini didn't respond. Try again.";
+  return "AI didn't respond. Try again.";
 }

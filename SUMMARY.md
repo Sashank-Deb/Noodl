@@ -61,7 +61,7 @@ Package manager: **pnpm 10** workspaces. Node 22.
   - On a real conflict the newer version wins and the older one is kept as a conflict copy.
   - Sign-out asks whether to keep a copy of the notes on the device or remove them.
 - **Auth.** Supabase Auth (`apps/app/src/context/auth.tsx`, `lib/supabase.ts`): Google sign-in only (OAuth redirect, PKCE) returning to `/app/`; email links were removed from the UI at the owner's request (Supabase supports them if wanted later). supabase-js is lazy-loaded, so guests never download it.
-- **AI.** The browser (`apps/app/src/lib/ai/ai.ts`) POSTs structured tasks to `/api/ai` with the Supabase access token. The function (`api/_lib/ai-core.js`) verifies the token against Supabase Auth (cached 60 s), applies per-user limits (30 suggestions/min, 10 others/min, 600/day; in-memory, best effort per instance), builds the prompt for the task and calls the Gemini REST API with `GEMINI_API_KEY` (model `GEMINI_MODEL`, default `gemini-3.1-flash-lite`). Tasks:
+- **AI.** The browser (`apps/app/src/lib/ai/ai.ts`) POSTs structured tasks to `/api/ai` with the Supabase access token. The function (`api/_lib/ai-core.js`) verifies the token against Supabase Auth (cached 60 s), applies per-user limits (30 suggestions/min, 10 others/min, 600/day; in-memory, best effort per instance), builds a short prompt for the task and calls **Groq** (OpenAI-compatible `/chat/completions`, `GROQ_API_KEY`; typeahead uses `GROQ_FAST_MODEL`, default `llama-3.1-8b-instant`; everything else `GROQ_MODEL`, default `openai/gpt-oss-20b` with `reasoning_effort: low`). If Groq fails or is rate-limited it falls back to **Gemini** (`GEMINI_API_KEY`, `GEMINI_MODEL`, default `gemini-flash-lite-latest`). Token budget: inputs capped (prompt 500 chars, pasted text 6,000, node text 150, path 4 levels, 8 siblings; same limits in the app's text boxes) and small output caps (suggest 120 tokens, generate 700–1,000). Tasks:
   - typeahead `suggest()` (JSON schema output)
   - `generateMap`, `summarizeToMap`, `expandNode`, `rewriteNode` (shorter, more specific, grammar, clearer, question)
 
@@ -121,7 +121,7 @@ On macOS, `Start noodl.command` / `Dev noodl.command` at the repo root are doubl
 
 Without env vars the app runs fully local: no sign-in, no sync, local typeahead only.
 
-Env vars (see `.env.example`): `NEXT_PUBLIC_Noodl_NOODLSUPABASE_URL`, `NEXT_PUBLIC_Noodl_NOODLSUPABASE_PUBLISHABLE_KEY` (public), `GEMINI_API_KEY` + optional `GEMINI_MODEL` (server only), `NEXT_PUBLIC_SITE_URL`; local dev only: `NEXT_PUBLIC_AI_ENDPOINT`, `AI_ALLOWED_ORIGINS`.
+Env vars (see `.env.example`): `NEXT_PUBLIC_Noodl_NOODLSUPABASE_URL`, `NEXT_PUBLIC_Noodl_NOODLSUPABASE_PUBLISHABLE_KEY` (public), `GROQ_API_KEY` (+ optional `GROQ_MODEL`, `GROQ_FAST_MODEL`), optional backup `GEMINI_API_KEY` + `GEMINI_MODEL` (all server only), `NEXT_PUBLIC_SITE_URL`; local dev only: `NEXT_PUBLIC_AI_ENDPOINT`, `AI_ALLOWED_ORIGINS`.
 
 **How it was verified.** Playwright (Python) end-to-end runs against the static builds checked:
 - map rendering, Tab/Enter node creation, ghost-text accept, picking a suggestion with ↑↓ and Enter, ideas mode

@@ -7,12 +7,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { generateMap, summarizeToMap } from "@/lib/ai/ai";
+import { AI_LIMITS, generateMap, summarizeToMap } from "@/lib/ai/ai";
 import type { OutlineItem } from "@/lib/tree";
 import { aiErrorMessage, MOD } from "@/components/editor/editor";
 
 const EXAMPLES = ["Plan a community garden", "Revise photosynthesis for an exam", "Launch plan for a podcast", "Pros and cons of remote work"];
-const MAX_SOURCE = 20_000;
+const MAX_SOURCE = AI_LIMITS.source;
 
 interface Props {
   open: boolean;
@@ -40,7 +40,7 @@ export function GenerateDialog({ open, onOpenChange, onCreate }: Props) {
       if (!out.children?.length) throw new Error("empty");
       setPreview(out);
     } catch (e) {
-      setError((e as Error).message === "empty" ? "Gemini returned an empty map. Try rephrasing." : aiErrorMessage(e));
+      setError((e as Error).message === "empty" ? "The AI returned an empty map. Try rephrasing." : aiErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -90,11 +90,15 @@ export function GenerateDialog({ open, onOpenChange, onCreate }: Props) {
               <Textarea
                 autoFocus
                 value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
+                onChange={(e) => setPrompt(e.target.value.slice(0, AI_LIMITS.prompt))}
+                maxLength={AI_LIMITS.prompt}
                 placeholder="e.g. Study plan for learning Spanish in 3 months"
                 className="min-h-[84px] resize-none"
                 aria-label="What should the map be about?"
               />
+              <p className="-mt-2 text-right text-xs text-muted-foreground tabular-nums">
+                {prompt.length} / {AI_LIMITS.prompt}
+              </p>
               <div className="flex flex-wrap gap-1.5">
                 {EXAMPLES.map((ex) => (
                   <button key={ex} type="button" onClick={() => setPrompt(ex)} className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground">
@@ -117,7 +121,8 @@ export function GenerateDialog({ open, onOpenChange, onCreate }: Props) {
               <Textarea
                 value={source}
                 onChange={(e) => setSource(e.target.value.slice(0, MAX_SOURCE))}
-                placeholder="Paste an article, transcript or notes (up to 20,000 characters)"
+                maxLength={MAX_SOURCE}
+                placeholder="Paste an article, transcript or notes (up to 6,000 characters)"
                 className="min-h-[160px] resize-y"
                 aria-label="Text to summarize"
               />
@@ -135,7 +140,7 @@ export function GenerateDialog({ open, onOpenChange, onCreate }: Props) {
         )}
 
         <DialogFooter className="items-center gap-2 sm:justify-between">
-          <p className="text-xs text-muted-foreground">Your prompt is sent to Google Gemini. Notes stay on this device.</p>
+          <p className="text-xs text-muted-foreground">Your prompt is sent to our AI provider (Groq). Your other notes aren&apos;t sent.</p>
           <div className="flex gap-2">
             {preview ? (
               <>

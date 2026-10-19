@@ -241,7 +241,7 @@ export default function Home() {
                 <SparkleIcon size={20} />
                 AI only when it&apos;s on
               </h3>
-              <p>AI is for signed-in users. Prompts and nearby node text go to Google Gemini only while AI is switched on.</p>
+              <p>AI is for signed-in users. Prompts and nearby node text go to our AI provider (Groq, with Google Gemini as backup) only while AI is switched on.</p>
             </div>
             <div>
               <h3 className="h3">

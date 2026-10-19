@@ -68,8 +68,8 @@ export default function MeetingNotesPage() {
       <h3>Summarising a transcript</h3>
       <p>
         If you have a transcript or a long chat thread, <strong>Generate › Summarize pasted text</strong> turns up to
-        20,000 characters into a map you can edit. Read it against the source before sharing: summaries can miss a
-        caveat or merge two decisions. The text is sent to Google Gemini, so check your company&apos;s policy and the
+        6,000 characters into a map you can edit. Read it against the source before sharing: summaries can miss a
+        caveat or merge two decisions. The text is sent to our AI provider (Groq), so check your company&apos;s policy and the
         participants&apos; expectations first. If in doubt, leave AI off; everything else works without it.
       </p>
 

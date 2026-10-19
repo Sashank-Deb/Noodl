@@ -4,7 +4,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata = pageMetadata({
   title: "Privacy",
   description:
-    "What noodl stores and where: notes in your browser's IndexedDB, optional sync to Supabase when you sign in, and AI requests to Google Gemini (through noodl's server) for signed-in users while AI is on. No ads, no tracking cookies.",
+    "What noodl stores and where: notes in your browser's IndexedDB, optional sync to Supabase when you sign in, and AI requests to Groq, with Google Gemini as backup (through noodl's server), for signed-in users while AI is on. No ads, no tracking cookies.",
   path: "/privacy/",
 });
 
@@ -56,7 +56,7 @@ export default function PrivacyPage() {
                 <tr>
                   <th scope="row">Signed in, AI on</th>
                   <td>Unchanged</td>
-                  <td>The text needed for each AI request, to Google Gemini via noodl&apos;s server</td>
+                  <td>The text needed for each AI request, to Groq (Google Gemini as backup) via noodl&apos;s server</td>
                 </tr>
               </tbody>
             </table>
@@ -96,9 +96,9 @@ export default function PrivacyPage() {
 
           <h2>AI features (signed in, and only when AI is on)</h2>
           <p>
-            AI features are provided by <strong>Google Gemini</strong> (Gemini API). They are available only while you
+            AI features are provided by <strong>Groq</strong> (GroqCloud API), with <strong>Google Gemini</strong> (Gemini API) as a backup when Groq is busy. They are available only while you
             are signed in. Your browser sends each request to a small noodl function on our host (Vercel), which checks
-            that you are signed in, applies a rate limit, and forwards the request to Google. We do not store request
+            that you are signed in, applies a rate limit, and forwards the request to Groq (or, if Groq is unavailable, to Google). We do not store request
             content. What is sent depends on the feature:
           </p>
           <ul>
@@ -122,14 +122,14 @@ export default function PrivacyPage() {
             </li>
           </ul>
           <p>
-            Your other notes are never sent. Google processes these requests under its own terms for the Gemini API.
-            While noodl uses the free tier of the Gemini API, Google&apos;s terms allow it to use request and response
-            content to improve its products, which may include human review. Don&apos;t put anything sensitive in a node
-            while AI is on, or switch AI off.{" "}
-            <em>[Reviewer: re-check this paragraph against the current Gemini API terms before launch.]</em>
+            Your other notes are never sent. Groq and Google process these requests under their own API terms. When a
+            request falls back to the free tier of the Gemini API, Google&apos;s terms allow it to use request and
+            response content to improve its products, which may include human review. Don&apos;t put anything sensitive
+            in a node while AI is on, or switch AI off.{" "}
+            <em>[Reviewer: re-check this paragraph against the current Groq and Gemini API terms before launch.]</em>
           </p>
           <p>
-            You can switch AI off entirely in <strong>Settings › AI</strong>. With AI off, nothing is sent to Gemini,
+            You can switch AI off entirely in <strong>Settings › AI</strong>. With AI off, nothing is sent to any AI provider,
             and typeahead suggests matches from your own notes, computed on your device.
           </p>
 

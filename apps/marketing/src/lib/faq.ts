@@ -18,11 +18,11 @@ export const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "What does the AI see?",
-    a: "Only when you are signed in and AI is turned on. For a typeahead suggestion: what you have typed in the node, the chain of node texts from the root (the note's title) down to its parent, and the texts of its sibling nodes. For Generate, Summarize, Rewrite and Expand: your prompt, the text you pasted, or the node you chose and its path. It goes through noodl's server to Google Gemini. Your other notes are never sent.",
+    a: "Only when you are signed in and AI is turned on. For a typeahead suggestion: what you have typed in the node, the chain of node texts from the root (the note's title) down to its parent, and the texts of its sibling nodes. For Generate, Summarize, Rewrite and Expand: your prompt, the text you pasted, or the node you chose and its path. It goes through noodl's server to Groq, with Google Gemini as a backup. Your other notes are never sent.",
   },
   {
     q: "Can I turn the AI off?",
-    a: "Yes. Settings › AI has a single on/off switch. With AI off, nothing is sent to Gemini, and typeahead still suggests phrases and words from your own notes.",
+    a: "Yes. Settings › AI has a single on/off switch. With AI off, nothing is sent to any AI provider, and typeahead still suggests phrases and words from your own notes.",
   },
   {
     q: "What can I export?",

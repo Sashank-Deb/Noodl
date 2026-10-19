@@ -83,13 +83,13 @@ export default function StudentsPage() {
 
       <h2>Readings: summarise, then check</h2>
       <p>
-        For a long article or chapter, <strong>Generate › Summarize pasted text</strong> turns up to 20,000 characters
+        For a long article or chapter, <strong>Generate › Summarize pasted text</strong> turns up to 6,000 characters
         into a map of the main points. Treat it as a first draft: open the source next to it and correct anything that
         is wrong or missing. Checking a summary against the text is itself good revision, and the mistakes you catch
         are the ones you will remember.
       </p>
       <p>
-        Pasted text is sent to Google Gemini to make the summary. If your course materials aren&apos;t yours to share,
+        Pasted text is sent to our AI provider (Groq) to make the summary. If your course materials aren&apos;t yours to share,
         type your own outline instead, or switch AI off in Settings.
       </p>
 

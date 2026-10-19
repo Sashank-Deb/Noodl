@@ -1,6 +1,6 @@
 /**
  * AI calls go to our own serverless function (/api/ai on Vercel), which holds
- * the Gemini API key (Google AI Studio, free tier), checks the caller's
+ * the AI keys (Groq, Gemini as backup; free tiers), checks the caller's
  * Supabase session and rate-limits per user. AI is for signed-in users only;
  * guests (and anyone offline / rate-limited / with AI off) get local
  * suggestions from their own notes instead.
@@ -9,6 +9,9 @@ import { create } from "zustand";
 import { AI_ENDPOINT, getAccessToken, supabaseConfigured } from "../supabase";
 import { fromIndentedText } from "../io";
 import type { OutlineItem } from "../tree";
+
+/** Input limits in characters (the server enforces the same). Keeps AI token use low. */
+export const AI_LIMITS = { prompt: 500, source: 6000, custom: 200 };
 
 export type AIStatus = "idle" | "loading" | "ok" | "rate-limited" | "offline" | "unavailable" | "error";
 
@@ -97,7 +100,7 @@ export interface SuggestContext {
 
 const cache = new Map<string, string[]>();
 const CACHE_MAX = 300;
-const cacheKey = (c: SuggestContext) => JSON.stringify([c.path.slice(-4), c.siblings.slice(0, 12), c.text]);
+const cacheKey = (c: SuggestContext) => JSON.stringify([c.path.slice(-4), c.siblings.slice(0, 8), c.text]);
 
 export function cachedSuggestions(c: SuggestContext) {
   return cache.get(cacheKey(c));
@@ -113,7 +116,7 @@ export async function suggest(c: SuggestContext, signal?: AbortSignal): Promise<
   }
   useAIStatus.getState().set("loading");
   try {
-    const res = await callAI<{ suggestions?: unknown }>({ task: "suggest", path: c.path.slice(-6), siblings: c.siblings.slice(0, 12), text: c.text }, signal);
+    const res = await callAI<{ suggestions?: unknown }>({ task: "suggest", path: c.path.slice(-4), siblings: c.siblings.slice(0, 8), text: c.text.slice(0, 150) }, signal);
     const parsed = res;
     const list = Array.isArray(parsed.suggestions)
       ? parsed.suggestions.filter((s): s is string => typeof s === "string" && !!s.trim()).map((s) => s.trim())
@@ -152,23 +155,23 @@ function parseOutline(raw: string, fallbackTitle: string): OutlineItem {
 }
 
 export async function generateMap(prompt: string, depth = 3): Promise<OutlineItem> {
-  const raw = await generateText({ task: "generate", prompt: prompt.slice(0, 2000), depth });
+  const raw = await generateText({ task: "generate", prompt: prompt.slice(0, AI_LIMITS.prompt), depth });
   return parseOutline(raw, prompt.slice(0, 60));
 }
 
 export async function summarizeToMap(source: string): Promise<OutlineItem> {
-  const raw = await generateText({ task: "summarize", source: source.slice(0, 20_000) });
+  const raw = await generateText({ task: "summarize", source: source.slice(0, AI_LIMITS.source) });
   return parseOutline(raw, "Summary");
 }
 
 export async function expandNode(path: string[], text: string, children: string[]): Promise<OutlineItem[]> {
-  const raw = await generateText({ task: "expand", path: path.slice(-6), text, children: children.slice(0, 20) });
+  const raw = await generateText({ task: "expand", path: path.slice(-4), text, children: children.slice(0, 12) });
   return fromIndentedText(raw.replace(/```[a-z]*\n?|```/g, ""));
 }
 
 export type RewriteMode = "shorter" | "expand" | "grammar" | "clearer" | "question" | "custom";
 
 export async function rewriteNode(text: string, mode: RewriteMode, path: string[], custom?: string): Promise<string> {
-  const raw = await generateText({ task: "rewrite", text, mode, path: path.slice(-6), custom: custom?.slice(0, 300) });
+  const raw = await generateText({ task: "rewrite", text, mode, path: path.slice(-4), custom: custom?.slice(0, AI_LIMITS.custom) });
   return raw.trim().replace(/^["'“]|["'”]$/g, "").replace(/^[-*•]\s+/, "");
 }

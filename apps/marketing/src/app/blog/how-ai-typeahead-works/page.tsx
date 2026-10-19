@@ -32,7 +32,7 @@ export default function Post() {
       </p>
       <TypeaheadDemo />
       <p>
-        Marigold is reserved for AI throughout the app. If something is yellow, Gemini made it or is offering it. Your
+        Marigold is reserved for AI throughout the app. If something is yellow, AI made it or is offering it. Your
         own words are never shown in that colour.
       </p>
 
@@ -97,7 +97,7 @@ export default function Post() {
           second), so a fast typist doesn&apos;t send a request per keystroke.
         </li>
         <li>
-          <strong>Ask Gemini with context.</strong> The request includes where the node sits in the tree, so the same
+          <strong>Ask the model with context.</strong> The request includes where the node sits in the tree, so the same
           letters finish differently under <em>Fixes</em> than under <em>Budget</em>. It asks for full node texts that
           start with exactly what you typed and that don&apos;t repeat a sibling.
         </li>
@@ -117,7 +117,7 @@ export default function Post() {
       <h2>Exactly what is sent</h2>
       <p>
         Only when you are signed in with AI switched on, and only when the app decides to ask, one request goes from
-        your browser to a small noodl function, which checks your session and passes it on to Google Gemini. For a
+        your browser to a small noodl function, which checks your session and passes it on to Groq (or Google Gemini as a backup). For a
         typeahead suggestion it contains:
       </p>
       <ul>
@@ -161,7 +161,7 @@ Give 4 suggestions for the full node text…`}</code>
           attempted.
         </li>
         <li>
-          <strong>AI off</strong> in Settings › AI: the same local matches, and nothing is ever sent to Gemini.
+          <strong>AI off</strong> in Settings › AI: the same local matches, and nothing is ever sent to an AI provider.
         </li>
         <li>
           <strong>Rate-limited:</strong> if Google reports that the quota is used up, AI suggestions pause for about a
@@ -176,7 +176,7 @@ Give 4 suggestions for the full node text…`}</code>
       <h2>The short version</h2>
       <p>
         Ghost text is a suggestion, never an edit. <Kbd ai>Tab</Kbd> takes it, typing ignores it, <Kbd>Esc</Kbd> hides
-        it. With AI on, the node&apos;s path and siblings are sent to Gemini to make it smarter; with AI off, nothing
+        it. With AI on, the node&apos;s path and siblings are sent to the AI provider to make it smarter; with AI off, nothing
         leaves your device. The full details are in the <a href="/privacy/">privacy notice</a>.
       </p>
     </PostLayout>

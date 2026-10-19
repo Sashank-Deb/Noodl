@@ -106,7 +106,7 @@ const AI_TOOLS: { title: string; body: string; how: string }[] = [
   },
   {
     title: "Summarize pasted text into a map",
-    body: "Paste an article, transcript or notes (up to 20,000 characters). You get a new note titled from the text, organised into main points and details.",
+    body: "Paste an article, transcript or notes (up to 6,000 characters). You get a new note titled from the text, organised into main points and details.",
     how: "Generate › Summarize pasted text",
   },
   {
@@ -239,7 +239,7 @@ export default function FeaturesPage() {
           AI that drafts, then waits for you
         </h2>
         <p className="lede mt-6 max-w-[60ch]">
-          AI features use Google Gemini, are available once you sign in, and are marked in marigold. Typeahead, generated maps and
+          AI features use Groq (with Google Gemini as backup), are available once you sign in, and are marked in marigold. Typeahead, generated maps and
           rewrites wait for you to accept them. Expanding a node into ideas applies at once, with Undo and a version
           snapshot taken first, so you can always go back.
         </p>

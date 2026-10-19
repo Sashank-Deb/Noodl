@@ -15,7 +15,7 @@ export const POSTS: PostMeta[] = [
     title: "How AI typeahead works in noodl, and what it sends",
     seoTitle: "How AI typeahead works, and what it sends",
     description:
-      "Ghost text, the Tab key, caching and the offline fallback: a plain explanation of how suggestions are made and exactly which text goes to Google Gemini.",
+      "Ghost text, the Tab key, caching and the offline fallback: a plain explanation of how suggestions are made and exactly which text is sent to the AI provider.",
     date: "2026-10-19",
     readingMinutes: 6,
   },

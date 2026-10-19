@@ -82,7 +82,7 @@ createServer(async (req, res) => {
     res.writeHead(404).end("Not found");
   }
 }).listen(port, () => {
-  const ai = process.env.GEMINI_API_KEY ? "on" : "off (set GEMINI_API_KEY in .env.local)";
+  const ai = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY ? "on" : "off (set GROQ_API_KEY in .env.local)";
   console.log(
     apiOnly
       ? `\n  noodl AI function → http://localhost:${port}/api/ai (AI ${ai})\n`

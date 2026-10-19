@@ -9,7 +9,7 @@
  *    ↑ ↓ choose, Enter picks the highlighted suggestion (else new sibling),
  *    Shift+Enter new line, Esc closes the list (or stops editing).
  *  - Empty node + pause → AI "ideas" for this position (no ghost text).
- *  - Debounced, cached and rate-limited so the free Gemini quota lasts.
+ *  - Debounced, cached and rate-limited so the free AI quota lasts.
  */
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
@@ -39,7 +39,7 @@ interface Suggestion {
 export const TYPEAHEAD = {
   debounceMs: 350,
   ideasDelayMs: 700,
-  minChars: 2,
+  minChars: 3,
   max: 5,
 };
 

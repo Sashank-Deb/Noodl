@@ -112,7 +112,7 @@ export function SettingsDialog({ open, onOpenChange, initialTab = "general" }: {
           </TabsContent>
 
           <TabsContent value="ai" className="divide-y">
-            <Row label="AI suggestions" hint={aiReady ? "Typeahead, Generate and Rewrite. The current branch's text is sent to Google Gemini through noodl's server." : aiConfigured ? "Sign in to use AI. Typeahead uses your own notes until then." : "AI isn't configured for this deployment. Typeahead uses your own notes."} htmlFor="ai-switch">
+            <Row label="AI suggestions" hint={aiReady ? "Typeahead, Generate and Rewrite. The current branch's text is sent to Groq (Google Gemini as backup) through noodl's server." : aiConfigured ? "Sign in to use AI. Typeahead uses your own notes until then." : "AI isn't configured for this deployment. Typeahead uses your own notes."} htmlFor="ai-switch">
               <Switch id="ai-switch" checked={settings.aiEnabled} disabled={!aiReady} onCheckedChange={(v) => update({ aiEnabled: v })} />
             </Row>
             <Row label="Suggestion delay" hint={`Wait ${settings.typeaheadDelay} ms after you stop typing. Longer saves AI quota.`}>

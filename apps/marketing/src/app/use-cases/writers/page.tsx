@@ -83,7 +83,7 @@ export default function WritersPage() {
           is a useful check on whether a scene has stakes.
         </li>
         <li>
-          <strong>AI off</strong> (Settings › AI) sends nothing to Gemini. Typeahead keeps
+          <strong>AI off</strong> (Settings › AI) sends nothing to any AI provider. Typeahead keeps
           working from your own notes, which is handy for invented names and places: they autocomplete with the
           spelling you chose.
         </li>
