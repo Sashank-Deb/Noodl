@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Auth is optional (Supabase Auth: Google OAuth + email magic link). Guests
+ * Auth is optional (Supabase Auth, Google sign-in only). Guests
  * never download supabase-js unless they open sign-in, signed in before on
  * this device, or land here from a sign-in redirect.
  */
@@ -24,7 +24,6 @@ interface AuthCtx {
   loading: boolean;
   configured: boolean;
   signInWithGoogle: () => Promise<void>;
-  sendEmailLink: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -33,7 +32,6 @@ const Ctx = createContext<AuthCtx>({
   loading: false,
   configured: false,
   signInWithGoogle: async () => {},
-  sendEmailLink: async () => {},
   signOut: async () => {},
 });
 
@@ -46,7 +44,7 @@ const toUser = (u: User): AuthUser => ({
   photoURL: (u.user_metadata?.avatar_url as string) ?? (u.user_metadata?.picture as string) ?? null,
 });
 
-/** Where Supabase sends people back after Google / the email link. */
+/** Where Supabase sends people back after Google sign-in. */
 const redirectTo = () => `${window.location.origin}/app/`;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -111,16 +109,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   }, [listen]);
 
-  const sendEmailLink = useCallback(
-    async (email: string) => {
-      await listen();
-      const sb = await getSupabase();
-      const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo() } });
-      if (error) throw error;
-    },
-    [listen],
-  );
-
   const signOut = useCallback(async () => {
     const sb = await getSupabase();
     await stopSync();
@@ -128,8 +116,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, configured: supabaseConfigured, signInWithGoogle, sendEmailLink, signOut }),
-    [user, loading, signInWithGoogle, sendEmailLink, signOut],
+    () => ({ user, loading, configured: supabaseConfigured, signInWithGoogle, signOut }),
+    [user, loading, signInWithGoogle, signOut],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

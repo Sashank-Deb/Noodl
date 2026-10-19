@@ -1,6 +1,6 @@
 # noodl
 
-**noodl** is a playful, local-first mind-mapping app for the web, modelled on the UX of the iOS app *MindNote – Mind Map & Notes*: every note is both an **outline** and a **mind map**, every node has **AI typeahead**, and everything works **offline, free, with no account**. Sign in (Google or an email link) to sync across devices and to use AI suggestions.
+**noodl** is a playful, local-first mind-mapping app for the web, modelled on the UX of the iOS app *MindNote – Mind Map & Notes*: every note is both an **outline** and a **mind map**, every node has **AI typeahead**, and everything works **offline, free, with no account**. Sign in with Google to sync across devices and to use AI suggestions.
 
 ```
 apps/app             The web app (Next.js static export, served at /app)
@@ -33,7 +33,7 @@ flowchart TB
     FN["Function /api/ai<br/>verifies session, rate-limits,<br/>builds prompts"]
   end
   subgraph SUPA["Supabase (free plan)"]
-    AUTH["Auth<br/>Google + email link"]
+    AUTH["Auth<br/>Google sign-in"]
     PG[("Postgres + RLS<br/>notes, folders")]
     RT["Realtime<br/>row changes"]
   end
@@ -58,7 +58,7 @@ flowchart TB
 |---|---|
 | Next.js `output: "export"` | Pure static files → free hosting, CDN everywhere, no cold starts. |
 | Zustand for the editor, Context for app state | A map can have hundreds of typeahead nodes. With Context every keystroke re-renders every consumer; with Zustand each node subscribes to its own slice. Settings/auth/theme change rarely, so they stay in Context. Redux would add weight without benefit. |
-| Supabase Auth | Free up to 50k monthly active users; Google OAuth + magic links; no SMS. |
+| Supabase Auth | Free up to 50k monthly active users; Google sign-in only (email links can be added later). |
 | Supabase Postgres, one row per note (jsonb) | Opening a note costs 0 reads (it's local); syncing an edit is 1 upsert; pulls ask only for rows with a newer server timestamp; Realtime streams changes while the app is open. |
 | Gemini behind a Vercel Function | The key never reaches the browser; only signed-in users; prompts built server-side, so the endpoint isn't a general Gemini proxy. |
 | Vercel | One project serves the static sites and the function. **The free Hobby plan is for personal, non-commercial use**; a commercial launch needs Pro. |
@@ -93,7 +93,7 @@ Without environment variables the app runs fully local: no sign-in, no sync, typ
 **Supabase**
 1. Create a project at supabase.com (free plan).
 2. *SQL editor* → run `supabase/migrations/20261019000000_noodl_sync.sql` (or `supabase db push` with the CLI). It creates `notes` and `folders`, row-level security, server timestamps and adds both tables to Realtime.
-3. *Authentication → Sign In / Providers*: enable **Email** (magic link) and **Google** (create an OAuth client in Google's console with the redirect URL Supabase shows you).
+3. *Authentication → Sign In / Providers → Google*: copy the **Callback URL** shown there. In Google's console (console.cloud.google.com → Google Auth Platform): set Branding + Audience (External), add the `openid` scope, then *Clients → Create client → Web application* with Authorized JavaScript origins `https://YOUR-DOMAIN`, `http://localhost:4320`, `http://localhost:3000` and Authorized redirect URI = the Supabase callback URL. Paste the Client ID + secret into Supabase's Google provider and enable it.
 4. *Authentication → URL Configuration*: Site URL = your Vercel URL; add `https://YOUR-DOMAIN/app/` and `http://localhost:4320/app/`, `http://localhost:3000/app/` to Redirect URLs.
 5. *Project Settings → API*: copy the Project URL and the **publishable** key.
 

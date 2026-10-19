@@ -76,7 +76,7 @@ export default function PrivacyPage() {
 
           <h2>Sign-in and sync (optional)</h2>
           <p>
-            If you choose to sign in with Google or with an email sign-in link, we use <strong>Supabase Auth</strong>{" "}
+            If you choose to sign in with Google, we use <strong>Supabase Auth</strong>{" "}
             to identify your account. Supabase receives your email address and, for Google sign-in, your account&apos;s
             basic profile (name and photo).
           </p>

@@ -6,11 +6,11 @@ export const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Do I need an account?",
-    a: "No. You start in guest mode and everything except AI works without signing in: your notes are saved in this browser and typeahead suggests from your own notes. Sign in (Google or an email link) to sync across devices and to turn on AI suggestions.",
+    a: "No. You start in guest mode and everything except AI works without signing in: your notes are saved in this browser and typeahead suggests from your own notes. Sign in with Google to sync across devices and to turn on AI suggestions.",
   },
   {
     q: "Where are my notes stored?",
-    a: "In your browser's IndexedDB storage, on this device. If you sign in (Google or an email link), your notes are also synced to Supabase under your account so your other devices can load them.",
+    a: "In your browser's IndexedDB storage, on this device. If you sign in with Google, your notes are also synced to Supabase under your account so your other devices can load them.",
   },
   {
     q: "Does it work offline?",

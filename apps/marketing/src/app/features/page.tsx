@@ -276,7 +276,7 @@ export default function FeaturesPage() {
               browser&apos;s IndexedDB as you type, and the app keeps working without a connection.
             </p>
             <p>
-              <strong>Sign in to sync.</strong> With Google or an email link, your notes are then stored in Supabase under
+              <strong>Sign in to sync.</strong> With your Google account, your notes are then stored in Supabase under
               your account and stay in step across devices. Notes you made as a guest are merged into your account. A status
               chip always tells you which state you are in: Local only, Syncing, Synced, Offline, or Needs review.
               Images stay on the device that added them and are not synced.

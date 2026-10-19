@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { HardDrive, Loader2, LogOut, Mail, RefreshCw } from "lucide-react";
+import { HardDrive, Loader2, LogOut, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -54,13 +53,10 @@ export function AccountChip() {
     configured,
     loading,
     signInWithGoogle,
-    sendEmailLink,
     signOut,
   } = useAuth();
   const { lastSyncedAt } = useSyncStatus();
   const [busy, setBusy] = useState(false);
-  const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
   const [confirmOut, setConfirmOut] = useState(false);
 
   const doSignOut = async (keep: boolean) => {
@@ -81,21 +77,6 @@ export function AccountChip() {
       await signInWithGoogle();
     } catch {
       toast.error("Sign-in didn't start. Try again.");
-      setBusy(false);
-    }
-  };
-
-  const emailLink = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!/^\S+@\S+\.\S+$/.test(email))
-      return toast.error("Enter a valid email address");
-    setBusy(true);
-    try {
-      await sendEmailLink(email);
-      setSent(true);
-    } catch {
-      toast.error("Couldn't send the link. Try Google sign-in instead.");
-    } finally {
       setBusy(false);
     }
   };
@@ -208,7 +189,7 @@ export function AccountChip() {
                   Your notes are saved in this browser.
                 </span>{" "}
                 <span className="text-muted-foreground">
-                  Sign in to back them up and open them on other devices.
+                  Sign in with your Google (Gmail) account to back them up, open them on other devices and use AI.
                 </span>
               </p>
               <Button className="w-full" onClick={google} disabled={busy}>
@@ -217,34 +198,8 @@ export function AccountChip() {
                 ) : (
                   <GoogleG />
                 )}{" "}
-                Continue with Google
+                Sign in with Google
               </Button>
-              {sent ? (
-                <p className="rounded-lg bg-muted p-2.5 text-xs">
-                  Check {email} for a sign-in link. Open it in this browser.
-                </p>
-              ) : (
-                <form onSubmit={emailLink} className="flex gap-2">
-                  <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="or email me a link"
-                    aria-label="Email"
-                    className="h-9"
-                  />
-                  <Button
-                    type="submit"
-                    variant="outline"
-                    size="icon"
-                    className="size-9 shrink-0"
-                    aria-label="Send sign-in link"
-                    disabled={busy}
-                  >
-                    <Mail className="size-4" />
-                  </Button>
-                </form>
-              )}
               <p className="text-xs text-muted-foreground">
                 Notes on this device are merged into your account.
               </p>

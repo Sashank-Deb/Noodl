@@ -234,7 +234,7 @@ export default function Home() {
                 <CloudIcon size={20} />
                 Sync is opt-in
               </h3>
-              <p>Sign in with Google or an email link to sync your notes under your account, and open them anywhere.</p>
+              <p>Sign in with Google to sync your notes under your account, and open them anywhere.</p>
             </div>
             <div>
               <h3 className="h3">
