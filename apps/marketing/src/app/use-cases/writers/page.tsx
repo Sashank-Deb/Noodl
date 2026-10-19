@@ -96,7 +96,7 @@ export default function WritersPage() {
       <h2>Unpublished work stays yours</h2>
       <p>
         In guest mode the outline exists only in your browser on this device. If you sign in to sync, it is stored in
-        Google Firestore under your account. AI requests send only the text needed for that request, and only while AI
+        Supabase under your account. AI requests send only the text needed for that request, and only while AI
         is on. Details are in the <a href="/privacy/">privacy notice</a>.
       </p>
 

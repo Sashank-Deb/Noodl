@@ -1,24 +1,24 @@
 /**
- * Optional cloud mirror in Firestore: users/{uid}/notes/{noteId} and
- * users/{uid}/folders/{folderId}.
+ * Optional cloud mirror in Supabase Postgres (tables `notes` and `folders`,
+ * see supabase/migrations). Row-level security limits every row to its owner.
  *
- * Cost design (stays inside the free Spark quota):
- *  - one document per note (the whole node tree), so opening a note is 0 reads
- *    (it's local) and a sync of an edited note is 1 write;
+ * Cost design (stays inside the free plan):
+ *  - one row per note (the whole node tree as jsonb), so opening a note is 0
+ *    reads (it's local) and syncing an edited note is 1 upsert;
  *  - pushes are debounced; only notes/folders with updatedAt > syncedAt go up;
- *  - the realtime listener only queries docs whose *server* timestamp is newer
- *    than the last pull, so a returning device reads just what changed (server
- *    time avoids missing edits from devices with skewed or offline clocks);
- *  - images are not synced (Cloud Storage requires the paid Blaze plan).
+ *  - pulls ask only for rows whose *server* timestamp is newer than the last
+ *    pull (immune to device clock skew), and realtime pushes changes as they
+ *    happen while the app is open;
+ *  - images are not synced.
  * Deletes are tombstones (deletedAt) so they reach every device; permanent
- * deletes remove the document and other devices apply the removal.
- * Conflicts (edited on two devices while offline) keep the newer version and
- * save the other as a "conflict copy" note, for review.
+ * deletes remove the row and other devices apply the removal.
+ * Conflicts keep the newer version and save the other as a conflict copy,
+ * which the conflict review dialog lets the user resolve.
  */
-import type { Firestore, Unsubscribe } from "firebase/firestore";
+import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 import { create } from "zustand";
 import { db, kvGet, kvSet } from "./db";
-import { getFirebaseApp } from "./firebase";
+import { getSupabase } from "./supabase";
 import type { Folder, MindNode, Note } from "./types";
 import { newId } from "./tree";
 
@@ -37,31 +37,29 @@ export const useSyncStatus = create<SyncStatus & { set: (p: Partial<SyncStatus>)
   set: (p) => set(p),
 }));
 
-let fs: Firestore | null = null;
+let sb: SupabaseClient | null = null;
 let uid: string | null = null;
 let generation = 0;
-let unsubs: Unsubscribe[] = [];
+let channel: RealtimeChannel | null = null;
 let pushTimer: ReturnType<typeof setTimeout> | null = null;
 let pushing = false;
 let pushAgain = false;
+let pulling = false;
 
 const PUSH_DEBOUNCE_MS = 3000;
-const MAX_DOC_BYTES = 900_000; // Firestore limit is 1 MiB per document
+const MAX_DOC_BYTES = 900_000;
+const PAGE = 500;
 const keyFor = (u: string, k: string) => `sync:${u}:${k}`;
 
-async function firestore() {
-  if (fs) return fs;
-  const app = await getFirebaseApp();
-  const { initializeFirestore, getFirestore } = await import("firebase/firestore");
-  try {
-    fs = initializeFirestore(app, { ignoreUndefinedProperties: true });
-  } catch {
-    fs = getFirestore(app);
-  }
-  return fs;
+interface Row {
+  id: string;
+  data: Record<string, unknown>;
+  updated_at: number;
+  deleted_at: number | null;
+  server_updated_at: string;
 }
 
-// --- Encoding: Firestore can't store nested arrays (tables) ------------------
+// --- Encoding (tables as JSON strings: keeps rows compatible with older clients) ---
 type RemoteNode = Omit<MindNode, "table"> & { tableJson?: string };
 
 export function toRemote(n: Note): Record<string, unknown> {
@@ -76,7 +74,7 @@ export function toRemote(n: Note): Record<string, unknown> {
 }
 
 export function fromRemote(data: Record<string, unknown>): Note {
-  const { serverUpdatedAt: _t, ...rest } = data;
+  const { serverUpdatedAt: _t, ...rest } = data ?? {};
   void _t;
   const nodes: Record<string, MindNode> = {};
   for (const [id, raw] of Object.entries((rest.nodes as Record<string, RemoteNode>) ?? {})) {
@@ -95,81 +93,112 @@ export function fromRemote(data: Record<string, unknown>): Note {
   return { ...(rest as unknown as Note), nodes };
 }
 
-const millis = (v: unknown): number => {
-  const t = v as { toMillis?: () => number } | null;
-  return t?.toMillis ? t.toMillis() : 0;
-};
-
 // --- Lifecycle -------------------------------------------------------------------
 export async function startSync(userId: string) {
   await stopSync();
   const gen = ++generation;
   uid = userId;
-  const f = await firestore();
-  const { collection, query, where, onSnapshot, Timestamp } = await import("firebase/firestore");
+  const client = await getSupabase();
   if (gen !== generation) return; // signed out / switched while loading
-  const lastKey = keyFor(userId, "lastPull");
-  const lastPull = (await kvGet<number>(lastKey)) ?? 0;
-  if (gen !== generation) return;
+  sb = client;
   useSyncStatus.getState().set({ state: "syncing" });
 
-  const notesQ = query(collection(f, "users", userId, "notes"), where("serverUpdatedAt", ">", Timestamp.fromMillis(lastPull)));
-  unsubs.push(
-    onSnapshot(
-      notesQ,
-      async (snap) => {
-        if (gen !== generation) return;
-        let maxSeen = (await kvGet<number>(lastKey)) ?? 0;
-        let conflicts = 0;
-        for (const change of snap.docChanges()) {
-          if (change.doc.metadata.hasPendingWrites) continue; // our own write, not yet stamped
-          if (change.type === "removed") {
-            await db().notes.delete(change.doc.id);
-            continue;
-          }
-          const data = change.doc.data();
-          maxSeen = Math.max(maxSeen, millis(data.serverUpdatedAt));
-          conflicts += await mergeRemote(fromRemote(data));
-        }
-        await kvSet(lastKey, maxSeen);
-        const s = useSyncStatus.getState();
-        s.set({ state: "synced", lastSyncedAt: Date.now(), conflicts: s.conflicts + conflicts });
-      },
-      (err) => {
-        console.warn("sync listener", err);
-        useSyncStatus.getState().set({ state: navigator.onLine ? "error" : "offline" });
-      },
-    ),
-  );
-
-  unsubs.push(
-    onSnapshot(collection(f, "users", userId, "folders"), async (snap) => {
+  // Realtime: rows changed on other devices while we're open.
+  channel = client
+    .channel(`noodl-${userId}`)
+    .on("postgres_changes", { event: "*", schema: "public", table: "notes", filter: `user_id=eq.${userId}` }, (p) => {
       if (gen !== generation) return;
-      for (const change of snap.docChanges()) {
-        if (change.doc.metadata.hasPendingWrites) continue;
-        if (change.type === "removed") {
-          await db().folders.delete(change.doc.id);
-          continue;
-        }
-        const { serverUpdatedAt: _t, ...remote } = change.doc.data() as Folder & { serverUpdatedAt?: unknown };
-        void _t;
-        const local = await db().folders.get(remote.id);
-        if (!local || local.updatedAt < remote.updatedAt) await db().folders.put({ ...remote, syncedAt: remote.updatedAt });
+      if (p.eventType === "DELETE") {
+        const id = (p.old as Partial<Row>).id;
+        if (id) void db().notes.delete(id);
+        return;
       }
-    }),
-  );
+      const row = p.new as Row;
+      void mergeRemote(fromRemote(row.data)).then((c) => {
+        if (c) bumpConflicts(c);
+      });
+    })
+    .on("postgres_changes", { event: "*", schema: "public", table: "folders", filter: `user_id=eq.${userId}` }, (p) => {
+      if (gen !== generation) return;
+      if (p.eventType === "DELETE") {
+        const id = (p.old as Partial<Row>).id;
+        if (id) void db().folders.delete(id);
+        return;
+      }
+      void mergeFolder((p.new as Row).data as unknown as Folder);
+    })
+    .subscribe((status) => {
+      // Catch up on anything missed before (or while) the channel connected.
+      if (status === "SUBSCRIBED") void pull(gen);
+    });
 
   window.addEventListener("online", onOnline);
+  document.addEventListener("visibilitychange", onVisible);
+  await pull(gen);
   schedulePush(0);
 }
 
 export async function stopSync() {
   generation++;
-  unsubs.forEach((u) => u());
-  unsubs = [];
+  if (channel && sb) void sb.removeChannel(channel);
+  channel = null;
   uid = null;
-  if (typeof window !== "undefined") window.removeEventListener("online", onOnline);
+  if (typeof window !== "undefined") {
+    window.removeEventListener("online", onOnline);
+    document.removeEventListener("visibilitychange", onVisible);
+  }
   useSyncStatus.getState().set({ state: "local", conflicts: 0, failed: 0 });
+}
+
+function bumpConflicts(n: number) {
+  const s = useSyncStatus.getState();
+  s.set({ conflicts: s.conflicts + n });
+}
+
+/** Incremental pull of rows changed since the last pull (by server time). */
+async function pull(gen = generation) {
+  if (!sb || !uid || pulling) return;
+  pulling = true;
+  const me = uid;
+  try {
+    for (const table of ["folders", "notes"] as const) {
+      const key = keyFor(me, `lastPull:${table}`);
+      let since = (await kvGet<string>(key)) ?? "1970-01-01T00:00:00Z";
+      for (;;) {
+        const { data, error } = await sb
+          .from(table)
+          .select("id,data,updated_at,deleted_at,server_updated_at")
+          .gt("server_updated_at", since)
+          .order("server_updated_at", { ascending: true })
+          .limit(PAGE);
+        if (error) throw error;
+        if (gen !== generation) return;
+        const rows = (data ?? []) as Row[];
+        let conflicts = 0;
+        for (const r of rows) {
+          if (table === "notes") conflicts += await mergeRemote(fromRemote(r.data));
+          else await mergeFolder(r.data as unknown as Folder);
+        }
+        if (conflicts) bumpConflicts(conflicts);
+        if (rows.length) {
+          since = rows[rows.length - 1].server_updated_at;
+          await kvSet(key, since);
+        }
+        if (rows.length < PAGE) break;
+      }
+    }
+    useSyncStatus.getState().set({ state: "synced", lastSyncedAt: Date.now() });
+  } catch (e) {
+    console.warn("sync pull failed", e);
+    useSyncStatus.getState().set({ state: navigator.onLine ? "error" : "offline" });
+  } finally {
+    pulling = false;
+  }
+}
+
+async function mergeFolder(remote: Folder) {
+  const local = await db().folders.get(remote.id);
+  if (!local || local.updatedAt < remote.updatedAt) await db().folders.put({ ...remote, syncedAt: remote.updatedAt });
 }
 
 /** Returns 1 if a conflict copy was created. */
@@ -209,7 +238,13 @@ export async function mergeRemote(remote: Note): Promise<number> {
 }
 
 // --- Push -----------------------------------------------------------------------
-const onOnline = () => schedulePush(0);
+const onOnline = () => {
+  void pull();
+  schedulePush(0);
+};
+const onVisible = () => {
+  if (document.visibilityState === "visible") void pull();
+};
 
 export function schedulePush(delay = PUSH_DEBOUNCE_MS) {
   if (!uid) return;
@@ -218,7 +253,7 @@ export function schedulePush(delay = PUSH_DEBOUNCE_MS) {
 }
 
 async function pushNow() {
-  if (!uid) return;
+  if (!uid || !sb) return;
   if (pushing) {
     pushAgain = true;
     return;
@@ -228,13 +263,12 @@ async function pushNow() {
     return;
   }
   const me = uid;
+  const client = sb;
   const gen = generation;
   pushing = true;
   pushAgain = false;
   let failed = 0;
   try {
-    const f = await firestore();
-    const { doc, setDoc, deleteDoc, serverTimestamp } = await import("firebase/firestore");
     const dirty = await db().notes.filter((n) => n.updatedAt > (n.syncedAt ?? 0)).toArray();
     const dirtyFolders = await db().folders.filter((x) => x.updatedAt > (x.syncedAt ?? 0)).toArray();
     const delKey = keyFor(me, "pendingDeletes");
@@ -245,10 +279,10 @@ async function pushNow() {
     }
     useSyncStatus.getState().set({ state: "syncing" });
 
-    // One write per document so a single bad document can't block the rest.
+    // One request per row so a single bad row can't block the rest.
     const write = async <T,>(items: T[], fn: (x: T) => Promise<void>) => {
-      for (let i = 0; i < items.length; i += 20) {
-        const res = await Promise.allSettled(items.slice(i, i + 20).map(fn));
+      for (let i = 0; i < items.length; i += 10) {
+        const res = await Promise.allSettled(items.slice(i, i + 10).map(fn));
         res.forEach((r) => {
           if (r.status === "rejected") {
             failed++;
@@ -257,18 +291,24 @@ async function pushNow() {
         });
       }
     };
+    const upsert = async (table: "notes" | "folders", id: string, data: Record<string, unknown>, updatedAt: number, deletedAt: number | null | undefined) => {
+      const { error } = await client
+        .from(table)
+        .upsert({ user_id: me, id, data, updated_at: updatedAt, deleted_at: deletedAt ?? null }, { onConflict: "user_id,id" });
+      if (error) throw error;
+    };
 
     await write(dirtyFolders, async (fo) => {
       const { syncedAt: _s, ...data } = fo;
       void _s;
-      await setDoc(doc(f, "users", me, "folders", fo.id), { ...data, serverUpdatedAt: serverTimestamp() });
+      await upsert("folders", fo.id, data as unknown as Record<string, unknown>, fo.updatedAt, fo.deletedAt);
       await db().folders.update(fo.id, { syncedAt: fo.updatedAt });
     });
 
     await write(dirty, async (n) => {
       const data = toRemote(n);
       if (JSON.stringify(data).length > MAX_DOC_BYTES) throw new Error(`Note ${n.id} is too large to sync`);
-      await setDoc(doc(f, "users", me, "notes", n.id), { ...data, serverUpdatedAt: serverTimestamp() });
+      await upsert("notes", n.id, data, n.updatedAt, n.deletedAt);
       const cur = await db().notes.get(n.id);
       // Only mark synced if it wasn't edited again during the push.
       if (cur && cur.updatedAt === n.updatedAt) await db().notes.update(n.id, { syncedAt: n.updatedAt });
@@ -276,7 +316,8 @@ async function pushNow() {
 
     const deleted: string[] = [];
     await write(pendingDeletes, async (id) => {
-      await deleteDoc(doc(f, "users", me, "notes", id));
+      const { error } = await client.from("notes").delete().eq("user_id", me).eq("id", id);
+      if (error) throw error;
       deleted.push(id);
     });
     if (deleted.length) {

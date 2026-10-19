@@ -17,16 +17,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
-      - run: pnpm --filter app test
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-      - name: Firestore rules tests (emulator)
-        run: pnpm --filter firestore-rules-tests emulator:test
+      - run: pnpm test # app unit tests, Supabase RLS tests (PGlite), AI function tests
       - run: ./scripts/build-site.sh
-        env:
-          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
       - name: Lighthouse CI (marketing)
         run: npx -y @lhci/cli@0.15 autorun --config=apps/marketing/lighthouserc.json
         continue-on-error: true
+# Deploys are done by Vercel's GitHub integration (every push to main → production).

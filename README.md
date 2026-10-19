@@ -1,13 +1,16 @@
 # noodl
 
-**noodl** is a playful, local-first mind-mapping app for the web, modelled on the UX of the iOS app *MindNote – Mind Map & Notes*: every note is both an **outline** and a **mind map**, every node has **AI typeahead**, and everything works **offline, free, with no account**. Sign in with Google only if you want sync across devices.
+**noodl** is a playful, local-first mind-mapping app for the web, modelled on the UX of the iOS app *MindNote – Mind Map & Notes*: every note is both an **outline** and a **mind map**, every node has **AI typeahead**, and everything works **offline, free, with no account**. Sign in (Google or an email link) to sync across devices and to use AI suggestions.
 
 ```
-apps/app         The web app (Next.js static export, served at /app)
-apps/marketing   The marketing site (pre-rendered, SEO-first, served at /)
-packages/tokens  Shared design tokens (shadcn / Tailwind v4 CSS variables)
-packages/brand   noodl brand kit: logos, app icons, favicons, social preview
-design/          Design spec (DESIGN.md), tokens and mockups
+apps/app             The web app (Next.js static export, served at /app)
+apps/marketing       The marketing site (pre-rendered, SEO-first, 0 KB JS, served at /)
+api/                 Vercel Function: /api/ai (Gemini, signed-in users only)
+supabase/migrations  Postgres schema + row-level security for sync
+packages/tokens      Shared design tokens (shadcn / Tailwind v4 CSS variables)
+packages/brand       noodl brand kit: logos, app icons, favicons, social preview
+tests/               supabase-rls (PGlite) and api function tests
+design/              Design spec (DESIGN.md), tokens and mockups
 ```
 
 ## Architecture
@@ -15,7 +18,7 @@ design/          Design spec (DESIGN.md), tokens and mockups
 ```mermaid
 flowchart TB
   subgraph Browser
-    MKT["Marketing site<br/>pre-rendered HTML, ~0 JS"]
+    MKT["Marketing site<br/>pre-rendered HTML, 0 JS"]
     subgraph APP["Web app (static SPA, PWA)"]
       UI["shadcn/ui + Tailwind<br/>outline + mind map views"]
       Z["Zustand editor store<br/>undo/redo, per-node subscriptions"]
@@ -25,25 +28,29 @@ flowchart TB
       LOCAL["Local typeahead index"]
     end
   end
-  CDN["Firebase Hosting CDN<br/>(free Spark plan)"]
-  subgraph GCP["Google Cloud / Firebase — free tier, no servers of ours"]
-    AUTH["Firebase Auth<br/>Google + email link"]
-    FS[("Firestore<br/>users/{uid}/notes/{id}")]
-    AIL["Firebase AI Logic → Gemini<br/>(no proxy, App Check)"]
-    AC["App Check<br/>reCAPTCHA v3"]
+  subgraph VERCEL["Vercel (Hobby)"]
+    CDN["CDN: dist/<br/>marketing at /, app at /app"]
+    FN["Function /api/ai<br/>verifies session, rate-limits,<br/>builds prompts"]
   end
+  subgraph SUPA["Supabase (free plan)"]
+    AUTH["Auth<br/>Google + email link"]
+    PG[("Postgres + RLS<br/>notes, folders")]
+    RT["Realtime<br/>row changes"]
+  end
+  GEM["Gemini API<br/>(AI Studio key, free tier)"]
   CDN --> MKT & APP
   UI <--> Z --> IDB
   UI --> LOCAL
-  Z -. "opt-in sync, debounced" .-> FS
-  CTX -. "only when signing in" .-> AUTH
-  UI -. "typeahead / generate / rewrite" .-> AIL
-  AC -. protects .-> FS & AIL
+  CTX -. "sign-in (optional)" .-> AUTH
+  Z -. "opt-in sync, debounced" .-> PG
+  RT -. "changes from other devices" .-> Z
+  UI -. "AI (signed in)" .-> FN --> GEM
+  FN -. "check token" .-> AUTH
 ```
 
 **Local-first.** Notes are read and written in IndexedDB; the network is never on the critical path. Sync is a mirror, not the source of truth.
 
-**No backend.** Both sites are static files on Firebase Hosting. The browser talks to Firebase directly; Firestore security rules (`firestore.rules`) replace an API, and Firebase AI Logic lets the browser call Gemini without exposing a key, so there is no proxy to run.
+**Almost no backend.** Both sites are static files on Vercel's CDN. The browser talks to Supabase directly; Postgres row-level security (`supabase/migrations`) replaces an API. The only server code is one small function, `/api/ai`, which keeps the Gemini key secret, accepts only signed-in users, builds the prompts and rate-limits per user. No Google Cloud project to manage.
 
 ### Why these choices
 
@@ -51,50 +58,55 @@ flowchart TB
 |---|---|
 | Next.js `output: "export"` | Pure static files → free hosting, CDN everywhere, no cold starts. |
 | Zustand for the editor, Context for app state | A map can have hundreds of typeahead nodes. With Context every keystroke re-renders every consumer; with Zustand each node subscribes to its own slice. Settings/auth/theme change rarely, so they stay in Context. Redux would add weight without benefit. |
-| Firebase Auth (GCP) | Free for email/Google sign-in up to 50k MAU; phone/SMS (paid) deliberately not used. |
-| Firestore, one document per note | Opening a note costs 0 reads (it's local); syncing an edit is 1 write; listeners only query docs changed since the last pull. |
-| Firebase AI Logic instead of a proxy | Gemini Developer API free tier works on the Spark plan; no Cloud Function (which needs the paid Blaze plan). |
-| Firebase Hosting instead of Vercel | Vercel's free Hobby plan is non-commercial only; Firebase Hosting is free for commercial use and keeps everything in one GCP project. |
-| Images stay local | Cloud Storage for Firebase now requires the Blaze plan. Images are compressed (WebP, ≤1280px) and kept on the device. |
+| Supabase Auth | Free up to 50k monthly active users; Google OAuth + magic links; no SMS. |
+| Supabase Postgres, one row per note (jsonb) | Opening a note costs 0 reads (it's local); syncing an edit is 1 upsert; pulls ask only for rows with a newer server timestamp; Realtime streams changes while the app is open. |
+| Gemini behind a Vercel Function | The key never reaches the browser; only signed-in users; prompts built server-side, so the endpoint isn't a general Gemini proxy. |
+| Vercel | One project serves the static sites and the function. **The free Hobby plan is for personal, non-commercial use**; a commercial launch needs Pro. |
+| Images stay local | Keeps storage at zero; images are compressed (WebP, ≤1280px) and kept on the device. |
 
 ## Cost: what keeps it at ~$0
 
-| Service | Free allowance (Spark) | How we stay under it |
+| Service | Free allowance | How we stay under it |
 |---|---|---|
-| Hosting | 10 GB storage, 360 MB/day transfer | Static, compressed, immutable-cached assets; marketing pages ship ~no JS. |
-| Auth | 50k monthly active users (email/Google) | Guests never touch Auth; no SMS. |
-| Firestore | 50k reads, 20k writes, 20k deletes per day; 1 GiB | Sync is opt-in, debounced (3 s), batched, only dirty notes; incremental listener. |
-| Gemini (AI Logic) | Free-tier rate limits per project | Debounce (350 ms), abort on keystroke, LRU cache, client limit of 12 suggestion calls/min, 60 s back-off on 429, local fallback. |
+| Vercel Hobby | 100 GB transfer, 1M function invocations, 4 active-CPU hours / month | Static, immutable-cached assets; marketing pages ship 0 JS; the AI function mostly waits on Gemini (I/O wait isn't active CPU). |
+| Supabase Free | 50k MAU, 500 MB database, 5 GB egress; **pauses after 1 week without activity** | Guests never touch Supabase; sync is opt-in, debounced (3 s), only dirty rows, incremental pulls. |
+| Gemini API (AI Studio key, no billing) | Free-tier rate limits per minute/day | Signed-in only; client debounce (adjustable 150–600 ms), abort on keystroke, LRU cache, 12 suggestion calls/min client-side; server limits of 30 suggestions/min, 10 generations/min, 600 requests/day per user (best effort per instance); 60 s back-off on 429; local fallback. |
 
-Spark has **hard caps**: if a quota is hit, that feature pauses until the next cycle — you never get a bill. If you outgrow it, upgrade to Blaze with a budget alert.
+On the free Gemini tier, Google's terms allow it to use prompts and responses to improve its products; the privacy page says so. Use a paid key to avoid that.
 
 ## Getting started
 
 ```bash
 pnpm install
 pnpm dev                 # app on http://localhost:3000/app
-pnpm dev:marketing       # marketing site
-pnpm test                # unit tests (tree ops, layout, import/export, typeahead)
+pnpm dev:marketing       # marketing site on http://localhost:3001
+pnpm test                # app unit tests + Supabase RLS tests (PGlite) + AI function tests
 pnpm lint
-./scripts/build-site.sh  # builds both into dist/ (marketing at /, app at /app)
+pnpm build               # builds both into dist/ (marketing at /, app at /app)
+pnpm start               # serves dist/ + /api/ai like Vercel, on http://localhost:4320
 ```
 
-Without any environment variables the app runs fully local: no sign-in, no sync, typeahead uses your own notes.
+Without environment variables the app runs fully local: no sign-in, no sync, typeahead uses your own notes. Copy `.env.example` to `.env.local` (repo root) to enable Supabase and AI locally.
 
-## Turning on Firebase (sign-in, sync, AI)
+## Setting up Supabase + Vercel
 
-1. Create a Firebase project (keep it on the **Spark** plan).
-2. **Authentication** → enable **Google** and **Email link (passwordless)**. Add your hosting domain to *Authorized domains*.
-3. **Firestore** → create a database (production mode), then deploy rules: `firebase deploy --only firestore`.
-4. **AI Logic** → *Get started* → choose **Gemini Developer API** (free tier). Check the current free model id in Google AI Studio and set `NEXT_PUBLIC_GEMINI_MODEL` (default `gemini-3.1-flash-lite`).
-5. **App Check** → register the web app with **reCAPTCHA v3**, put the site key in `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`, then **enforce** App Check for Firestore and AI Logic (required for AI Logic from 2 Nov 2026).
-6. Copy `apps/app/.env.example` to `apps/app/.env.local` and fill in the web app config from *Project settings*.
-7. `cp .firebaserc.example .firebaserc`, set your project id, then `./scripts/build-site.sh && firebase deploy`.
+**Supabase**
+1. Create a project at supabase.com (free plan).
+2. *SQL editor* → run `supabase/migrations/20261019000000_noodl_sync.sql` (or `supabase db push` with the CLI). It creates `notes` and `folders`, row-level security, server timestamps and adds both tables to Realtime.
+3. *Authentication → Sign In / Providers*: enable **Email** (magic link) and **Google** (create an OAuth client in Google's console with the redirect URL Supabase shows you).
+4. *Authentication → URL Configuration*: Site URL = your Vercel URL; add `https://YOUR-DOMAIN/app/` and `http://localhost:4320/app/`, `http://localhost:3000/app/` to Redirect URLs.
+5. *Project Settings → API*: copy the Project URL and the **publishable** key.
 
-### CI/CD
+**Gemini key**: create an API key at https://aistudio.google.com/apikey (no billing account → free tier).
 
-- `.github/workflows/ci.yml`: install, lint, test, build, Lighthouse CI on every push/PR.
-- `.github/workflows/deploy.yml`: deploys `main` to Firebase Hosting. Set repository **variables** `FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_FIREBASE_*`, `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`, optional `NEXT_PUBLIC_GEMINI_MODEL`, and the **secret** `FIREBASE_SERVICE_ACCOUNT`.
+**Vercel**
+1. *Add New → Project* → import `Sashank-Deb/Noodl`. Root directory: the repo root. `vercel.json` sets the build (`./scripts/build-site.sh`), output (`dist`) and the `/api/ai` function.
+2. Environment variables (Production + Preview): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `GEMINI_API_KEY`, optional `GEMINI_MODEL`, `NEXT_PUBLIC_SITE_URL` (your production URL).
+3. Deploy. Every push to `main` deploys to production; pull requests get preview URLs (add their domains to Supabase redirect URLs if you test sign-in there).
+
+### CI
+
+`.github/workflows/ci.yml`: install, lint, all tests, build and Lighthouse CI on every push/PR. Deploys are handled by Vercel's GitHub integration.
 
 ## Features
 
@@ -108,12 +120,12 @@ Without any environment variables the app runs fully local: no sign-in, no sync,
 - Library: folders, search across notes and nodes (⌘K), templates, recycle bin (30 days), duplicate, move
 - Version history: last 20 snapshots per note on the device, restore in place or as a copy
 - Export PNG, JPEG, PDF, Markdown, HTML, plain text, JSON; import Markdown/JSON (also drag-and-drop); full backup/restore
-- Works offline (service worker + IndexedDB); guest mode by default; Google / email-link sign-in for sync; side-by-side conflict review
+- Works offline (service worker + IndexedDB); guest mode by default; Google / email-link sign-in (Supabase) for sync and AI; side-by-side conflict review
 
 ## Run it locally
 
 - macOS: double-click `Start noodl.command` (serves the production build at http://localhost:4320/app/) or `Dev noodl.command` (hot reload at http://localhost:3000/app/). See `TESTING.md` for a manual test checklist.
-- Anywhere: `pnpm install && ./scripts/build-site.sh && node scripts/serve-dist.mjs dist`
+- Anywhere: `pnpm install && pnpm build && pnpm start`
 
 ## Not yet built (good next steps)
 

@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/context/settings";
 import { useAuth } from "@/context/auth";
-import { aiAvailable } from "@/lib/ai/ai";
+import { aiConfigured, useAIAvailable } from "@/lib/ai/ai";
 import { exportBackup, importBackup, type Backup } from "@/lib/db";
 import { download } from "@/lib/io";
 import { schedulePush } from "@/lib/sync";
@@ -64,6 +64,7 @@ const SHORTCUTS: [string, string][] = [
 export function SettingsDialog({ open, onOpenChange, initialTab = "general" }: { open: boolean; onOpenChange: (o: boolean) => void; initialTab?: string }) {
   const { settings, update } = useSettings();
   const { user } = useAuth();
+  const aiReady = useAIAvailable();
   const fileRef = useRef<HTMLInputElement>(null);
 
   return (
@@ -111,8 +112,8 @@ export function SettingsDialog({ open, onOpenChange, initialTab = "general" }: {
           </TabsContent>
 
           <TabsContent value="ai" className="divide-y">
-            <Row label="AI suggestions" hint={aiAvailable() ? "Typeahead, Generate and Rewrite. Prompts and the current branch's text are sent to Google Gemini." : "AI isn't configured for this deployment. Typeahead uses your own notes."} htmlFor="ai-switch">
-              <Switch id="ai-switch" checked={settings.aiEnabled} disabled={!aiAvailable()} onCheckedChange={(v) => update({ aiEnabled: v })} />
+            <Row label="AI suggestions" hint={aiReady ? "Typeahead, Generate and Rewrite. The current branch's text is sent to Google Gemini through noodl's server." : aiConfigured ? "Sign in to use AI. Typeahead uses your own notes until then." : "AI isn't configured for this deployment. Typeahead uses your own notes."} htmlFor="ai-switch">
+              <Switch id="ai-switch" checked={settings.aiEnabled} disabled={!aiReady} onCheckedChange={(v) => update({ aiEnabled: v })} />
             </Row>
             <Row label="Suggestion delay" hint={`Wait ${settings.typeaheadDelay} ms after you stop typing. Longer saves AI quota.`}>
               <Slider

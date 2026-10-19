@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 /**
- * Static export: the app is plain HTML/JS/CSS served from Firebase Hosting's
+ * Static export: the app is plain HTML/JS/CSS served from Vercel's
  * CDN under /app — no server, no functions, $0 to host.
  */
 const nextConfig: NextConfig = {

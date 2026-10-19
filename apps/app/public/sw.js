@@ -1,7 +1,7 @@
 /* noodl service worker: makes the app open offline.
  * - Hashed build assets (/_next/static) are cache-first (they never change).
  * - Page navigations are network-first, falling back to the cached app shell.
- * Firebase / Gemini requests are never cached. */
+ * API, Supabase and Gemini requests are never cached. */
 const VERSION = "mn-v1";
 const SHELL = "/app/";
 

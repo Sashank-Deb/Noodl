@@ -66,7 +66,7 @@ export function FinalCta({
         <div className="flex justify-center [&_.hero-cta]:justify-center">
           <CtaButtons secondary="templates" />
         </div>
-        <p className="hero-fine">Free in your browser. Works offline. No account until you want sync.</p>
+        <p className="hero-fine">Free in your browser. Works offline. No account until you want sync or AI.</p>
       </div>
     </section>
   );

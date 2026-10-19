@@ -28,7 +28,7 @@ import { createNote, noteFromOutline, type OutlineItem } from "@/lib/tree";
 import { TEMPLATES, WELCOME } from "@/lib/templates";
 import { fromJSON, fromMarkdown } from "@/lib/io";
 import { localIndex } from "@/lib/ai/local-suggest";
-import { aiAvailable } from "@/lib/ai/ai";
+import { useAIAvailable } from "@/lib/ai/ai";
 import type { Note } from "@/lib/types";
 
 function isTypingTarget(t: EventTarget | null) {
@@ -60,6 +60,7 @@ export function AppShell() {
   const { settings, ready } = useSettings();
   const { resolvedTheme, setTheme } = useTheme();
   const desktop = useIsDesktop();
+  const aiReady = useAIAvailable();
   const [sidebarPinned, setSidebarPinned] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [genOpen, setGenOpen] = useState(false);
@@ -230,7 +231,7 @@ export function AppShell() {
       } else if (e.altKey && e.code === "KeyN") {
         e.preventDefault();
         newNote();
-      } else if (mod && e.shiftKey && k === "g" && settings.aiEnabled && aiAvailable()) {
+      } else if (mod && e.shiftKey && k === "g" && settings.aiEnabled && aiReady) {
         e.preventDefault();
         setGenOpen(true);
       } else if (mod && e.key === ",") {
@@ -248,7 +249,7 @@ export function AppShell() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [desktop, newNote, settings.aiEnabled]);
+  }, [desktop, newNote, settings.aiEnabled, aiReady]);
 
   const toggleSidebar = () => (desktop ? setSidebarPinned((p) => !p) : setSheetOpen((o) => !o));
 
@@ -371,6 +372,7 @@ export function AppShell() {
 
 function EmptyState({ onNew, onGenerate, onImport, onMenu }: { onNew: () => void; onGenerate: () => void; onImport: () => void; onMenu: () => void }) {
   const { settings } = useSettings();
+  const aiReady = useAIAvailable();
   return (
     <div className="map-canvas grid h-full place-items-center p-6" style={{ backgroundSize: "22px 22px" }}>
       <div className="max-w-sm text-center">
@@ -381,7 +383,7 @@ function EmptyState({ onNew, onGenerate, onImport, onMenu }: { onNew: () => void
           <Button onClick={onNew}>
             <Plus className="size-4" /> New note
           </Button>
-          {settings.aiEnabled && aiAvailable() && (
+          {settings.aiEnabled && aiReady && (
             <Button variant="outline" onClick={onGenerate}>
               <Sparkles className="size-4 text-(--ai)" /> Generate with AI
             </Button>

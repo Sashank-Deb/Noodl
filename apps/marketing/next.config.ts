@@ -2,7 +2,7 @@ import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Fully static, pre-rendered HTML for Firebase Hosting (served at the domain root;
+  // Fully static, pre-rendered HTML for Vercel (served at the domain root;
   // the web app lives under /app/ on the same domain).
   output: "export",
   trailingSlash: true,

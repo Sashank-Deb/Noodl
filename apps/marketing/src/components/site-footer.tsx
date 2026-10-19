@@ -11,7 +11,7 @@ export function SiteFooter() {
             <span>noodl</span>
           </a>
           <p className="muted mt-3 max-w-[34ch] text-[15px] leading-relaxed">
-            Free in your browser. Works offline. No account until you want sync.
+            Free in your browser. Works offline. No account until you want sync or AI.
           </p>
         </div>
         <div>

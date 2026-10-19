@@ -5,9 +5,13 @@
   "scripts": {
     "dev": "pnpm --filter app dev",
     "dev:marketing": "pnpm --filter marketing dev",
-    "build": "pnpm -r build",
-    "lint": "pnpm -r lint",
-    "test": "pnpm --filter app test",
-    "test:rules": "pnpm --filter firestore-rules-tests emulator:test"
+    "build": "./scripts/build-site.sh",
+    "start": "node scripts/serve-dist.mjs dist",
+    "lint": "pnpm --filter app lint && pnpm --filter marketing lint",
+    "test": "pnpm --filter app test && pnpm --filter supabase-rls-tests test && pnpm --filter api-tests test"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22"
   }
 }

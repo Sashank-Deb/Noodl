@@ -116,8 +116,9 @@ export default function Post() {
 
       <h2>Exactly what is sent</h2>
       <p>
-        Only when AI is switched on, and only when the app decides to ask, one request goes from your browser to Google
-        Gemini through Firebase AI Logic. For a typeahead suggestion it contains:
+        Only when you are signed in with AI switched on, and only when the app decides to ask, one request goes from
+        your browser to a small noodl function, which checks your session and passes it on to Google Gemini. For a
+        typeahead suggestion it contains:
       </p>
       <ul>
         <li>what you have typed in the current node so far;</li>

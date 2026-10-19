@@ -216,7 +216,7 @@ export default function FeaturesPage() {
                   dropped, and Esc hides suggestions until you change the text.
                 </li>
                 <li>
-                  <strong>Offline fallback.</strong> Without a connection, or with AI off, you get matches from phrases
+                  <strong>Works without AI.</strong> As a guest, offline, or with AI off, you get matches from phrases
                   and words you have written in any of your notes, labelled “From your notes”.
                 </li>
                 <li>
@@ -239,7 +239,7 @@ export default function FeaturesPage() {
           AI that drafts, then waits for you
         </h2>
         <p className="lede mt-6 max-w-[60ch]">
-          AI features use Google Gemini through Firebase and are marked in marigold. Typeahead, generated maps and
+          AI features use Google Gemini, are available once you sign in, and are marked in marigold. Typeahead, generated maps and
           rewrites wait for you to accept them. Expanding a node into ideas applies at once, with Undo and a version
           snapshot taken first, so you can always go back.
         </p>
@@ -276,8 +276,8 @@ export default function FeaturesPage() {
               browser&apos;s IndexedDB as you type, and the app keeps working without a connection.
             </p>
             <p>
-              <strong>Sign in with Google to sync.</strong> Your notes are then stored in Google Firestore under your
-              account and stay in step across devices. Notes you made as a guest are merged into your account. A status
+              <strong>Sign in to sync.</strong> With Google or an email link, your notes are then stored in Supabase under
+              your account and stay in step across devices. Notes you made as a guest are merged into your account. A status
               chip always tells you which state you are in: Local only, Syncing, Synced, Offline, or Needs review.
               Images stay on the device that added them and are not synced.
             </p>

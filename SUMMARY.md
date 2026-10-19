@@ -11,7 +11,7 @@ Repo: https://github.com/Sashank-Deb/Noodl (branch `main`).
 Product goals set by the owner:
 - Next.js + shadcn/ui.
 - Near-zero running cost. Everything stays on Google's free tiers and there is no backend of our own.
-- Auth on GCP (Firebase Auth).
+- **No GCP.** Hosting on Vercel, auth + sync on Supabase, AI via a Gemini API key (Google AI Studio) used only server-side in a Vercel Function. AI is for signed-in users only.
 - Guest mode by default. Sign-in only adds cross-device sync.
 - An SEO-first marketing site that scores high on Lighthouse.
 - The design benchmarks Excalidraw's canvas feel, while the UX follows MindNote.
@@ -25,20 +25,23 @@ packages/tokens   @noodl/tokens: shared shadcn/Tailwind v4 CSS variables (light 
 packages/brand    noodl brand kit: logos, app icons, favicons, social preview, README with colours
 design/           DESIGN.md (UX spec, source of truth), tokens.css, mockups.html (static frames)
 scripts/build-site.sh   Builds both apps into dist/ (marketing at /, app at /app/)
-scripts/serve-dist.mjs  Zero-dependency local server for dist/ (mirrors firebase.json routing)
-tests/firestore-rules   Security rules tests (@firebase/rules-unit-testing, emulator)
+scripts/serve-dist.mjs  Zero-dependency local server for dist/ + /api/ai (mirrors vercel.json routing)
+tests/supabase-rls      RLS tests for supabase/migrations, on PGlite (in-process Postgres)
+tests/api               Tests for the AI function (auth, validation, rate limits, errors)
 Start/Dev noodl.command macOS double-click launchers; TESTING.md manual checklist
-firebase.json     Hosting (dist/, headers, CSP report-only, /app/** rewrite) + Firestore
-firestore.rules   Owner-only access to users/{uid}/notes and users/{uid}/folders
-.github/workflows ci.yml (lint, test, build, LHCI) and deploy.yml (Firebase Hosting on main)
+vercel.json       Build (scripts/build-site.sh → dist/), headers, CSP report-only, /app/* rewrite, function config
+api/ai.js         Vercel Function entry; logic in api/_lib/ai-core.js (zero deps)
+supabase/migrations  Postgres tables notes/folders, RLS (owner only), server timestamps, Realtime
+.env.example      All env vars (repo root .env.local for local runs; same names in Vercel)
+.github/workflows ci.yml (lint, all tests, build, LHCI). Deploys: Vercel GitHub integration
 ```
 
 Package manager: **pnpm 10** workspaces. Node 22.
 
 ## 3. Architecture and key decisions
 
-- **Static everything.** Both apps use `output: "export"` and are hosted on Firebase Hosting (Spark plan, free).
-  - Vercel was rejected because its free Hobby plan is non-commercial only.
+- **Static sites + one function on Vercel.** Both apps use `output: "export"`; `scripts/build-site.sh` assembles `dist/` (marketing at `/`, app at `/app/`). `api/ai.js` is the only server code.
+  - Vercel's free Hobby plan is **non-commercial only**; a commercial launch needs Pro ($20/month).
   - The app is a client-side SPA. Note selection lives in the URL query (`/app/?n=<noteId>`) because static export can't serve dynamic routes.
   - Deep links from the marketing site: `?new=1`, `?generate=1`, `?template=<id>`.
 - **Local-first data.** IndexedDB via Dexie (`apps/app/src/lib/db.ts`).
@@ -49,15 +52,16 @@ Package manager: **pnpm 10** workspaces. Node 22.
   - App-wide, rarely-changing state (settings, auth, theme) uses **React Context** (`src/context/`).
   - Redux was judged unnecessary.
 - **Persistence.** `persistEditor()` in editor-store saves the editor's copy at most every 400 ms. It never overwrites a newer stored version: if the stored note changed underneath (via sync), that version is saved as a "(conflict copy)" note first. `app-shell.tsx` watches the stored copy and reloads the editor when a newer clean version arrives.
-- **Sync (optional).** `apps/app/src/lib/sync.ts` mirrors data to Firestore at `users/{uid}/notes/{id}` and `users/{uid}/folders/{id}`.
-  - Pushes are debounced (3 s) and written one document at a time, so one bad document can't block the rest.
+- **Sync (optional).** `apps/app/src/lib/sync.ts` mirrors data to Supabase Postgres tables `notes` and `folders` (one row per record: `id`, `data` jsonb, `updated_at`, `deleted_at`, `server_updated_at`; primary key `(user_id, id)`; RLS owner-only).
+  - Pushes are debounced (3 s) and upserted one row at a time, so one bad row can't block the rest.
+  - Realtime `postgres_changes` streams other devices' edits while the app is open; on connect, focus and `online` it also pulls.
   - Only dirty records are pushed (`updatedAt > syncedAt`).
-  - Incremental pulls query on the server timestamp `serverUpdatedAt`, which avoids problems with device clock skew.
-  - Folders use tombstones (`deletedAt`). Hard deletes are queued per uid. Tables are encoded as `tableJson` because Firestore rejects nested arrays.
+  - Incremental pulls query `server_updated_at` (set by a database trigger), which avoids problems with device clock skew.
+  - Folders use tombstones (`deletedAt`). Hard deletes are queued per uid. Table nodes are encoded as `tableJson` (kept from the earlier Firestore design; harmless).
   - On a real conflict the newer version wins and the older one is kept as a conflict copy.
   - Sign-out asks whether to keep a copy of the notes on the device or remove them.
-- **Auth.** Firebase Auth with Google popup (falling back to redirect) and email-link sign-in. The SDK is lazy-loaded, so guests never download it. Phone/SMS sign-in isn't used because it costs money.
-- **AI.** Firebase AI Logic with `GoogleAIBackend` (Gemini Developer API free tier) is called directly from the browser, so no proxy or Cloud Function is needed. App Check (reCAPTCHA v3) protects it and **must be enforced from 2 Nov 2026**. Code is in `apps/app/src/lib/ai/ai.ts`:
+- **Auth.** Supabase Auth (`apps/app/src/context/auth.tsx`, `lib/supabase.ts`): Google OAuth (redirect, PKCE) and email magic links, both returning to `/app/`. supabase-js is lazy-loaded, so guests never download it.
+- **AI.** The browser (`apps/app/src/lib/ai/ai.ts`) POSTs structured tasks to `/api/ai` with the Supabase access token. The function (`api/_lib/ai-core.js`) verifies the token against Supabase Auth (cached 60 s), applies per-user limits (30 suggestions/min, 10 others/min, 600/day; in-memory, best effort per instance), builds the prompt for the task and calls the Gemini REST API with `GEMINI_API_KEY` (model `GEMINI_MODEL`, default `gemini-3.1-flash-lite`). Tasks:
   - typeahead `suggest()` (JSON schema output)
   - `generateMap`, `summarizeToMap`, `expandNode`, `rewriteNode` (shorter, more specific, grammar, clearer, question)
 
@@ -107,20 +111,17 @@ Package manager: **pnpm 10** workspaces. Node 22.
 pnpm install
 pnpm dev                    # app → http://localhost:3000/app/
 pnpm dev:marketing          # marketing site
-pnpm test                   # vitest (apps/app): 27 tests on tree ops, layout, import/export, sanitising, local suggest, sync merge/encoding
-pnpm test:rules             # Firestore rules tests (tests/firestore-rules) on the emulator; needs Java + network. CI runs them
+pnpm test                   # 39 tests: app (tree, layout, io, sanitising, local suggest, sync merge), Supabase RLS on PGlite, AI function
+pnpm start                  # serve dist/ + /api/ai on http://localhost:4320 (reads .env.local)
 pnpm lint                   # eslint (React Compiler rules on). Must be clean
 ./scripts/build-site.sh     # → dist/ (serve with: cd dist && python3 -m http.server 4320)
-firebase deploy             # needs .firebaserc (copy .firebaserc.example)
-node scripts/serve-dist.mjs dist   # serve dist/ like Firebase Hosting (port 4320)
 ```
 
 On macOS, `Start noodl.command` / `Dev noodl.command` at the repo root are double-click launchers; `TESTING.md` is the manual test checklist. The owner's working copy is in `~/Desktop/Mindnote/noodl`.
 
 Without env vars the app runs fully local: no sign-in, no sync, local typeahead only.
 
-App env vars (`apps/app/.env.example`; all are public client config): `NEXT_PUBLIC_FIREBASE_API_KEY`, `_AUTH_DOMAIN`, `_PROJECT_ID`, `_APP_ID`, `_MESSAGING_SENDER_ID`, `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`, `NEXT_PUBLIC_GEMINI_MODEL`.
-Marketing env var: `NEXT_PUBLIC_SITE_URL`.
+Env vars (see `.env.example`): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (public), `GEMINI_API_KEY` + optional `GEMINI_MODEL` (server only), `NEXT_PUBLIC_SITE_URL`; local dev only: `NEXT_PUBLIC_AI_ENDPOINT`, `AI_ALLOWED_ORIGINS`.
 
 **How it was verified.** Playwright (Python) end-to-end runs against the static builds checked:
 - map rendering, Tab/Enter node creation, ghost-text accept, picking a suggestion with ↑↓ and Enter, ideas mode
@@ -131,7 +132,7 @@ Marketing env var: `NEXT_PUBLIC_SITE_URL`.
 - a 776-node map (culling renders ~230 nodes at fit zoom)
 - mobile and dark mode
 
-Gemini was **mocked** by intercepting `**/*generateContent*`; the test build used fake Firebase env values. **Real Firebase (Auth, Firestore rules, AI Logic, App Check) has not been exercised yet.** The setup steps are in README.md under "Turning on Firebase".
+Supabase and Gemini were **mocked** (a local mock server for `/auth/v1/user`, `/rest/v1/*` and `:generateContent`, with a session injected into localStorage): guest mode hides AI; a signed-in session gets AI typeahead through `/api/ai`, map generation works, and sync upserts rows. **Real Supabase and Gemini have not been exercised yet** — follow README "Setting up Supabase + Vercel".
 
 ## 5. Gotchas for whoever continues
 
@@ -140,20 +141,19 @@ Gemini was **mocked** by intercepting `**/*generateContent*`; the test build use
 - **Fonts come from npm, not Google Fonts** (Google Fonts was also blocked here): `@fontsource-variable/onest` via `next/font/local`.
 - **basePath is `/app`.** Use `/app/...` for absolute paths in public assets and the service worker, or use the metadata file conventions (`icon.svg`, `manifest.ts`).
 - **React Compiler lint rules apply:** no setState directly in effect bodies, no ref reads during render, no `Date.now()` in render-scope closures. Write module-level helpers or derived state instead.
-- **Keep the Firestore rules in step with sync.ts.** Rules require `serverUpdatedAt == request.time`, and folder names must be ≤ 200 characters.
+- **Keep `supabase/migrations` in step with sync.ts** (columns `id, data, updated_at, deleted_at, server_updated_at`; folder names ≤ 200 chars). Add new migrations as new files; `tests/supabase-rls` runs them all.
+- **Root `package.json` is `"type": "module"`** so `api/*.js` are ESM. `scripts/serve-dist.mjs` imports `api/_lib/ai-core.js` directly for local runs.
+- **Supabase free projects pause after a week without activity**; restore from the dashboard.
 - **Backward compatibility:** import and backup accept both `app: "noodl"` and the old `"mindnote-web"` id. The IndexedDB database is named `noodl`; renaming it again would orphan users' local data.
 
 ## 6. Status and next steps (priority order)
 
-Done: everything described in section 3, plus a code review pass that fixed 12 defects in sync, persistence, undo, keyboard scoping, URL sanitising and empty-node delete. Also done: phone keyboard accessory bar with suggestion chips, side-by-side conflict review dialog (`components/dialogs/conflicts-dialog.tsx`), AI rewrite preview with Replace / Insert below / Discard and custom instructions, balanced layout setting, typeahead delay slider and "Tab accepts" toggle, viewport culling above 300 nodes, Firestore rules tests (written; run in CI only — the emulator can't be downloaded in the build container, so they have **not been run yet**).
+Done: everything described in section 3, plus a code review pass that fixed 12 defects in sync, persistence, undo, keyboard scoping, URL sanitising and empty-node delete. Also done: moved off GCP entirely (Vercel + Supabase + Gemini AI Studio key behind `/api/ai`), phone keyboard accessory bar with suggestion chips, side-by-side conflict review dialog (`components/dialogs/conflicts-dialog.tsx`), AI rewrite preview with Replace / Insert below / Discard and custom instructions, balanced layout setting, typeahead delay slider and "Tab accepts" toggle, viewport culling above 300 nodes, Supabase RLS tests and AI function tests (both run locally and in CI).
 
-1. **Set up a real Firebase project**, following README "Turning on Firebase".
-   - Enable Google + email-link sign-in, create Firestore and deploy the rules, enable AI Logic (Gemini Developer API), and register App Check with reCAPTCHA v3 and **enforce** it.
-   - Set GitHub repo variables and the `FIREBASE_SERVICE_ACCOUNT` secret for `deploy.yml`.
-   - Then test sign-in, two-device sync, conflicts, the email link and real Gemini suggestions.
-2. **Run the Firestore rules tests** (`pnpm test:rules`, or let CI run them) and fix anything they catch.
+1. **Set up Supabase + Vercel for real** (README → "Setting up Supabase + Vercel"): run the migration, enable Google + Email providers, set redirect URLs, create the Gemini key, import the repo in Vercel and add the env vars. Then test sign-in (Google + magic link), two-device sync, realtime updates, conflict review and AI on the deployed URL.
+2. **Durable AI rate limits.** The per-user limits live in function memory (reset on cold start, per instance). If abuse shows up, move them to a Postgres table (e.g. `ai_usage(user_id, day, count)` with an RPC) — still free.
 3. **Colours are decided:** the owner chose to keep the current UI palette (ballpoint blue primary, marigold reserved for AI). The noodl brand colours are used only for the logo and icons (`--brand-*` tokens). Don't re-theme the UI.
 4. **Privacy page** (`apps/marketing/src/app/privacy/page.tsx`) is a draft with `[Reviewer: …]` placeholders: the Gemini data-use terms and a contact address. It needs legal review before launch.
 5. **Not built yet** from DESIGN.md: multi-select / marquee selection, extra map styles (Monochrome, Highlighter, Sketch), ⌥→ accept-next-word, inline bold/italic marks, animated layout transitions.
-6. **Performance.** The app's initial JS is about 300 KB gzipped, mostly React and Next. The Firebase SDKs are already lazy-loaded. Possible next steps: more code-splitting of the export libraries (they're already dynamic), and measuring the app itself with Lighthouse.
-7. **Custom domain.** Update `NEXT_PUBLIC_SITE_URL` (default `https://noodl.web.app`) and add the domain to Firebase Auth's authorized domains.
+6. **Performance.** The app's initial JS is about 300 KB gzipped, mostly React and Next. supabase-js is already lazy-loaded. Possible next steps: more code-splitting of the export libraries (they're already dynamic), and measuring the app itself with Lighthouse.
+7. **Custom domain.** Add it in Vercel, update `NEXT_PUBLIC_SITE_URL` (default `https://noodl.vercel.app`) and add `https://DOMAIN/app/` to Supabase's redirect URLs.

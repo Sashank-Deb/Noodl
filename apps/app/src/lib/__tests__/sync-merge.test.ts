@@ -49,8 +49,8 @@ describe("sync merge", () => {
   });
 });
 
-describe("firestore encoding", () => {
-  it("round-trips tables through tableJson (no nested arrays)", async () => {
+describe("remote encoding", () => {
+  it("round-trips tables through tableJson", async () => {
     const { toRemote, fromRemote } = await import("../sync");
     const n = noteFromOutline({ text: "T", children: [{ text: "tbl", type: "table", table: [["a", "b"], ["1", "2"]] }] });
     const remote = toRemote(n) as { nodes: Record<string, Record<string, unknown>> };

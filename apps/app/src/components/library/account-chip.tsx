@@ -13,7 +13,7 @@ import {
 import { useAuth } from "@/context/auth";
 import { schedulePush, useSyncStatus } from "@/lib/sync";
 import { clearLocalData } from "@/lib/db";
-import { useEditor } from "@/store/editor-store";
+import { persistEditor, useEditor } from "@/store/editor-store";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -76,13 +76,11 @@ export function AccountChip() {
   const google = async () => {
     setBusy(true);
     try {
+      // Google sign-in leaves the page and comes back to /app/; save first.
+      await persistEditor();
       await signInWithGoogle();
-      toast("Signed in. Your notes on this device will sync.");
-    } catch (e) {
-      const code = (e as { code?: string }).code ?? "";
-      if (!code.includes("popup-closed"))
-        toast.error("Sign-in didn't complete. Try again.");
-    } finally {
+    } catch {
+      toast.error("Sign-in didn't start. Try again.");
       setBusy(false);
     }
   };

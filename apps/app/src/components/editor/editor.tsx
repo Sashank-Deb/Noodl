@@ -47,7 +47,7 @@ import { saveImageAsset, takeSnapshot } from "@/lib/db";
 import { schedulePush } from "@/lib/sync";
 import { ancestorsText, flattenVisible, newId, safeUrl, toOutline } from "@/lib/tree";
 import { download, fromIndentedText, safeFilename, toHTML, toJSON, toMarkdown, toPlainText } from "@/lib/io";
-import { aiAvailable, expandNode, rewriteNode, type RewriteMode } from "@/lib/ai/ai";
+import { expandNode, rewriteNode, useAIAvailable, type RewriteMode } from "@/lib/ai/ai";
 import type { MapStyle } from "@/lib/types";
 import { MindMapView, getLastLayout, type Viewport } from "./mindmap-view";
 import { OutlineView } from "./outline-view";
@@ -79,6 +79,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
   const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, k: 1 });
   const contentRef = useRef<HTMLDivElement>(null);
   const [aiBusy, setAiBusy] = useState(false);
+  const aiReady = useAIAvailable();
   const [aiMenuOpen, setAiMenuOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
 
@@ -88,7 +89,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
       const mod = e.metaKey || e.ctrlKey;
       if (!mod || (e.target as HTMLElement | null)?.closest?.("[role=dialog]")) return;
       const k = e.key.toLowerCase();
-      if (k === "j" && !e.shiftKey && settings.aiEnabled && aiAvailable()) {
+      if (k === "j" && !e.shiftKey && settings.aiEnabled && aiReady) {
         e.preventDefault();
         useEditor.getState().edit(null);
         setAiMenuOpen(true);
@@ -99,7 +100,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [settings.aiEnabled]);
+  }, [settings.aiEnabled, aiReady]);
 
   // Version history: a snapshot every 5 minutes while the note is being edited.
   const snapRev = useRef(0);
@@ -524,7 +525,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
   };
 
   if (!note) return null;
-  const ai = settings.aiEnabled && aiAvailable();
+  const ai = settings.aiEnabled && aiReady;
 
   return (
     <div className="flex h-full min-w-0 flex-1 flex-col">
@@ -957,6 +958,6 @@ export function aiErrorMessage(e: unknown) {
   const m = String((e as Error)?.message ?? e);
   if (/rate|429|quota/i.test(m)) return "AI is busy (free quota). Try again in a minute.";
   if (/network|fetch|offline/i.test(m)) return "You're offline. AI needs a connection.";
-  if (/app.?check/i.test(m)) return "AI request was blocked by App Check. Reload and try again.";
+  if (/sign in|session/i.test(m)) return m;
   return "Gemini didn't respond. Try again.";
 }

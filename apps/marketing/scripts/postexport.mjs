@@ -2,7 +2,7 @@
 //
 // 1. Give generated metadata images a file extension. Next exports
 //    `opengraph-image` and `apple-icon` routes as extensionless files; static
-//    hosts (Firebase Hosting included) pick Content-Type from the extension, so
+//    hosts (Vercel included) pick Content-Type from the extension, so
 //    we rename them to `*.png` and rewrite the references in every page.
 //
 // 2. Remove the Next.js client runtime from every exported HTML page.
@@ -56,7 +56,7 @@ for (const file of walk(outDir)) {
 }
 console.log(`postexport: renamed ${renamed} generated images to .png`);
 
-// Duplicate 404 routes: Firebase Hosting serves /404.html for unknown paths.
+// Duplicate 404 routes: Vercel serves /404.html for unknown paths.
 rmSync(join(outDir, "_not-found"), { recursive: true, force: true });
 rmSync(join(outDir, "404"), { recursive: true, force: true });
 

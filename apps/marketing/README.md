@@ -3,7 +3,7 @@
 Static, pre-rendered marketing site for noodl. Next.js 16 App Router,
 React Server Components only, Tailwind v4 + the shared `@noodl/tokens`.
 It is exported to plain HTML (`output: "export"`, `trailingSlash: true`) and
-deployed to Firebase Hosting at the domain root; the web app is served from the
+deployed to Vercel at the domain root (see the root `vercel.json`); the web app is served from the
 same domain under `/app/`.
 
 **Zero client JavaScript.** No page contains a client component, so after
@@ -30,7 +30,7 @@ Run from the repo root (pnpm workspace):
 
 | Variable | Default | Used for |
 |---|---|---|
-| `NEXT_PUBLIC_SITE_URL` | `https://noodl.web.app` | `metadataBase`, canonical URLs, Open Graph URLs, `sitemap.xml`, `robots.txt`, JSON-LD |
+| `NEXT_PUBLIC_SITE_URL` | `https://noodl.vercel.app` | `metadataBase`, canonical URLs, Open Graph URLs, `sitemap.xml`, `robots.txt`, JSON-LD |
 
 Set it at build time for a custom domain, e.g. `NEXT_PUBLIC_SITE_URL=https://noodl.example pnpm --filter marketing build`.
 
@@ -45,7 +45,7 @@ Set it at build time for a custom domain, e.g. `NEXT_PUBLIC_SITE_URL=https://noo
 | `/use-cases/students/`, `/use-cases/meeting-notes/`, `/use-cases/writers/` | Long-form guides (~600–800 words each). |
 | `/privacy/` | Privacy notice — **marked "Draft — have this reviewed before launch"**, with two `[Reviewer: …]` placeholders (Gemini data-use terms, contact address). |
 | `/blog/` + `/blog/outline-or-mind-map/`, `/blog/how-ai-typeahead-works/` | Posts are TSX pages; metadata lives in `src/lib/posts.ts`. |
-| `404.html` | Custom not-found page (`noindex`). Firebase Hosting serves it automatically. |
+| `404.html` | Custom not-found page (`noindex`). Vercel serves it automatically for unknown paths. |
 | `sitemap.xml`, `robots.txt`, `manifest.webmanifest`, `icon.svg`, `apple-icon.png`, `icon-192/512.png`, `**/opengraph-image.png` | Generated at build time. |
 
 All app deep links come from `APP_LINKS` in `src/lib/site.ts`:
@@ -94,59 +94,11 @@ next to it (copy an existing one). The sitemap and blog index pick it up.
 - [x] No third-party requests, no analytics, no client JS.
 - [ ] Before launch: set `NEXT_PUBLIC_SITE_URL` to the production domain, get the privacy notice reviewed, submit the sitemap in Search Console, validate with the Rich Results Test.
 
-## Firebase Hosting headers (for the root `firebase.json`)
+## Hosting headers
 
-`out/` is the hosting `public` directory for the site root (the app's own
-`/app/**` rules take precedence for that path). Suggested `headers` block:
-
-```json
-{
-  "hosting": {
-    "public": "apps/marketing/out",
-    "cleanUrls": false,
-    "trailingSlash": true,
-    "headers": [
-      {
-        "source": "/_next/static/**",
-        "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
-      },
-      {
-        "source": "**/*.@(png|svg|webmanifest)",
-        "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }]
-      },
-      {
-        "source": "**/*.html",
-        "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
-      },
-      {
-        "source": "/@(sitemap.xml|robots.txt)",
-        "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }]
-      },
-      {
-        "source": "**",
-        "headers": [
-          { "key": "X-Content-Type-Options", "value": "nosniff" },
-          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-          { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
-          { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
-          { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" }
-        ]
-      }
-    ]
-  }
-}
-```
-
-Content-Security-Policy for the marketing pages only (they have no scripts except
-JSON-LD data blocks, which CSP does not execute; scope it so it doesn't apply to `/app/**`):
-
-```
-default-src 'self'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
-```
-
-(`'unsafe-inline'` styles are needed for the inline `style` attributes used by the
-product illustrations and SVG mini maps.) Firebase Hosting compresses
-HTML/CSS/SVG with Brotli/gzip automatically.
+Caching and security headers live in the root `vercel.json`: immutable caching
+for `/_next/static/**`, revalidation for HTML, HSTS, `nosniff`, `X-Frame-Options`,
+`Referrer-Policy`, `Permissions-Policy`, and a report-only CSP for `/app/**`.
 
 ## Verification (last run)
 

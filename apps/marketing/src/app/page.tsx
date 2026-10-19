@@ -12,7 +12,7 @@ export const metadata = pageMetadata({
   title: "noodl: every note is a list and a map",
   absoluteTitle: true,
   description:
-    "Write an outline, flip it into a mind map, flip it back. Free in your browser, works offline, no account until you want sync. Suggestions on every node follow what your map is about.",
+    "Write an outline, flip it into a mind map, flip it back. Free in your browser, works offline, no account until you want sync or AI. Suggestions on every node follow what your map is about.",
   path: "/",
 });
 
@@ -44,7 +44,7 @@ export default function Home() {
               suggestions follow what the rest of your map is about.
             </p>
             <CtaButtons />
-            <p className="hero-fine">Free in your browser. Works offline. No account until you want sync.</p>
+            <p className="hero-fine">Free in your browser. Works offline. No account until you want sync or AI.</p>
           </div>
         </div>
         <HeroStage />
@@ -234,14 +234,14 @@ export default function Home() {
                 <CloudIcon size={20} />
                 Sync is opt-in
               </h3>
-              <p>Sign in with Google to sync your notes to Firestore under your account, and open them anywhere.</p>
+              <p>Sign in with Google or an email link to sync your notes under your account, and open them anywhere.</p>
             </div>
             <div>
               <h3 className="h3">
                 <SparkleIcon size={20} />
                 AI only when it&apos;s on
               </h3>
-              <p>Prompts and nearby node text go to Google Gemini via Firebase, and only while AI is switched on.</p>
+              <p>AI is for signed-in users. Prompts and nearby node text go to Google Gemini only while AI is switched on.</p>
             </div>
             <div>
               <h3 className="h3">

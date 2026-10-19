@@ -2,7 +2,7 @@
 
 Run it: double-click **Start noodl.command** (production build, http://localhost:4320/app/) or **Dev noodl.command** (hot reload, http://localhost:3000/app/). First time on macOS: right-click → Open, because the scripts aren't signed. Needs Node.js 22+ to build; serving an existing `dist/` also works with Python 3.
 
-Without Firebase config the app runs in **local mode**: no sign-in, no sync, and typeahead suggests from your own notes (AI is hidden). To test AI/sync, fill `apps/app/.env.local` (see `.env.example`) and run Dev mode.
+Without Supabase config the app runs in **local mode**: no sign-in, no sync, and typeahead suggests from your own notes (AI is hidden; AI needs sign-in). To test sign-in, sync and AI, copy `.env.example` to `.env.local` in the repo folder, fill in Supabase + `GEMINI_API_KEY`, then run Start with `--rebuild` or Dev mode.
 
 ## Core editing (map view)
 - [ ] First visit opens the "Welcome to noodl" note
@@ -41,8 +41,8 @@ Without Firebase config the app runs in **local mode**: no sign-in, no sync, and
 - [ ] Settings → General → Map layout: Balanced puts branches on both sides; ← / → navigate outward on each side
 - [ ] Settings → AI: suggestion delay slider, "Tab accepts suggestions" off → Tab always adds a child (→ still accepts)
 - [ ] Phone (devtools device mode with touch): while editing, a bar above the keyboard shows suggestion chips + indent / outdent / new sibling / Done
-- [ ] Conflict review: appears as "Needs review" in the top bar when sync finds edits from two devices (needs Firebase); Keep this / Keep the other / Keep both
-- [ ] AI rewrite (needs Firebase AI): ⌘J → Rewrite → preview with Replace / Insert below / Discard; Custom instruction…
+- [ ] Conflict review: appears as "Needs review" in the top bar when sync finds edits from two devices (needs Supabase); Keep this / Keep the other / Keep both
+- [ ] AI rewrite (needs sign-in + GEMINI_API_KEY): ⌘J → Rewrite → preview with Replace / Insert below / Discard; Custom instruction…
 - [ ] Big maps (import a large JSON/Markdown outline): panning stays smooth
 
 ## Other

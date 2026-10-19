@@ -23,7 +23,7 @@ fi
 if command -v node >/dev/null 2>&1; then
   PORT="$PORT" node scripts/serve-dist.mjs dist
 else
-  echo "Serving with Python (install Node.js for the exact Firebase-like routing)."
+  echo "Serving with Python (install Node.js for the exact Vercel-like routing and the AI function)."
   echo "  Marketing site → http://localhost:$PORT/   Web app → http://localhost:$PORT/app/"
   cd dist && python3 -m http.server "$PORT"
 fi

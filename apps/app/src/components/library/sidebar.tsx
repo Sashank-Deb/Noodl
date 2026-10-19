@@ -49,7 +49,7 @@ import { cloneNote, countNodes, newId } from "@/lib/tree";
 import { download, safeFilename, toJSON } from "@/lib/io";
 import type { Folder as FolderT, Note } from "@/lib/types";
 import { useEditor } from "@/store/editor-store";
-import { aiAvailable } from "@/lib/ai/ai";
+import { useAIAvailable } from "@/lib/ai/ai";
 import { useSettings } from "@/context/settings";
 import { Mark } from "@/components/mark";
 import { AccountChip } from "./account-chip";
@@ -86,6 +86,7 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
   const [confirmFolder, setConfirmFolder] = useState<FolderT | null>(null);
   const [dropFolder, setDropFolder] = useState<string | null>(null);
   const { settings } = useSettings();
+  const aiReady = useAIAvailable();
 
   const live = useMemo(() => (notes ?? []).filter((n) => !n.deletedAt).sort((a, b) => b.updatedAt - a.updatedAt), [notes]);
   const trash = useMemo(() => (notes ?? []).filter((n) => n.deletedAt).sort((a, b) => (b.deletedAt ?? 0) - (a.deletedAt ?? 0)), [notes]);
@@ -240,11 +241,11 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
           <span className="flex-1 text-left">Search notes</span>
           <kbd className="kbd">{MOD}K</kbd>
         </button>
-        <div className={cn("mt-2.5 mb-3 grid gap-2", settings.aiEnabled && aiAvailable() ? "grid-cols-2" : "grid-cols-1")}>
+        <div className={cn("mt-2.5 mb-3 grid gap-2", settings.aiEnabled && aiReady ? "grid-cols-2" : "grid-cols-1")}>
           <Button onClick={() => onNew(null)} className="h-9 rounded-[10px]">
             <Plus className="size-4" /> New note
           </Button>
-          {settings.aiEnabled && aiAvailable() && (
+          {settings.aiEnabled && aiReady && (
             <Button variant="outline" onClick={onGenerate} className="h-9 rounded-[10px] border-0 bg-(--ai-soft) text-(--ai-strong) shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--ai)_55%,transparent)] hover:bg-(--ai-soft) hover:brightness-[0.98]">
               <Sparkles className="size-4" /> Generate
             </Button>

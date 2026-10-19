@@ -1,26 +1,40 @@
 /**
- * Gemini via Firebase AI Logic. The browser calls Gemini directly; the API key
- * never leaves Google's side and App Check stops abuse, so there's no proxy
- * server to run or pay for. Works on the free Spark plan (Gemini Developer API
- * free tier). Every call degrades gracefully: callers fall back to local
- * suggestions when AI is off, offline, unconfigured or rate-limited.
+ * AI calls go to our own serverless function (/api/ai on Vercel), which holds
+ * the Gemini API key (Google AI Studio, free tier), checks the caller's
+ * Supabase session and rate-limits per user. AI is for signed-in users only;
+ * guests (and anyone offline / rate-limited / with AI off) get local
+ * suggestions from their own notes instead.
  */
 import { create } from "zustand";
-import { firebaseConfigured, getFirebaseApp, GEMINI_MODEL } from "../firebase";
-import { fromIndentedText, } from "../io";
+import { AI_ENDPOINT, getAccessToken, supabaseConfigured } from "../supabase";
+import { fromIndentedText } from "../io";
 import type { OutlineItem } from "../tree";
-import type { GenerativeModel } from "firebase/ai";
 
 export type AIStatus = "idle" | "loading" | "ok" | "rate-limited" | "offline" | "unavailable" | "error";
 
-export const useAIStatus = create<{ status: AIStatus; set: (s: AIStatus) => void }>((set) => ({
-  status: firebaseConfigured ? "idle" : "unavailable",
+interface AIState {
+  status: AIStatus;
+  /** True when a user is signed in (AI needs a session). */
+  signedIn: boolean;
+  set: (s: AIStatus) => void;
+  setSignedIn: (v: boolean) => void;
+}
+
+export const useAIStatus = create<AIState>((set) => ({
+  status: supabaseConfigured ? "idle" : "unavailable",
+  signedIn: false,
   set: (status) => set({ status }),
+  setSignedIn: (signedIn) => set({ signedIn }),
 }));
 
-export const aiAvailable = () => firebaseConfigured;
+/** AI can be offered at all on this deployment (sign-in is configured). */
+export const aiConfigured = supabaseConfigured;
+/** AI is usable right now (configured and signed in). */
+export const aiAvailable = () => supabaseConfigured && useAIStatus.getState().signedIn;
+/** Reactive version for components. */
+export const useAIAvailable = () => useAIStatus((s) => supabaseConfigured && s.signedIn);
 
-// --- Client-side rate limiting (protects the shared free quota) -------------
+// --- Client-side rate limiting (the server enforces its own limit too) -------
 const SUGGEST_PER_MIN = 12;
 let suggestTimes: number[] = [];
 let cooldownUntil = 0;
@@ -33,9 +47,16 @@ function allowSuggest(now = Date.now()) {
   return true;
 }
 
+class AIError extends Error {
+  constructor(message: string, public status = 0) {
+    super(message);
+  }
+}
+
 function handleError(e: unknown): never {
+  const status = (e as AIError)?.status ?? 0;
   const msg = String((e as Error)?.message ?? e);
-  if (/429|quota|rate|RESOURCE_EXHAUSTED/i.test(msg)) {
+  if (status === 429 || /rate|quota/i.test(msg)) {
     cooldownUntil = Date.now() + 60_000;
     useAIStatus.getState().set("rate-limited");
   } else if (typeof navigator !== "undefined" && !navigator.onLine) {
@@ -46,41 +67,19 @@ function handleError(e: unknown): never {
   throw e;
 }
 
-// --- Model handles (lazy) ----------------------------------------------------
-let jsonModel: Promise<GenerativeModel> | null = null;
-let textModel: Promise<GenerativeModel> | null = null;
-
-const SYSTEM = `You help people build mind maps and outline notes. Nodes are short (usually 1-8 words), concrete and specific. Never add numbering, bullets, quotes or emoji unless the user did. Reply in the same language as the user's text.`;
-
-async function getModels() {
-  if (!firebaseConfigured) throw new Error("AI unavailable");
-  if (!jsonModel || !textModel) {
-    const app = await getFirebaseApp();
-    const { getAI, getGenerativeModel, GoogleAIBackend, Schema } = await import("firebase/ai");
-    const ai = getAI(app, { backend: new GoogleAIBackend() });
-    jsonModel = Promise.resolve(
-      getGenerativeModel(ai, {
-        model: GEMINI_MODEL,
-        systemInstruction: SYSTEM,
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: Schema.object({
-            properties: { suggestions: Schema.array({ items: Schema.string() }) },
-          }),
-          temperature: 0.6,
-          maxOutputTokens: 200,
-        },
-      }),
-    );
-    textModel = Promise.resolve(
-      getGenerativeModel(ai, {
-        model: GEMINI_MODEL,
-        systemInstruction: SYSTEM,
-        generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
-      }),
-    );
-  }
-  return { json: await jsonModel!, text: await textModel! };
+/** POST a task to the AI function. */
+async function callAI<T>(body: Record<string, unknown>, signal?: AbortSignal): Promise<T> {
+  const token = await getAccessToken();
+  if (!token) throw new AIError("Sign in to use AI", 401);
+  const res = await fetch(AI_ENDPOINT, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+    signal,
+  });
+  const data = (await res.json().catch(() => ({}))) as { error?: string } & T;
+  if (!res.ok) throw new AIError(data.error || `AI request failed (${res.status})`, res.status);
+  return data;
 }
 
 // --- Typeahead suggestions ---------------------------------------------------
@@ -108,16 +107,10 @@ export async function suggest(c: SuggestContext, signal?: AbortSignal): Promise<
     useAIStatus.getState().set("rate-limited");
     throw new Error("rate-limited");
   }
-  const { json } = await getModels();
-  const where = c.path.length ? c.path.map((p, i) => `${"  ".repeat(i)}- ${p}`).join("\n") : "(this is the central topic)";
-  const sib = c.siblings.length ? c.siblings.map((s) => `- ${s}`).join("\n") : "(none)";
-  const prompt = c.text.trim()
-    ? `Mind map branch (root first):\n${where}\n\nExisting sibling nodes:\n${sib}\n\nThe user is typing a new node and has written: "${c.text}"\nGive 4 suggestions for the full node text. Each suggestion MUST start with exactly "${c.text}" (same characters) and continue it naturally. Do not repeat siblings.\nReturn JSON {"suggestions": [...]}.`
-    : `Mind map branch (root first):\n${where}\n\nExisting sibling nodes:\n${sib}\n\nSuggest 4 short ideas for a new node at this position that are different from the siblings.\nReturn JSON {"suggestions": [...]}.`;
   useAIStatus.getState().set("loading");
   try {
-    const res = await json.generateContent(prompt, { signal });
-    const parsed = JSON.parse(res.response.text()) as { suggestions?: unknown };
+    const res = await callAI<{ suggestions?: unknown }>({ task: "suggest", path: c.path.slice(-6), siblings: c.siblings.slice(0, 12), text: c.text }, signal);
+    const parsed = res;
     const list = Array.isArray(parsed.suggestions)
       ? parsed.suggestions.filter((s): s is string => typeof s === "string" && !!s.trim()).map((s) => s.trim())
       : [];
@@ -135,24 +128,21 @@ export async function suggest(c: SuggestContext, signal?: AbortSignal): Promise<
   }
 }
 
-// --- Bigger generations --------------------------------------------------------
-async function generateText(prompt: string): Promise<string> {
+// --- Bigger generations (prompts are built on the server) ----------------------
+async function generateText(body: Record<string, unknown>): Promise<string> {
   if (Date.now() < cooldownUntil) {
     useAIStatus.getState().set("rate-limited");
     throw new Error("AI is rate-limited. Try again in a minute.");
   }
-  const { text } = await getModels();
   useAIStatus.getState().set("loading");
   try {
-    const res = await text.generateContent(prompt);
+    const res = await callAI<{ text?: string }>(body);
     useAIStatus.getState().set("ok");
-    return res.response.text();
+    return res.text ?? "";
   } catch (e) {
     handleError(e);
   }
 }
-
-const OUTLINE_FORMAT = `Output ONLY an indented Markdown bullet list using "- " and two spaces per level. The first line is the central topic (no indentation). No headings, no prose, no code fences.`;
 
 function parseOutline(raw: string, fallbackTitle: string): OutlineItem {
   const cleaned = raw.replace(/```[a-z]*\n?|```/g, "");
@@ -162,39 +152,23 @@ function parseOutline(raw: string, fallbackTitle: string): OutlineItem {
 }
 
 export async function generateMap(prompt: string, depth = 3): Promise<OutlineItem> {
-  const raw = await generateText(
-    `Create a well-structured mind map about: ${prompt}\nUse ${depth} levels below the central topic, 3-7 branches per level where useful, concise node text.\n${OUTLINE_FORMAT}`,
-  );
+  const raw = await generateText({ task: "generate", prompt: prompt.slice(0, 2000), depth });
   return parseOutline(raw, prompt.slice(0, 60));
 }
 
 export async function summarizeToMap(source: string): Promise<OutlineItem> {
-  const raw = await generateText(
-    `Summarize the following content into a mind map that captures its structure and key points.\n${OUTLINE_FORMAT}\n\nCONTENT:\n${source.slice(0, 30_000)}`,
-  );
+  const raw = await generateText({ task: "summarize", source: source.slice(0, 20_000) });
   return parseOutline(raw, "Summary");
 }
 
-export async function expandNode(path: string[], text: string, siblings: string[]): Promise<OutlineItem[]> {
-  const raw = await generateText(
-    `Mind map branch: ${[...path, text].join(" > ")}\nExisting children: ${siblings.join("; ") || "none"}\nSuggest 3-6 new child nodes for "${text}" (one level, optionally one more level beneath each).\nOutput ONLY an indented Markdown bullet list ("- ", two spaces per level).`,
-  );
+export async function expandNode(path: string[], text: string, children: string[]): Promise<OutlineItem[]> {
+  const raw = await generateText({ task: "expand", path: path.slice(-6), text, children: children.slice(0, 20) });
   return fromIndentedText(raw.replace(/```[a-z]*\n?|```/g, ""));
 }
 
 export type RewriteMode = "shorter" | "expand" | "grammar" | "clearer" | "question" | "custom";
 
 export async function rewriteNode(text: string, mode: RewriteMode, path: string[], custom?: string): Promise<string> {
-  const instruction = {
-    shorter: "Make it shorter and punchier.",
-    expand: "Make it a bit more specific and descriptive (max ~15 words).",
-    grammar: "Fix grammar and spelling only.",
-    clearer: "Make it clearer.",
-    question: "Turn it into a short question that this node answers or raises.",
-    custom: custom || "Improve it.",
-  }[mode];
-  const raw = await generateText(
-    `Context: ${path.join(" > ") || "(central topic)"}\nRewrite this mind map node. ${instruction}\nNode: ${text}\nReply with only the rewritten node text.`,
-  );
+  const raw = await generateText({ task: "rewrite", text, mode, path: path.slice(-6), custom: custom?.slice(0, 300) });
   return raw.trim().replace(/^["'“]|["'”]$/g, "").replace(/^[-*•]\s+/, "");
 }

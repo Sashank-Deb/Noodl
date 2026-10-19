@@ -5,7 +5,7 @@
  */
 
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || "https://noodl.web.app"
+  process.env.NEXT_PUBLIC_SITE_URL || "https://noodl.vercel.app"
 ).replace(/\/+$/, "");
 
 export const SITE_NAME = "noodl";

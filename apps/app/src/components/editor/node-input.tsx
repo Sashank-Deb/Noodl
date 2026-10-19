@@ -18,7 +18,7 @@ import { CornerDownLeft, History, IndentDecrease, IndentIncrease, Loader2, Spark
 import { cn } from "@/lib/utils";
 import { useEditor } from "@/store/editor-store";
 import { ancestorsText, siblingTexts } from "@/lib/tree";
-import { cachedSuggestions, suggest, aiAvailable, useAIStatus } from "@/lib/ai/ai";
+import { cachedSuggestions, suggest, useAIAvailable, useAIStatus } from "@/lib/ai/ai";
 import { localIndex } from "@/lib/ai/local-suggest";
 import { useSettings } from "@/context/settings";
 
@@ -73,7 +73,8 @@ export function NodeInput({ nodeId, className, placeholder, onAction, autoFocus,
   const [sel, setSel] = useState<{ v: string; i: number }>({ v: "", i: -1 });
   const [acceptedFor, setAcceptedFor] = useState<string | null>(null);
   const listId = useId();
-  const useAI = settings.aiEnabled && aiAvailable();
+  const aiReady = useAIAvailable();
+  const useAI = settings.aiEnabled && aiReady;
   const phone = usePhone();
   const delay = Math.min(600, Math.max(150, settings.typeaheadDelay ?? TYPEAHEAD.debounceMs));
 

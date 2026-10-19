@@ -4,7 +4,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata = pageMetadata({
   title: "Privacy",
   description:
-    "What noodl stores and where: notes in your browser's IndexedDB, optional sync to Google Firestore when you sign in, and AI requests to Google Gemini only while AI is on. No ads, no tracking cookies.",
+    "What noodl stores and where: notes in your browser's IndexedDB, optional sync to Supabase when you sign in, and AI requests to Google Gemini (through noodl's server) for signed-in users while AI is on. No ads, no tracking cookies.",
   path: "/privacy/",
 });
 
@@ -49,14 +49,14 @@ export default function PrivacyPage() {
                   <td>Nothing about your notes</td>
                 </tr>
                 <tr>
-                  <th scope="row">Signed in with Google</th>
-                  <td>IndexedDB, plus Google Firestore under your account</td>
+                  <th scope="row">Signed in</th>
+                  <td>IndexedDB, plus Supabase (Postgres) under your account</td>
                   <td>Your notes, to sync them</td>
                 </tr>
                 <tr>
-                  <th scope="row">AI on</th>
+                  <th scope="row">Signed in, AI on</th>
                   <td>Unchanged</td>
-                  <td>The text needed for each AI request, to Google Gemini via Firebase</td>
+                  <td>The text needed for each AI request, to Google Gemini via noodl&apos;s server</td>
                 </tr>
               </tbody>
             </table>
@@ -76,13 +76,13 @@ export default function PrivacyPage() {
 
           <h2>Sign-in and sync (optional)</h2>
           <p>
-            If you choose to sign in with Google (or with an email sign-in link, where offered), we use{" "}
-            <strong>Firebase Authentication</strong> to identify your account. Firebase receives your email address
-            and, for Google sign-in, your account&apos;s basic profile (name and photo).
+            If you choose to sign in with Google or with an email sign-in link, we use <strong>Supabase Auth</strong>{" "}
+            to identify your account. Supabase receives your email address and, for Google sign-in, your account&apos;s
+            basic profile (name and photo).
           </p>
           <p>
-            While you are signed in, your notes are synced to <strong>Google Cloud Firestore</strong>, stored under your
-            account&apos;s user ID so that only you can read or change them, and copied back to IndexedDB on each device
+            While you are signed in, your notes are synced to a <strong>Supabase</strong> Postgres database, stored
+            under your account&apos;s user ID with row-level security so that only you can read or change them, and copied back to IndexedDB on each device
             where you sign in. When you first sign in, notes made in guest mode on that device are merged into your
             account. Two things are never synced and stay only on the device that created them: images you add to
             notes, and version snapshots.
@@ -90,15 +90,16 @@ export default function PrivacyPage() {
           <p>
             Signing out stops syncing. You are asked whether to keep a copy of your notes on that device or remove
             them from it. To have
-            synced notes deleted from Firestore, delete them in the app while signed in (they are removed for good after
+            synced notes deleted from the cloud, delete them in the app while signed in (they are removed for good after
             30 days in the Recycle Bin), or contact us.
           </p>
 
-          <h2>AI features (only when AI is on)</h2>
+          <h2>AI features (signed in, and only when AI is on)</h2>
           <p>
-            AI features are provided by <strong>Google Gemini</strong> through <strong>Firebase AI Logic</strong>.
-            Requests go from your browser to Google; they are not sent to a server we run. What is sent depends on the
-            feature:
+            AI features are provided by <strong>Google Gemini</strong> (Gemini API). They are available only while you
+            are signed in. Your browser sends each request to a small noodl function on our host (Vercel), which checks
+            that you are signed in, applies a rate limit, and forwards the request to Google. We do not store request
+            content. What is sent depends on the feature:
           </p>
           <ul>
             <li>
@@ -121,10 +122,11 @@ export default function PrivacyPage() {
             </li>
           </ul>
           <p>
-            Your other notes are never sent. Google processes these requests under its own terms for the Gemini API;
-            depending on how the service is configured, Google may retain request content for a limited period to
-            provide the service and prevent abuse.{" "}
-            <em>[Reviewer: confirm the Gemini API tier and data-use terms that apply to this project.]</em>
+            Your other notes are never sent. Google processes these requests under its own terms for the Gemini API.
+            While noodl uses the free tier of the Gemini API, Google&apos;s terms allow it to use request and response
+            content to improve its products, which may include human review. Don&apos;t put anything sensitive in a node
+            while AI is on, or switch AI off.{" "}
+            <em>[Reviewer: re-check this paragraph against the current Gemini API terms before launch.]</em>
           </p>
           <p>
             You can switch AI off entirely in <strong>Settings › AI</strong>. With AI off, nothing is sent to Gemini,
@@ -143,15 +145,14 @@ export default function PrivacyPage() {
 
           <h2>Hosting</h2>
           <p>
-            This website and the app are served by <strong>Firebase Hosting</strong>. Like any web server, it processes
-            your IP address and request details to deliver pages, and Google may keep short-lived server logs for
-            security and reliability.
+            This website, the app and the AI function are served by <strong>Vercel</strong>. Like any web host, it
+            processes your IP address and request details to deliver pages, and keeps short-lived logs for security and
+            reliability.
           </p>
 
           <h2>Children</h2>
           <p>
-            noodl is a general-purpose tool and is not directed at children under 13. Signing in requires a
-            Google account, which is subject to Google&apos;s own age requirements.
+            noodl is a general-purpose tool and is not directed at children under 13.
           </p>
 
           <h2>Changes and contact</h2>

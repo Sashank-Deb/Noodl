@@ -1,13 +1,15 @@
 "use client";
 
 /**
- * Auth is optional. Guests never download the Firebase Auth SDK unless they
- * open the sign-in dialog (or signed in before on this device).
+ * Auth is optional (Supabase Auth: Google OAuth + email magic link). Guests
+ * never download supabase-js unless they open sign-in, signed in before on
+ * this device, or land here from a sign-in redirect.
  */
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import type { User } from "firebase/auth";
-import { firebaseConfigured, getFirebaseApp } from "@/lib/firebase";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import type { User } from "@supabase/supabase-js";
+import { getSupabase, supabaseConfigured } from "@/lib/supabase";
 import { startSync, stopSync } from "@/lib/sync";
+import { useAIStatus } from "@/lib/ai/ai";
 import { useSettings } from "./settings";
 
 export interface AuthUser {
@@ -36,64 +38,67 @@ const Ctx = createContext<AuthCtx>({
 });
 
 const WAS_SIGNED_IN = "mn:wasSignedIn";
-const EMAIL_FOR_LINK = "mn:emailForSignIn";
 
-async function auth() {
-  const app = await getFirebaseApp();
-  const mod = await import("firebase/auth");
-  return { a: mod.getAuth(app), mod };
-}
+const toUser = (u: User): AuthUser => ({
+  uid: u.id,
+  name: (u.user_metadata?.full_name as string) ?? (u.user_metadata?.name as string) ?? null,
+  email: u.email ?? null,
+  photoURL: (u.user_metadata?.avatar_url as string) ?? (u.user_metadata?.picture as string) ?? null,
+});
 
-const toUser = (u: User): AuthUser => ({ uid: u.uid, name: u.displayName, email: u.email, photoURL: u.photoURL });
+/** Where Supabase sends people back after Google / the email link. */
+const redirectTo = () => `${window.location.origin}/app/`;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(false);
-  const [listening, setListening] = useState(false);
+  const listening = useRef(false);
   const { settings } = useSettings();
 
   const listen = useCallback(async () => {
-    if (listening || !firebaseConfigured) return;
-    setListening(true);
+    if (listening.current || !supabaseConfigured) return;
+    listening.current = true;
     setLoading(true);
-    const { a, mod } = await auth();
-    // Complete an email-link sign-in if we landed on one.
-    if (mod.isSignInWithEmailLink(a, window.location.href)) {
-      let email = localStorage.getItem(EMAIL_FOR_LINK);
-      if (!email) email = window.prompt("Confirm your email to finish signing in") ?? "";
-      if (email) {
-        try {
-          await mod.signInWithEmailLink(a, email, window.location.href);
-        } finally {
-          localStorage.removeItem(EMAIL_FOR_LINK);
-          const url = new URL(window.location.href);
-          ["apiKey", "oobCode", "mode", "lang", "continueUrl"].forEach((k) => url.searchParams.delete(k));
-          window.history.replaceState(null, "", url.toString());
-        }
-      }
-    }
-    mod.onAuthStateChanged(a, (u) => {
-      setUser(u ? toUser(u) : null);
+    const sb = await getSupabase();
+    sb.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ? toUser(session.user) : null);
       setLoading(false);
       try {
-        if (u) localStorage.setItem(WAS_SIGNED_IN, "1");
+        if (session?.user) localStorage.setItem(WAS_SIGNED_IN, "1");
         else localStorage.removeItem(WAS_SIGNED_IN);
       } catch {}
     });
-  }, [listening]);
+    // Picks up the session (and finishes an OAuth / magic-link redirect: ?code=…).
+    const { data } = await sb.auth.getSession();
+    setUser(data.session?.user ? toUser(data.session.user) : null);
+    setLoading(false);
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("code") || url.hash.includes("access_token")) {
+      url.searchParams.delete("code");
+      url.hash = "";
+      window.history.replaceState(null, "", url.toString());
+    }
+  }, []);
 
   useEffect(() => {
-    if (!firebaseConfigured) return;
+    if (!supabaseConfigured) return;
     let should = false;
     try {
-      should = localStorage.getItem(WAS_SIGNED_IN) === "1" || window.location.search.includes("oobCode=");
+      should =
+        localStorage.getItem(WAS_SIGNED_IN) === "1" ||
+        new URLSearchParams(window.location.search).has("code") ||
+        window.location.hash.includes("access_token");
     } catch {}
     if (!should) return;
     const t = setTimeout(() => void listen(), 0);
     return () => clearTimeout(t);
   }, [listen]);
 
-  // Start/stop cloud sync with the session.
+  // AI needs a session; start/stop cloud sync with it too.
+  useEffect(() => {
+    useAIStatus.getState().setSignedIn(!!user);
+  }, [user]);
+
   useEffect(() => {
     if (user && settings.syncEnabled) void startSync(user.uid);
     else void stopSync();
@@ -101,32 +106,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = useCallback(async () => {
     await listen();
-    const { a, mod } = await auth();
-    const provider = new mod.GoogleAuthProvider();
-    try {
-      await mod.signInWithPopup(a, provider);
-    } catch (e) {
-      const code = (e as { code?: string }).code;
-      if (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment") {
-        await mod.signInWithRedirect(a, provider);
-      } else throw e;
-    }
+    const sb = await getSupabase();
+    const { error } = await sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: redirectTo() } });
+    if (error) throw error;
   }, [listen]);
 
-  const sendEmailLink = useCallback(async (email: string) => {
-    const { a, mod } = await auth();
-    await mod.sendSignInLinkToEmail(a, email, { url: window.location.origin + "/", handleCodeInApp: true });
-    localStorage.setItem(EMAIL_FOR_LINK, email);
-  }, []);
+  const sendEmailLink = useCallback(
+    async (email: string) => {
+      await listen();
+      const sb = await getSupabase();
+      const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo() } });
+      if (error) throw error;
+    },
+    [listen],
+  );
 
   const signOut = useCallback(async () => {
-    const { a, mod } = await auth();
+    const sb = await getSupabase();
     await stopSync();
-    await mod.signOut(a);
+    await sb.auth.signOut();
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, configured: firebaseConfigured, signInWithGoogle, sendEmailLink, signOut }),
+    () => ({ user, loading, configured: supabaseConfigured, signInWithGoogle, sendEmailLink, signOut }),
     [user, loading, signInWithGoogle, sendEmailLink, signOut],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
