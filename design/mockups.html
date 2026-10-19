@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MindNote Web Mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=JetBrains+Mono:wght@400;500&family=Onest:wght@400..700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --radius: 0.75rem; /* 12px. sm = 8, md = 10, lg = 12, xl = 16 */
+
+  /* ---- shadcn core ---------------------------------------------------- */
+  --background: oklch(0.99 0.003 250);
+  --foreground: oklch(0.22 0.02 262);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.02 262);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.02 262);
+  --primary: oklch(0.5 0.19 264);              /* ballpoint blue. white text: 6.6:1 */
+  --primary-foreground: oklch(0.99 0.005 264);
+  --secondary: oklch(0.955 0.008 255);
+  --secondary-foreground: oklch(0.28 0.03 262);
+  --muted: oklch(0.962 0.005 250);
+  --muted-foreground: oklch(0.5 0.016 262);    /* 5.3:1 on --background */
+  --accent: oklch(0.945 0.03 264);             /* hover / active row tint */
+  --accent-foreground: oklch(0.32 0.13 264);
+  --destructive: oklch(0.55 0.21 27);
+  --destructive-foreground: oklch(0.99 0.005 27);
+  --border: oklch(0.905 0.008 255);
+  --input: oklch(0.875 0.01 255);
+  --ring: oklch(0.55 0.19 264);                /* focus ring, 3:1+ on all surfaces */
+
+  /* ---- sidebar (library) ---------------------------------------------- */
+  --sidebar: oklch(0.975 0.004 250);
+  --sidebar-foreground: oklch(0.26 0.02 262);
+  --sidebar-primary: oklch(0.5 0.19 264);
+  --sidebar-primary-foreground: oklch(0.99 0.005 264);
+  --sidebar-accent: oklch(0.935 0.028 264);
+  --sidebar-accent-foreground: oklch(0.3 0.12 264);
+  --sidebar-border: oklch(0.91 0.007 255);
+  --sidebar-ring: oklch(0.55 0.19 264);
+
+  /* ---- canvas --------------------------------------------------------- */
+  --canvas: oklch(0.984 0.003 240);
+  --canvas-dot: oklch(0.855 0.007 255);        /* 1.2px dots, 22px grid */
+  --canvas-toolbar: oklch(1 0 0 / 0.92);       /* floating toolbars, with backdrop blur */
+  --canvas-shadow: 0 1px 0 oklch(0.22 0.02 262 / 0.04), 0 6px 20px -6px oklch(0.22 0.02 262 / 0.14);
+
+  /* ---- nodes ---------------------------------------------------------- */
+  --node-bg: oklch(1 0 0);
+  --node-fg: oklch(0.22 0.02 262);
+  --node-border: oklch(0.87 0.01 255);
+  --node-root-bg: oklch(0.27 0.03 264);        /* root = solid ink */
+  --node-root-fg: oklch(0.985 0.005 264);
+  --node-selected: oklch(0.55 0.19 264);       /* 2px ring + 4px halo at 18% */
+  --node-selected-halo: oklch(0.55 0.19 264 / 0.18);
+  --node-drop: oklch(0.55 0.19 264 / 0.35);    /* drag insertion line / drop target */
+  --ghost-text: oklch(0.58 0.012 262);         /* 4.5:1 on --node-bg */
+
+  /* ---- AI ------------------------------------------------------------- */
+  --ai: oklch(0.7 0.16 78);                    /* sparkle icon, AI ring (non-text 3:1 vs card via 1px darker edge) */
+  --ai-strong: oklch(0.46 0.11 68);            /* AI text/labels: 6.2:1 on white */
+  --ai-soft: oklch(0.965 0.05 92);             /* highlighter wash behind AI rows */
+  --ai-shimmer: oklch(0.93 0.07 90);           /* loading shimmer peak */
+
+  /* ---- sync status ---------------------------------------------------- */
+  --status-local: oklch(0.5 0.016 262);
+  --status-synced: oklch(0.52 0.13 150);
+  --status-syncing: oklch(0.5 0.19 264);
+  --status-offline: oklch(0.5 0.05 262);
+  --status-conflict: oklch(0.55 0.19 40);
+
+  /* ---- branch palette (strokes, L1 tints, outline dots) --------------- */
+  /* Each >= 3:1 against --canvas (non-text). L1 node fill = color-mix(branch 12%, node-bg). */
+  --branch-1: oklch(0.53 0.17 262);  /* ballpoint */
+  --branch-2: oklch(0.57 0.18 30);   /* tomato */
+  --branch-3: oklch(0.54 0.13 152);  /* fern */
+  --branch-4: oklch(0.6 0.135 68);   /* marigold (darkened) */
+  --branch-5: oklch(0.55 0.1 205);   /* lagoon */
+  --branch-6: oklch(0.52 0.17 302);  /* plum */
+  --branch-7: oklch(0.56 0.18 356);  /* rose */
+  --branch-8: oklch(0.52 0.07 55);   /* walnut */
+
+  /* ---- fonts ---------------------------------------------------------- */
+  --font-sans: "Onest", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Bricolage Grotesque", "Onest", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* ---- motion --------------------------------------------------------- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --dur-1: 90ms;   /* hover, press */
+  --dur-2: 160ms;  /* popovers, ghost text fade */
+  --dur-3: 240ms;  /* expand/collapse, view toggle */
+  --dur-4: 360ms;  /* restore view / fit camera */
+}
+.dark {
+  --background: oklch(0.195 0.012 262);
+  --foreground: oklch(0.94 0.008 250);
+  --card: oklch(0.225 0.014 262);
+  --card-foreground: oklch(0.94 0.008 250);
+  --popover: oklch(0.24 0.015 262);
+  --popover-foreground: oklch(0.94 0.008 250);
+  --primary: oklch(0.72 0.14 264);             /* dark text on it: 8:1 */
+  --primary-foreground: oklch(0.18 0.03 264);
+  --secondary: oklch(0.27 0.015 262);
+  --secondary-foreground: oklch(0.92 0.008 250);
+  --muted: oklch(0.26 0.012 262);
+  --muted-foreground: oklch(0.72 0.014 255);   /* 6.5:1 on --background */
+  --accent: oklch(0.3 0.04 264);
+  --accent-foreground: oklch(0.9 0.05 264);
+  --destructive: oklch(0.68 0.19 25);
+  --destructive-foreground: oklch(0.18 0.03 25);
+  --border: oklch(1 0 0 / 0.1);
+  --input: oklch(1 0 0 / 0.15);
+  --ring: oklch(0.74 0.14 264);
+
+  --sidebar: oklch(0.21 0.013 262);
+  --sidebar-foreground: oklch(0.92 0.008 250);
+  --sidebar-primary: oklch(0.72 0.14 264);
+  --sidebar-primary-foreground: oklch(0.18 0.03 264);
+  --sidebar-accent: oklch(0.29 0.035 264);
+  --sidebar-accent-foreground: oklch(0.92 0.04 264);
+  --sidebar-border: oklch(1 0 0 / 0.08);
+  --sidebar-ring: oklch(0.74 0.14 264);
+
+  --canvas: oklch(0.175 0.01 262);
+  --canvas-dot: oklch(0.32 0.012 262);
+  --canvas-toolbar: oklch(0.24 0.015 262 / 0.9);
+  --canvas-shadow: 0 1px 0 oklch(1 0 0 / 0.04) inset, 0 8px 24px -8px oklch(0 0 0 / 0.6);
+
+  --node-bg: oklch(0.235 0.014 262);
+  --node-fg: oklch(0.94 0.008 250);
+  --node-border: oklch(1 0 0 / 0.14);
+  --node-root-bg: oklch(0.9 0.03 264);         /* root inverts: paper-on-ink */
+  --node-root-fg: oklch(0.2 0.03 264);
+  --node-selected: oklch(0.74 0.14 264);
+  --node-selected-halo: oklch(0.74 0.14 264 / 0.22);
+  --node-drop: oklch(0.74 0.14 264 / 0.4);
+  --ghost-text: oklch(0.66 0.012 255);         /* 4.6:1 on --node-bg */
+
+  --ai: oklch(0.82 0.15 85);
+  --ai-strong: oklch(0.85 0.13 88);
+  --ai-soft: oklch(0.3 0.045 85);
+  --ai-shimmer: oklch(0.38 0.07 85);
+
+  --status-local: oklch(0.72 0.014 255);
+  --status-synced: oklch(0.76 0.14 152);
+  --status-syncing: oklch(0.74 0.14 264);
+  --status-offline: oklch(0.66 0.03 262);
+  --status-conflict: oklch(0.76 0.15 50);
+
+  --branch-1: oklch(0.74 0.13 262);
+  --branch-2: oklch(0.74 0.15 32);
+  --branch-3: oklch(0.76 0.13 152);
+  --branch-4: oklch(0.82 0.13 80);
+  --branch-5: oklch(0.76 0.1 205);
+  --branch-6: oklch(0.74 0.14 302);
+  --branch-7: oklch(0.74 0.15 356);
+  --branch-8: oklch(0.74 0.07 60);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--font-sans);background:var(--board);color:var(--foreground);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.ic{flex:none;display:block}
+
+/* board */
+:root{--board:oklch(0.94 0.006 255)}
+.board{max-width:1360px;margin:0 auto;padding:48px 24px 96px}
+.board-head{max-width:760px;margin-bottom:48px}
+.board-head h1{font-family:var(--font-display);font-size:40px;line-height:1.05;letter-spacing:-0.02em;font-weight:700;display:flex;gap:14px;align-items:center}
+.board-head p{margin-top:12px;color:var(--muted-foreground);font-size:16px;max-width:64ch}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:16px;color:var(--muted-foreground);font-size:13px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:4px;display:inline-block}
+.frame{margin-bottom:64px}
+.frame-label{display:flex;gap:10px;align-items:baseline;margin-bottom:14px}
+.frame-label b{font-family:var(--font-display);font-size:20px;font-weight:650;letter-spacing:-0.01em}
+.frame-label span{color:var(--muted-foreground);font-size:14px}
+.frame-letter{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--foreground);color:var(--background);font-weight:700;font-size:14px;flex:none;align-self:center}
+.shot{border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px oklch(0.22 0.02 262/.08),0 24px 48px -24px oklch(0.22 0.02 262/.35);width:max-content;max-width:100%}
+.scale{zoom:1}
+.phones{display:flex;gap:40px;flex-wrap:wrap}
+@media (max-width:1400px){.scale-d{zoom:.9}}
+@media (max-width:1240px){.scale-d{zoom:.75}}
+@media (max-width:1040px){.scale-d{zoom:.6}}
+@media (max-width:840px){.scale-d{zoom:.46}}
+@media (max-width:640px){.scale-d{zoom:.275}.board{padding:28px 16px 64px}.board-head h1{font-size:30px}.frame-label{flex-wrap:wrap}.frame-label>span:last-child{flex-basis:100%}.scale-p{zoom:.9}.phones{gap:24px}}
+
+/* app shell */
+.app{position:relative;display:flex;background:var(--background);color:var(--foreground);font-family:var(--font-sans);overflow:hidden;font-size:14px}
+.sidebar{width:272px;flex:none;background:var(--sidebar);color:var(--sidebar-foreground);border-right:1px solid var(--sidebar-border);display:flex;flex-direction:column;padding:12px 10px}
+.sb-head{display:flex;align-items:center;gap:8px;padding:2px 6px 12px}
+.sb-name{font-weight:650;font-size:15px;letter-spacing:-0.01em;flex:1;white-space:nowrap}
+.sb-head .icon-btn{width:30px;height:30px}
+.icon-btn{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:8px;color:var(--muted-foreground)}
+.icon-btn:hover,.icon-btn.is-pressed{background:var(--accent);color:var(--accent-foreground)}
+.icon-btn-xs{width:24px;height:24px;border-radius:6px}
+.search-trigger{display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 8px 0 10px;border:1px solid var(--input);border-radius:10px;background:var(--background);color:var(--muted-foreground);font-size:14px}
+.search-trigger span:nth-child(2){flex:1;text-align:left}
+.kbd{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:5px;border:1px solid var(--border);border-bottom-width:2px;background:var(--card);font-family:var(--font-mono);font-size:11px;line-height:1;color:var(--muted-foreground)}
+.kbd-ai{border-color:color-mix(in oklch,var(--ai) 60%,var(--card));background:var(--ai-soft);color:var(--ai-strong);margin-left:8px}
+.kbd-on-primary{background:transparent;border-color:color-mix(in oklch,var(--primary-foreground) 35%,transparent);color:var(--primary-foreground);margin-left:6px}
+.sb-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:36px;padding:0 14px;border-radius:10px;font-weight:550;font-size:14px;white-space:nowrap}
+.btn-sm{height:32px;padding:0 10px;font-size:13.5px;border-radius:9px}
+.btn-lg{height:48px;padding:0 22px;font-size:16px;border-radius:12px}
+.btn-primary{background:var(--primary);color:var(--primary-foreground);box-shadow:inset 0 -2px 0 oklch(0 0 0/.14)}
+.btn-ai{background:var(--ai-soft);color:var(--ai-strong);box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--ai) 55%,transparent)}
+.btn-ghost{color:var(--foreground)}
+.btn-ghost:hover{background:var(--accent)}
+.btn-outline{border:1px solid var(--input);background:var(--card)}
+.sb-nav{flex:1;display:flex;flex-direction:column;gap:1px;overflow:hidden}
+.nav-row{display:flex;align-items:center;gap:9px;height:34px;padding:0 8px;border-radius:8px;color:var(--sidebar-foreground);font-size:14px}
+.nav-row .ic{color:var(--muted-foreground)}
+.nav-row span:not(.count){flex:1}
+.nav-row:hover{background:var(--sidebar-accent)}
+.nav-row .chev{margin-right:-4px;margin-left:-2px}
+.count{font-size:12px;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
+.sb-label{display:flex;align-items:center;justify-content:space-between;margin:14px 8px 4px;font-size:12.5px;font-weight:600;color:var(--muted-foreground)}
+.note-list{display:flex;flex-direction:column;gap:1px;margin:2px 0 4px 22px;padding-left:10px;border-left:1px solid var(--sidebar-border)}
+.note-row{display:flex;flex-direction:column;padding:6px 10px;border-radius:8px}
+.note-row:hover{background:var(--sidebar-accent)}
+.note-row.is-active{background:var(--sidebar-accent);color:var(--sidebar-accent-foreground);box-shadow:inset 2px 0 0 var(--sidebar-primary)}
+.note-title{font-size:14px;font-weight:550;line-height:1.3}
+.note-meta{font-size:12px;color:var(--muted-foreground);line-height:1.35}
+.sb-foot{display:flex;align-items:center;gap:6px;border-top:1px solid var(--sidebar-border);padding-top:10px;margin-top:8px}
+.account-chip{flex:1;display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:10px;text-align:left;min-width:0}
+.account-chip:hover{background:var(--sidebar-accent)}
+.avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--secondary);color:var(--secondary-foreground);flex:none;border:1px dashed var(--input)}
+.acc-text{display:flex;flex-direction:column;min-width:0}
+.acc-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acc-sub{font-size:12px;color:var(--primary);font-weight:550}
+
+.editor{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
+.topbar{height:52px;flex:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 12px 0 16px;border-bottom:1px solid var(--border);background:var(--background);gap:12px}
+.crumbs{display:flex;align-items:center;gap:6px;font-size:14px;min-width:0}
+.crumb-muted{color:var(--muted-foreground)}
+.crumb-sep{color:var(--muted-foreground);opacity:.6}
+.crumb-current{font-weight:600}
+.seg{display:inline-flex;padding:3px;border-radius:11px;background:var(--muted);box-shadow:inset 0 0 0 1px var(--border)}
+.seg-item{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:8px;font-size:13.5px;font-weight:550;color:var(--muted-foreground)}
+.seg-item.on{background:var(--card);color:var(--foreground);box-shadow:0 1px 2px oklch(0.22 0.02 262/.12),0 0 0 1px var(--border)}
+.tb-right{display:flex;align-items:center;justify-content:flex-end;gap:4px}
+.sync{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:550;padding:0 10px;height:28px;border-radius:999px;margin-right:4px}
+.sync-local{color:var(--status-local);background:var(--muted)}
+.sync-synced{color:var(--status-synced);background:color-mix(in oklch,var(--status-synced) 12%,var(--background))}
+
+/* canvas */
+.canvas{position:relative;flex:1;overflow:hidden}
+.canvas-surface{background-color:var(--canvas);background-image:radial-gradient(var(--canvas-dot) 1.2px,transparent 1.3px);background-size:22px 22px}
+.float{position:absolute;z-index:5;display:flex;align-items:center;gap:4px;padding:4px;background:var(--canvas-toolbar);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:12px;box-shadow:var(--canvas-shadow)}
+.float-top{top:14px;left:50%;transform:translateX(-50%)}
+.float-bl{left:14px;bottom:14px}
+.float-br{right:14px;bottom:14px;padding:6px 10px;gap:8px;font-size:13px;color:var(--muted-foreground)}
+.zoom{min-width:48px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums;font-weight:550}
+.vsep{width:1px;height:20px;background:var(--border);margin:0 4px}
+.tg{display:inline-flex;gap:2px}
+.tg-item{height:30px;min-width:34px;padding:0 9px;border-radius:8px;font-size:13px;font-weight:550;color:var(--muted-foreground)}
+.tg-item.on{background:var(--accent);color:var(--accent-foreground)}
+.tool-btn{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:550}
+.tool-btn:hover{background:var(--accent)}
+.swatches{display:inline-flex}
+.swatches i{width:10px;height:10px;border-radius:50%;margin-left:-3px;box-shadow:0 0 0 1.5px var(--card)}
+.swatches i:first-child{margin-left:0}
+
+/* map */
+.map{position:absolute;inset:0}
+.wires{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.wires path{fill:none;stroke-linecap:round}
+.n{position:absolute;display:flex;align-items:center;white-space:nowrap;color:var(--node-fg);line-height:1}
+.n-root{height:48px;padding:0 20px;border-radius:14px;background:var(--node-root-bg);color:var(--node-root-fg);font-size:17px;font-weight:650;letter-spacing:-0.01em;justify-content:center;box-shadow:0 2px 0 oklch(0 0 0/.12),0 10px 24px -12px oklch(0.22 0.03 264/.5)}
+.n-l1{height:36px;padding:0 14px;border-radius:10px;justify-content:center;font-size:15px;font-weight:600;background:color-mix(in oklch,var(--b) 13%,var(--node-bg));border:1.5px solid color-mix(in oklch,var(--b) 60%,var(--node-bg));box-shadow:0 1px 0 color-mix(in oklch,var(--b) 30%,transparent)}
+.n-leaf{height:30px;padding:0 6px;font-size:14px;font-weight:450;border-bottom:2px solid var(--b)}
+.n-edit{height:34px;padding:0 5px 0 10px;border-radius:9px;font-size:14px;background:var(--node-bg);border:1px solid var(--node-border);box-shadow:0 0 0 2px var(--node-selected),0 0 0 6px var(--node-selected-halo);z-index:3}
+.ghost{color:var(--ghost-text)}
+.caret{display:inline-block;width:1.5px;height:17px;background:var(--primary);margin:0 1px;animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.collapsed-count{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;margin-left:8px;border-radius:999px;font-size:11.5px;font-weight:650;background:var(--secondary);color:var(--secondary-foreground)}
+
+/* typeahead */
+.ta{position:absolute;z-index:6;width:330px;background:var(--popover);color:var(--popover-foreground);border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 0 oklch(0 0 0/.03),0 16px 40px -12px oklch(0.22 0.02 262/.32);padding:5px;font-size:14px}
+.ta-static{position:relative;width:100%;margin-top:8px}
+.ta-head{display:flex;align-items:center;gap:7px;padding:6px 8px 7px;font-size:12.5px;color:var(--muted-foreground)}
+.ta-head b{color:var(--foreground);font-weight:600}
+.ta-head-off{color:var(--muted-foreground)}
+.ai-ic{color:var(--ai)}
+.ai-txt{color:var(--ai-strong)}
+.ta-item{display:flex;align-items:center;gap:8px;min-height:34px;padding:0 8px;border-radius:8px;justify-content:space-between}
+.ta-item span:first-child{flex:1}
+.ta-item b{font-weight:650}
+.ta-item.on{background:var(--ai-soft);box-shadow:inset 2px 0 0 var(--ai)}
+.ta-local{justify-content:flex-start}
+.ta-local .ic{color:var(--muted-foreground)}
+.ta-src{font-size:12px;color:var(--muted-foreground)}
+.ta-sep{font-size:12px;color:var(--muted-foreground);padding:8px 8px 3px;border-top:1px solid var(--border);margin-top:4px}
+.ta-foot{display:flex;gap:10px;flex-wrap:nowrap;white-space:nowrap;padding:8px 8px 4px;margin-top:4px;border-top:1px solid var(--border);font-size:12px;color:var(--muted-foreground)}
+.ta-foot>span{display:inline-flex;align-items:center;gap:4px}
+.ta-foot .kbd{min-width:18px;height:18px;font-size:10.5px}
+.shimmer{display:block;height:10px;border-radius:5px;background:linear-gradient(90deg,var(--muted) 0%,var(--ai-shimmer) 45%,var(--muted) 90%);background-size:200% 100%;animation:shim 1.4s var(--ease-in-out) infinite}
+@keyframes shim{from{background-position:100% 0}to{background-position:-100% 0}}
+.spin{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35;transform:scale(.85)}}
+
+/* states strip */
+.states{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;padding:24px;background:var(--background);width:1280px}
+.st-card{border:1px solid var(--border);border-radius:14px;padding:14px;background:var(--card);display:flex;flex-direction:column}
+.st-title{font-weight:650;font-size:14px}
+.st-desc{font-size:12.5px;color:var(--muted-foreground);margin:4px 0 12px;min-height:56px}
+.st-stage{border-radius:10px;padding:14px 12px 12px;flex:1;min-height:210px}
+.st-node{position:relative;width:max-content;max-width:100%}
+.ta-static .ta-item span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ta-static .ta-item{font-size:13.5px}
+.ta-static .ta-src{flex:none}
+
+/* outline */
+.outline-wrap{flex:1;position:relative;overflow:hidden;background:var(--background)}
+.outline{max-width:720px;margin:0 auto;padding:40px 24px}
+.o-title{font-size:30px;font-weight:700;letter-spacing:-0.02em;line-height:1.15;padding-left:36px}
+.o-meta{color:var(--muted-foreground);font-size:13px;margin:6px 0 20px;padding-left:36px}
+.orow{position:relative;display:flex;align-items:center;min-height:34px;border-radius:8px;font-size:15px;line-height:1.5;padding-right:8px}
+.orow.o-l1{font-weight:600}
+.orow .grip{width:20px;display:grid;place-items:center;color:var(--muted-foreground);opacity:0}
+.orow.is-hover{background:var(--muted)}
+.orow.is-hover .grip{opacity:1;cursor:grab}
+.orow.is-selected{background:var(--accent);box-shadow:inset 0 0 0 1.5px var(--node-selected)}
+.disc{width:22px;height:22px;display:grid;place-items:center;margin-right:6px;flex:none;border-radius:6px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.guide{position:absolute;top:0;bottom:0;width:1px;background:var(--border)}
+.otext{flex:1;padding:4px 0}
+.row-actions{display:inline-flex;gap:2px}
+.link-node{display:inline-flex;align-items:center;gap:6px;color:var(--primary);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;font-weight:450}
+.orow-media{position:relative;padding:4px 0 8px}
+.img-node{display:inline-flex;flex-direction:column;gap:6px;border:1px solid var(--border);border-radius:10px;padding:6px;background:var(--card)}
+.img-ph{border-radius:6px;overflow:hidden;line-height:0}
+.img-node figcaption{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted-foreground);padding:0 2px 2px}
+.table-node{border-collapse:separate;border-spacing:0;font-size:13.5px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--card);min-width:300px}
+.table-node th{text-align:left;font-weight:600;background:var(--muted);padding:6px 12px;border-bottom:1px solid var(--border)}
+.table-node td{padding:6px 12px;border-bottom:1px solid var(--border)}
+.table-node tr:last-child td{border-bottom:0}
+.table-node td:last-child,.table-node th:last-child{text-align:right;font-variant-numeric:tabular-nums;border-left:1px solid var(--border)}
+.drop-line{height:2px;background:var(--node-selected);border-radius:2px;position:relative;margin:-1px 0;display:none}
+.o-add{display:flex;align-items:center;gap:8px;color:var(--muted-foreground);margin:10px 0 0 36px;font-size:14px;height:32px}
+.menu{position:absolute;z-index:6;width:236px;background:var(--popover);border:1px solid var(--border);border-radius:12px;padding:5px;box-shadow:0 16px 40px -12px oklch(0.22 0.02 262/.32);font-size:14px}
+.menu-sub{width:220px}
+.menu-anchored{right:0;bottom:calc(100% + 4px);font-weight:400}
+.menu-sub{right:calc(100% + 4px);top:144px}
+.row-actions{position:relative}
+.mi{display:flex;align-items:center;justify-content:space-between;height:34px;padding:0 8px;border-radius:8px}
+.mi>span:first-child{display:inline-flex;align-items:center;gap:9px}
+.mi .ic{color:var(--muted-foreground)}
+.mi.on{background:var(--accent)}
+.mi.on .ai-ic{color:var(--ai)}
+.mi-danger{color:var(--destructive)}
+.mi-danger .ic{color:var(--destructive)}
+.msep{height:1px;background:var(--border);margin:4px 2px}
+
+/* dialog */
+.app-solo{display:block}
+.app-solo .canvas{position:absolute}
+.scrim{position:absolute;inset:0;background:oklch(0.22 0.02 262/.32);backdrop-filter:blur(2px)}
+.dialog{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:600px;background:var(--popover);border:1px solid var(--border);border-radius:18px;padding:22px;box-shadow:0 30px 80px -20px oklch(0.22 0.02 262/.45)}
+.dlg-head{display:flex;gap:14px;align-items:flex-start}
+.dlg-head>div{flex:1}
+.dlg-head h3{font-size:19px;font-weight:650;letter-spacing:-0.01em;line-height:1.3}
+.dlg-head p{color:var(--muted-foreground);font-size:14px}
+.ai-badge{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--ai-soft);color:var(--ai-strong);box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--ai) 50%,transparent);flex:none}
+.tabs{display:flex;gap:4px;margin:18px 0 16px;border-bottom:1px solid var(--border)}
+.tab{height:36px;padding:0 4px;margin-right:14px;font-size:14px;font-weight:550;color:var(--muted-foreground);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.on{color:var(--foreground);border-color:var(--foreground)}
+.field-label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.textarea{border:1px solid var(--input);border-radius:12px;padding:12px 14px;min-height:84px;font-size:15px;line-height:1.5;box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 22%,transparent);border-color:var(--ring);background:var(--background)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 16px}
+.chip{height:28px;padding:0 10px;border-radius:999px;border:1px solid var(--border);font-size:12.5px;color:var(--muted-foreground);background:var(--background)}
+.opts{display:grid;grid-template-columns:auto auto 1fr 1fr;gap:14px;align-items:end}
+.opts .tg{background:var(--muted);padding:3px;border-radius:10px}
+.opts .tg-item{height:28px;min-width:32px}
+.opts .tg-item.on{background:var(--card);color:var(--foreground);box-shadow:0 0 0 1px var(--border)}
+.select{display:flex;align-items:center;gap:8px;height:34px;width:100%;padding:0 10px;border:1px solid var(--input);border-radius:10px;font-size:14px;background:var(--background)}
+.select .ic:last-child{margin-left:auto;color:var(--muted-foreground)}
+.preview{margin-top:18px;border:1px dashed color-mix(in oklch,var(--ai) 60%,var(--border));border-radius:12px;padding:10px 14px 12px;background:color-mix(in oklch,var(--ai-soft) 55%,var(--popover))}
+.pv-head{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ai-strong);font-weight:600;margin-bottom:6px}
+.dots{display:inline-flex;gap:3px;margin-left:2px}
+.dots i{width:4px;height:4px;border-radius:50%;background:currentColor;animation:pulse 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+.pv-row{display:flex;align-items:center;gap:8px;font-size:14px;line-height:1.3;padding:3px 0}
+.pv-row.l0{font-weight:650}
+.pv-row.l1{padding-left:14px;font-weight:550}
+.pv-row.l2{padding-left:44px;color:var(--muted-foreground)}
+.shimmer-row{height:22px}
+.shimmer-row .shimmer{flex:none}
+.dlg-foot{display:flex;align-items:center;gap:8px;margin-top:18px}
+.fine{flex:1;font-size:12.5px;color:var(--muted-foreground)}
+
+/* phone */
+.phone{position:relative;width:390px;height:844px;background:var(--background);color:var(--foreground);border-radius:44px;overflow:hidden;box-shadow:0 0 0 10px oklch(0.2 0.01 262),0 0 0 11px oklch(0.4 0.01 262),0 30px 60px -20px oklch(0 0 0/.5);margin:11px;display:flex;flex-direction:column;font-family:var(--font-sans);font-size:15px}
+.status-bar{height:46px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 6px;font-weight:600;font-size:15px}
+.sb-icons{display:flex;gap:5px}.sb-icons i{width:16px;height:10px;border-radius:3px;background:var(--foreground)}
+.sb-icons i:nth-child(3){width:24px}
+.m-top{display:flex;align-items:center;gap:8px;padding:6px 12px 10px;border-bottom:1px solid var(--border)}
+.m-title{flex:1;display:flex;flex-direction:column;min-width:0}
+.m-title>span:first-child{font-weight:650;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-sync{height:20px;padding:0;background:none;font-size:12px}
+.seg-icon .seg-item{padding:0 9px;height:30px}
+.m-body{flex:1;overflow:hidden;padding:10px 10px 0}
+.m-body .orow{min-height:40px;font-size:16px}
+.orow.is-editing{background:var(--card);box-shadow:0 0 0 2px var(--node-selected),0 0 0 5px var(--node-selected-halo)}
+.m-accessory{border-top:1px solid var(--border);background:var(--card)}
+.m-sugs{display:flex;gap:6px;align-items:center;padding:8px 10px 6px;overflow:hidden;white-space:nowrap}
+.sug{height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--border);font-size:14px;flex:none;background:var(--background)}
+.sug.on{background:var(--ai-soft);border-color:color-mix(in oklch,var(--ai) 60%,transparent);color:var(--ai-strong);font-weight:600}
+.m-tools{display:flex;align-items:center;gap:4px;padding:2px 8px 8px}
+.m-tools .icon-btn{width:44px;height:40px;color:var(--foreground)}
+.m-tools .icon-btn.ai-ic{color:var(--ai-strong)}
+.m-done{margin-left:auto;height:36px;padding:0 14px;border-radius:10px;background:var(--primary);color:var(--primary-foreground);font-weight:600}
+.kb{background:oklch(0.84 0.008 255);padding:8px 3px 30px;display:flex;flex-direction:column;gap:10px}
+.kb-row{display:flex;gap:6px;justify-content:center}
+.kb-row i{font-style:normal;flex:0 0 32px;height:42px;border-radius:6px;background:oklch(0.99 0 0);display:grid;place-items:center;font-size:18px;color:oklch(0.2 0 0);box-shadow:0 1px 0 oklch(0.5 0.01 255)}
+.kb-row .k-wide{flex:0 0 44px;font-size:14px;background:oklch(0.72 0.01 255)}
+.kb-row .k-space{flex:1 1 auto;max-width:190px;font-size:14px}
+.kb-row .k-ret{flex:0 0 88px}
+.scrim-phone{background:oklch(0.22 0.02 262/.4)}
+.sheet{position:absolute;top:0;bottom:0;left:0;width:330px;background:var(--sidebar);box-shadow:20px 0 50px -20px oklch(0 0 0/.4);padding-top:46px;border-radius:0 22px 22px 0}
+.sheet-inner,.sheet .sidebar{height:100%}
+.sheet .sidebar{width:100%;border-right:0;padding:8px 12px 28px}
+.sheet .nav-row{height:42px;font-size:15px}
+.sheet .note-row{padding:8px 10px}
+
+/* marketing */
+.site{background:var(--background);color:var(--foreground);font-family:var(--font-sans)}
+.site-nav{display:flex;align-items:center;gap:32px;padding:22px 56px}
+.site-brand{display:flex;align-items:center;gap:10px;font-weight:650;font-size:17px;letter-spacing:-0.01em;margin-right:auto}
+.site-links{display:flex;gap:28px;font-size:15px;color:var(--muted-foreground)}
+.hero{padding:64px 56px 40px}
+.hero-copy{display:grid;grid-template-columns:1.2fr 1fr;gap:64px;align-items:end}
+.hero-side{padding-bottom:10px}
+.hero h1{font-family:var(--font-display);font-size:84px;line-height:.98;letter-spacing:-0.035em;font-weight:700;font-variation-settings:"wdth" 92,"opsz" 96;text-wrap:balance}
+.lede{font-size:19px;line-height:1.55;color:var(--muted-foreground);max-width:42ch}
+.hero-cta{display:flex;gap:10px;margin-top:32px}
+.hero-fine{margin-top:16px;font-size:14px;color:var(--muted-foreground)}
+.hero-stage{position:relative;height:440px;margin-top:56px;border-radius:24px;border:1px solid var(--border);overflow:hidden}
+.hero-toggle{position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:4;background:var(--canvas-toolbar);box-shadow:var(--canvas-shadow)}
+.hero-outline{position:absolute;left:48px;top:84px;width:260px;z-index:3;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border);box-shadow:var(--canvas-shadow);transform:rotate(-2deg)}
+.ho-title{font-weight:700;font-size:16px;margin-bottom:6px}
+.ho-row{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;padding:3px 0}
+.ho-2{padding-left:16px;font-weight:400;color:var(--muted-foreground)}
+.hero-arrow{position:absolute;left:318px;top:140px;z-index:2}
+.hero-map{position:absolute;left:380px;top:0;right:0;bottom:0}
+.proof{display:grid;grid-template-columns:repeat(3,1fr);gap:48px;padding:24px 56px 64px;border-top:1px solid var(--border);margin:0 56px;padding-left:0;padding-right:0}
+.proof h4{font-size:16px;font-weight:650;margin-bottom:6px}
+.proof p{color:var(--muted-foreground);font-size:15px;line-height:1.55;max-width:36ch}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+</style>
+</head>
+<body>
+<main class="board">
+  <header class="board-head">
+    <h1><svg class="mark" width="40" height="40" viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="var(--mark-ink, var(--primary))" stroke-width="2.6" stroke-linecap="round"><path d="M11 16.5C16 16.5 16 7 24.5 7"/><path d="M11 16.5C16.5 16.5 18 15.6 26.5 15.6"/><path d="M11 16.5C16 16.5 16.5 24.6 22.5 24.6"/></g><circle cx="8" cy="16.5" r="4.6" fill="var(--mark-ink, var(--primary))"/><circle cx="25.2" cy="7" r="2.9" fill="var(--ai)"/><circle cx="27" cy="15.6" r="2.1" fill="var(--mark-ink, var(--primary))"/><circle cx="23" cy="24.6" r="2.1" fill="var(--mark-ink, var(--primary))"/></svg>MindNote Web, UI mockups v1</h1>
+    <p>Static high-fidelity frames for engineering. Tokens are inlined from <code>design/tokens.css</code>; behaviour is specified in <code>design/DESIGN.md</code>. One note, "Community garden", is used across frames so the outline and the map can be compared node for node.</p>
+    <div class="legend"><span><i style="background:var(--primary)"></i>Primary, ballpoint blue</span><span><i style="background:var(--ai)"></i>AI only, highlighter</span><span><i style="background:var(--branch-1)"></i><i style="background:var(--branch-2)"></i><i style="background:var(--branch-3)"></i><i style="background:var(--branch-4)"></i>Branch palette 1 to 4</span></div>
+  </header>
+  <section class="frame"><div class="frame-label"><span class="frame-letter">A</span><b>App shell, mind map</b><span>Sidebar library, canvas, typing in a new node with ghost text and suggestions open</span></div><div class="scale scale-d"><div class="shot">
+<div class="app " style="width:1280px;height:800px">
+  
+<aside class="sidebar" aria-label="Library">
+  <div class="sb-head">
+    <svg class="mark" width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="var(--mark-ink, var(--primary))" stroke-width="2.6" stroke-linecap="round"><path d="M11 16.5C16 16.5 16 7 24.5 7"/><path d="M11 16.5C16.5 16.5 18 15.6 26.5 15.6"/><path d="M11 16.5C16 16.5 16.5 24.6 22.5 24.6"/></g><circle cx="8" cy="16.5" r="4.6" fill="var(--mark-ink, var(--primary))"/><circle cx="25.2" cy="7" r="2.9" fill="var(--ai)"/><circle cx="27" cy="15.6" r="2.1" fill="var(--mark-ink, var(--primary))"/><circle cx="23" cy="24.6" r="2.1" fill="var(--mark-ink, var(--primary))"/></svg><span class="sb-name">MindNote Web</span>
+    <button class="icon-btn" aria-label="Settings"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></button><button class="icon-btn" aria-label="Collapse sidebar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg></button>
+  </div>
+  <button class="search-trigger"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7.5"/><path d="m20.5 20.5-4.2-4.2"/></svg><span>Search notes</span><span class="kbd">⌘K</span></button>
+  <div class="sb-actions">
+    <button class="btn btn-primary btn-sm"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>New note</button>
+    <button class="btn btn-ai btn-sm"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3.5 12.7 9.3 18.5 11 12.7 12.7 11 18.5 9.3 12.7 3.5 11 9.3 9.3Z"/><path d="M18.5 3v4M16.5 5h4"/></svg>Generate</button>
+  </div>
+  <nav class="sb-nav">
+    <a class="nav-row" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg><span>All notes</span><span class="count">47</span></a>
+    <a class="nav-row" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Recent</span></a>
+    <a class="nav-row" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="7" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/><rect x="15" y="14" width="6" height="7" rx="1.5"/></svg><span>Templates</span></a>
+    <div class="sb-label">Folders <button class="icon-btn icon-btn-xs" aria-label="New folder"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button></div>
+    <a class="nav-row is-open" href="#"><svg class="ic chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 19a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/></svg><span>Garden club</span><span class="count">5</span></a>
+    <div class="note-list"><a class="note-row is-active" href="#"><span class="note-title">Community garden</span><span class="note-meta">17 nodes, edited just now</span></a><a class="note-row" href="#"><span class="note-title">Seed swap flyer</span><span class="note-meta">9 nodes, yesterday</span></a><a class="note-row" href="#"><span class="note-title">Grant application</span><span class="note-meta">31 nodes, 12 Oct</span></a><a class="note-row" href="#"><span class="note-title">Volunteer FAQ</span><span class="note-meta">14 nodes, 3 Oct</span></a><a class="note-row" href="#"><span class="note-title">Tool inventory</span><span class="note-meta">22 nodes, 28 Sep</span></a></div>
+    <a class="nav-row" href="#"><svg class="ic chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 19a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/></svg><span>Work</span><span class="count">18</span></a>
+    <a class="nav-row" href="#"><svg class="ic chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 19a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/></svg><span>Reading notes</span><span class="count">24</span></a>
+    <a class="nav-row" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Recycle Bin</span><span class="count">3</span></a>
+  </nav>
+  <div class="sb-foot">
+    <button class="account-chip"><span class="avatar"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12H2M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1ZM6 16h.01M10 16h.01"/></svg></span>
+      <span class="acc-text"><span class="acc-name">Guest</span><span class="acc-sub">Sign in with Google to sync</span></span></button>
+  </div>
+</aside>
+  <main class="editor">
+    
+<header class="topbar">
+  <div class="crumbs"><span class="crumb-muted">Garden club</span><svg class="ic crumb-sep" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><span class="crumb-current">Community garden</span></div>
+  <div class="seg" role="radiogroup" aria-label="View"><button role="radio" aria-checked="false" class="seg-item"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12h-8M21 6H8M21 18h-8M3 6v4a2 2 0 0 0 2 2h3M3 10v6a2 2 0 0 0 2 2h3"/></svg>Outline</button><button role="radio" aria-checked="true" class="seg-item on"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="2.5"/><path d="M7.5 12c4 0 4-6 8-6M7.5 12c4 0 4 6 8 6M7.5 12h8"/><circle cx="18.5" cy="6" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/><circle cx="18.5" cy="18" r="1.6"/></svg>Mind map</button></div>
+  <div class="tb-right">
+    <span class="sync sync-local"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12H2M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1ZM6 16h.01M10 16h.01"/></svg>Local only</span>
+    <button class="btn btn-ghost btn-sm"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export</button>
+    <button class="icon-btn" aria-label="More"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+  </div>
+</header>
+    <div class="canvas canvas-surface">
+      
+<div class="float float-top" role="toolbar" aria-label="Map controls">
+  <div class="tg" role="radiogroup" aria-label="Expand to level">
+    <button class="tg-item on">All</button><button class="tg-item">L1</button><button class="tg-item">L2</button><button class="tg-item">L3</button>
+  </div>
+  <span class="vsep"></span>
+  <button class="tool-btn" aria-label="Map style"><span class="swatches"><i style="background:var(--branch-1)"></i><i style="background:var(--branch-2)"></i><i style="background:var(--branch-3)"></i></span>Ballpoint<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+  <span class="vsep"></span>
+  <button class="tool-btn" aria-label="Restore view"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.8 9.8 0 0 0-6.7 2.7L3 8"/><path d="M3 3v5h5"/></svg>Restore view</button>
+</div>
+<div class="float float-bl" role="toolbar" aria-label="Zoom">
+  <button class="icon-btn" aria-label="Zoom out"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><span class="zoom">100%</span><button class="icon-btn" aria-label="Zoom in"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button>
+  <span class="vsep"></span><button class="icon-btn" aria-label="Fit to screen"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
+</div>
+<div class="float float-br"><span class="kbd">?</span><span class="hint">Shortcuts</span></div>
+      <div class="map "><svg class="wires" aria-hidden="true"><path d="M259.0 366.0 C287.0 366.0 287.0 190.0 315.0 190.0" style="stroke:var(--branch-1);stroke-width:3"/><path d="M259.0 366.0 C287.0 366.0 287.0 306.0 315.0 306.0" style="stroke:var(--branch-2);stroke-width:3"/><path d="M259.0 366.0 C287.0 366.0 287.0 412.5 315.0 412.5" style="stroke:var(--branch-3);stroke-width:3"/><path d="M259.0 366.0 C287.0 366.0 287.0 542.0 315.0 542.0" style="stroke:var(--branch-4);stroke-width:3"/><path d="M376.0 190.0 C398.0 190.0 398.0 164.0 420.0 164.0" style="stroke:var(--branch-1);stroke-width:2"/><path d="M376.0 190.0 C398.0 190.0 398.0 204.0 420.0 204.0" style="stroke:var(--branch-1);stroke-width:2"/><path d="M376.0 190.0 C398.0 190.0 398.0 244.0 420.0 244.0" style="stroke:var(--branch-1);stroke-width:2"/><path d="M516.0 244.0 C534.0 244.0 534.0 244.0 552.0 244.0" style="stroke:var(--branch-1);stroke-width:1.75"/><path d="M393.0 306.0 C415.0 306.0 415.0 300.0 437.0 300.0" style="stroke:var(--branch-2);stroke-width:2"/><path d="M393.0 306.0 C415.0 306.0 415.0 340.0 437.0 340.0" style="stroke:var(--branch-2);stroke-width:2"/><path d="M393.0 412.5 C415.0 412.5 415.0 396.0 437.0 396.0" style="stroke:var(--branch-3);stroke-width:2"/><path d="M393.0 412.5 C415.0 412.5 415.0 457.0 437.0 457.0" style="stroke:var(--branch-3);stroke-width:2"/><path d="M512.0 457.0 C530.0 457.0 530.0 436.0 548.0 436.0" style="stroke:var(--branch-3);stroke-width:1.75"/><path d="M512.0 457.0 C530.0 457.0 530.0 464.0 548.0 464.0" style="stroke:var(--branch-3);stroke-width:1.75"/><path d="M410.0 542.0 C432.0 542.0 432.0 536.0 454.0 536.0" style="stroke:var(--branch-4);stroke-width:2"/><path d="M410.0 542.0 C432.0 542.0 432.0 576.0 454.0 576.0" style="stroke:var(--branch-4);stroke-width:2"/></svg><div class="n n-root" style="left:56px;top:342px;width:203px;">Community garden</div><div class="n n-l1" style="left:315px;top:172px;width:61px;--b:var(--branch-1);">Site</div><div class="n n-leaf" style="left:420px;top:135px;width:110px;--b:var(--branch-1);">Raised beds ×8</div><div class="n n-leaf" style="left:420px;top:175px;width:124px;--b:var(--branch-1);">Shed &amp; tool wall</div><div class="n n-leaf" style="left:420px;top:215px;width:96px;--b:var(--branch-1);">Water access</div><div class="n n-leaf" style="left:552px;top:215px;width:96px;--b:var(--branch-1);">Rain barrels</div><div class="n n-l1" style="left:315px;top:288px;width:78px;--b:var(--branch-2);">Budget</div><div class="n n-leaf" style="left:437px;top:271px;width:152px;--b:var(--branch-2);">Council grant £1,200</div><div class="n n-leaf" style="left:437px;top:311px;width:110px;--b:var(--branch-2);">Seed swap fund</div><div class="n n-l1" style="left:315px;top:394px;width:78px;--b:var(--branch-3);">People</div><div class="n n-leaf" style="left:437px;top:367px;width:110px;--b:var(--branch-3);">Volunteer rota</div><div class="n n-leaf" style="left:437px;top:428px;width:75px;--b:var(--branch-3);">Workshops</div><div class="n n-leaf" style="left:548px;top:407px;width:138px;--b:var(--branch-3);">Kids&#x27; planting day</div><div class="n n-edit" style="left:548px;top:447px;width:236px;--b:var(--branch-3);"><span>Composting for beg</span><span class="caret" aria-hidden="true"></span><span class="ghost">inners</span><span class="kbd kbd-ai" title="Tab accepts suggestion">Tab</span></div><div class="n n-l1" style="left:315px;top:524px;width:95px;--b:var(--branch-4);">Calendar</div><div class="n n-leaf" style="left:454px;top:507px;width:124px;--b:var(--branch-4);">March: soil prep</div><div class="n n-leaf" style="left:454px;top:547px;width:145px;--b:var(--branch-4);">May: first planting</div></div>
+      
+<div class="ta" role="listbox" aria-label="Suggestions" style="left:548px;top:489px">
+  <div class="ta-head"><svg class="ic ai-ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3.5 12.7 9.3 18.5 11 12.7 12.7 11 18.5 9.3 12.7 3.5 11 9.3 9.3Z"/><path d="M18.5 3v4M16.5 5h4"/></svg><span>Suggestions from <b>Workshops</b> and 1 sibling</span></div>
+  <div class="ta-item on" role="option" aria-selected="true"><span>Composting for beg<b>inners</b></span><span class="kbd">⏎</span></div>
+  <div class="ta-item" role="option"><span>Composting with <b>kitchen scraps</b></span></div>
+  <div class="ta-item" role="option"><span>Compost bins: <b>build day</b></span></div>
+  <div class="ta-item ta-local" role="option"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg><span>Compost rota</span><span class="ta-src">Allotment 2025</span></div>
+  <div class="ta-foot"><span><span class="kbd">↑</span><span class="kbd">↓</span>choose</span><span><span class="kbd">⏎</span>insert</span><span><span class="kbd">Tab</span>accept</span><span><span class="kbd">Esc</span>close</span></div>
+</div>
+    </div>
+  </main>
+</div></div></div></section>
+  <section class="frame"><div class="frame-label"><span class="frame-letter">A2</span><b>Typeahead states</b><span>The five states of a node's suggestion popover</span></div><div class="scale scale-d"><div class="shot">
+<div class="states">
+  <div class="st-card"><div class="st-title">1. Typing</div><p class="st-desc">Below 2 characters, or within the 220 ms debounce. Nothing extra is shown.</p><div class="st-stage"><div class="n n-edit st-node"><span>Co</span><span class="caret"></span></div></div></div>
+  <div class="st-card"><div class="st-title">2. Loading</div><p class="st-desc">Request in flight. Sparkle pulses, rows shimmer. Typing never blocks.</p><div class="st-stage"><div class="n n-edit st-node"><span>Composting for</span><span class="caret"></span></div><div class="ta ta-static"><div class="ta-head"><svg class="ic ai-ic spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3.5 12.7 9.3 18.5 11 12.7 12.7 11 18.5 9.3 12.7 3.5 11 9.3 9.3Z"/><path d="M18.5 3v4M16.5 5h4"/></svg><span>Thinking about Workshops</span></div><div class="ta-item"><span class="shimmer" style="width:78%"></span></div><div class="ta-item"><span class="shimmer" style="width:62%"></span></div><div class="ta-item"><span class="shimmer" style="width:70%"></span></div></div></div></div>
+  <div class="st-card"><div class="st-title">3. Ready</div><p class="st-desc">Ghost text shows the top suggestion. Tab or → accepts, ↑ ↓ ⏎ picks.</p><div class="st-stage"><div class="n n-edit st-node"><span>Composting for beg</span><span class="caret"></span><span class="ghost">inners</span><span class="kbd kbd-ai">Tab</span></div><div class="ta ta-static"><div class="ta-head"><svg class="ic ai-ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3.5 12.7 9.3 18.5 11 12.7 12.7 11 18.5 9.3 12.7 3.5 11 9.3 9.3Z"/><path d="M18.5 3v4M16.5 5h4"/></svg><span>Suggestions</span></div><div class="ta-item on"><span>Composting for beg<b>inners</b></span><span class="kbd">⏎</span></div><div class="ta-item"><span>Composting with <b>kitchen scraps</b></span></div><div class="ta-item"><span>Compost bins: <b>build day</b></span></div></div></div></div>
+  <div class="st-card"><div class="st-title">4. Offline</div><p class="st-desc">No network. Suggestions come from your other nodes, marked with a note icon.</p><div class="st-stage"><div class="n n-edit st-node"><span>Compost</span><span class="caret"></span><span class="ghost"> rota</span><span class="kbd kbd-ai">Tab</span></div><div class="ta ta-static"><div class="ta-head ta-head-off"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h.01M8.5 16.4a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.7M19 12.9a10 10 0 0 0-2.2-1.6M2 8.8a15 15 0 0 1 4.2-2.6M10.7 5c4-.4 8.1.9 11.3 3.8M2 2l20 20"/></svg><span>Offline. Showing matches from your notes</span></div><div class="ta-item on ta-local"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg><span>Compost rota</span><span class="ta-src">Allotment 2025</span></div><div class="ta-item ta-local"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg><span>Compost heap rules</span><span class="ta-src">Volunteer FAQ</span></div></div></div></div>
+  <div class="st-card"><div class="st-title">5. Rate limited</div><p class="st-desc">Gemini returned 429. Local matches continue, AI resumes on its own.</p><div class="st-stage"><div class="n n-edit st-node"><span>Compost</span><span class="caret"></span><span class="ghost"> rota</span><span class="kbd kbd-ai">Tab</span></div><div class="ta ta-static"><div class="ta-head ta-head-off"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h12M6 22h12M7 2v4a5 5 0 0 0 10 0V2M7 22v-4a5 5 0 0 1 10 0v4"/></svg><span>AI paused for 40 s. Local matches only</span></div><div class="ta-item on ta-local"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg><span>Compost rota</span><span class="ta-src">Allotment 2025</span></div></div></div></div>
+</div></div></div></section>
+  <section class="frame"><div class="frame-label"><span class="frame-letter">B</span><b>Same note, outline view</b><span>Image, link and table nodes; hover actions; node menu with Rewrite with AI</span></div><div class="scale scale-d"><div class="shot">
+<div class="app" style="width:1280px;height:980px">
+  
+<aside class="sidebar" aria-label="Library">
+  <div class="sb-head">
+    <svg class="mark" width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="var(--mark-ink, var(--primary))" stroke-width="2.6" stroke-linecap="round"><path d="M11 16.5C16 16.5 16 7 24.5 7"/><path d="M11 16.5C16.5 16.5 18 15.6 26.5 15.6"/><path d="M11 16.5C16 16.5 16.5 24.6 22.5 24.6"/></g><circle cx="8" cy="16.5" r="4.6" fill="var(--mark-ink, var(--primary))"/><circle cx="25.2" cy="7" r="2.9" fill="var(--ai)"/><circle cx="27" cy="15.6" r="2.1" fill="var(--mark-ink, var(--primary))"/><circle cx="23" cy="24.6" r="2.1" fill="var(--mark-ink, var(--primary))"/></svg><span class="sb-name">MindNote Web</span>
+    <button class="icon-btn" aria-label="Settings"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></button><button class="icon-btn" aria-label="Collapse sidebar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg></button>
+  </div>
+  <button class="search-trigger"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7.5"/><path d="m20.5 20.5-4.2-4.2"/></svg><span>Search notes</span><span class="kbd">⌘K</span></button>
+  <div class="sb-actions">
+    <button class="btn btn-primary btn-sm"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>New note</button>
+    <button class="btn btn-ai btn-sm"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3.5 12.7 9.3 18.5 11 12.7 12.7 11 18.5 9.3 12.7 3.5 11 9.3 9.3Z"/><path d="M18.5 3v4M16.5 5h4"/></svg>Generate</button>
+  </div>
+  <nav class="sb-nav">
+    <a class="nav-row" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg><span>All notes</span><span class="count">47</span></a>
+    <a class="nav-row" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Recent</span></a>
+    <a class="nav-row" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="7" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/><rect x="15" y="14" width="6" height="7" rx="1.5"/></svg><span>Templates</span></a>
+    <div class="sb-label">Folders <button class="icon-btn icon-btn-xs" aria-label="New folder"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button></div>
+    <a class="nav-row is-open" href="#"><svg class="ic chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 19a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/></svg><span>Garden club</span><span class="count">5</span></a>
+    <div class="note-list"><a class="note-row is-active" href="#"><span class="note-title">Community garden</span><span class="note-meta">17 nodes, edited just now</span></a><a class="note-row" href="#"><span class="note-title">Seed swap flyer</span><span class="note-meta">9 nodes, yesterday</span></a><a class="note-row" href="#"><span class="note-title">Grant application</span><span class="note-meta">31 nodes, 12 Oct</span></a><a class="note-row" href="#"><span class="note-title">Volunteer FAQ</span><span class="note-meta">14 nodes, 3 Oct</span></a><a class="note-row" href="#"><span class="note-title">Tool inventory</span><span class="note-meta">22 nodes, 28 Sep</span></a></div>
+    <a class="nav-row" href="#"><svg class="ic chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 19a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/></svg><span>Work</span><span class="count">18</span></a>
+    <a class="nav-row" href="#"><svg class="ic chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 19a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/></svg><span>Reading notes</span><span class="count">24</span></a>
+    <a class="nav-row" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Recycle Bin</span><span class="count">3</span></a>
+  </nav>
+  <div class="sb-foot">
+    <button class="account-chip"><span class="avatar"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12H2M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1ZM6 16h.01M10 16h.01"/></svg></span>
+      <span class="acc-text"><span class="acc-name">Guest</span><span class="acc-sub">Sign in with Google to sync</span></span></button>
+  </div>
+</aside>
+  <main class="editor">
+    
+<header class="topbar">
+  <div class="crumbs"><span class="crumb-muted">Garden club</span><svg class="ic crumb-sep" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><span class="crumb-current">Community garden</span></div>
+  <div class="seg" role="radiogroup" aria-label="View"><button role="radio" aria-checked="true" class="seg-item on"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12h-8M21 6H8M21 18h-8M3 6v4a2 2 0 0 0 2 2h3M3 10v6a2 2 0 0 0 2 2h3"/></svg>Outline</button><button role="radio" aria-checked="false" class="seg-item"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="2.5"/><path d="M7.5 12c4 0 4-6 8-6M7.5 12c4 0 4 6 8 6M7.5 12h8"/><circle cx="18.5" cy="6" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/><circle cx="18.5" cy="18" r="1.6"/></svg>Mind map</button></div>
+  <div class="tb-right">
+    <span class="sync sync-local"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12H2M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1ZM6 16h.01M10 16h.01"/></svg>Local only</span>
+    <button class="btn btn-ghost btn-sm"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export</button>
+    <button class="icon-btn" aria-label="More"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+  </div>
+</header>
+    <div class="outline-wrap">
+      <div class="outline">
+        <h2 class="o-title">Community garden</h2>
+        <p class="o-meta">17 nodes in Garden club. Saved on this device.</p>
+        <div class="otree"><div class="orow o-l1 " style="padding-left:8px"><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-1)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span class="otext">Site</span></div><div class="orow " style="padding-left:32px"><i class="guide" style="left:47px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc"><i class="dot" style="background:var(--branch-1)"></i></span><span class="otext">Raised beds ×8</span></div><div class="orow is-hover" style="padding-left:32px"><i class="guide" style="left:47px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-1)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span class="otext">Shed &amp; tool wall</span><span class="row-actions"><button class="icon-btn icon-btn-xs" aria-label="Add child"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button><button class="icon-btn icon-btn-xs ai-ic" aria-label="Rewrite with AI"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3.5 12.7 9.3 18.5 11 12.7 12.7 11 18.5 9.3 12.7 3.5 11 9.3 9.3Z"/><path d="M18.5 3v4M16.5 5h4"/></svg></button><button class="icon-btn icon-btn-xs" aria-label="Node actions"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button></span></div><div class="orow-media" style="padding-left:84px"><i class="guide" style="left:47px"></i><i class="guide" style="left:71px"></i><figure class="img-node"><div class="img-ph"><svg viewBox="0 0 160 96" width="160" height="96" aria-hidden="true"><rect width="160" height="96" fill="var(--muted)"/><g fill="none" stroke="var(--muted-foreground)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M30 78V44l30-20 30 20v34Z"/><path d="M50 78V56h20v22"/><path d="M98 78h36M104 78V50M116 78V42M128 78V54"/><path d="M104 50l-4-6M116 42l4-6M128 54l3-5"/></g></svg></div><figcaption><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L5 21"/></svg>shed-sketch.jpg</figcaption></figure></div><div class="orow " style="padding-left:32px"><i class="guide" style="left:47px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-1)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="otext">Water access</span><span class="collapsed-count">1</span></div><div class="drop-line" style="margin-left:80px" aria-hidden="true"></div><div class="orow o-l1 " style="padding-left:8px"><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-2)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span class="otext">Budget</span></div><div class="orow " style="padding-left:32px"><i class="guide" style="left:47px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-2)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span class="otext">Council grant £1,200</span></div><div class="orow " style="padding-left:56px"><i class="guide" style="left:47px"></i><i class="guide" style="left:71px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc"><i class="dot" style="background:var(--branch-2)"></i></span><span class="otext"><a class="link-node" href="#"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.8 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>example.org/community-grants</a></span></div><div class="orow " style="padding-left:32px"><i class="guide" style="left:47px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc"><i class="dot" style="background:var(--branch-2)"></i></span><span class="otext">Seed swap fund</span></div><div class="orow-media" style="padding-left:60px"><i class="guide" style="left:47px"></i><table class="table-node"><thead><tr><th>Item</th><th>Cost</th></tr></thead><tbody><tr><td>Soil and compost</td><td>£320</td></tr><tr><td>Timber for beds</td><td>£540</td></tr><tr><td>Hand tools</td><td>£210</td></tr></tbody></table></div><div class="orow o-l1 " style="padding-left:8px"><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-3)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span class="otext">People</span></div><div class="orow is-selected" style="padding-left:32px"><i class="guide" style="left:47px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc"><i class="dot" style="background:var(--branch-3)"></i></span><span class="otext">Volunteer rota</span><span class="row-actions show"><button class="icon-btn icon-btn-xs is-pressed" aria-label="Node actions" aria-expanded="true"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button></span>
+<div class="menu menu-anchored" role="menu">
+  <div class="mi"><span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12H11M21 6H11M21 18H11M3 8l4 4-4 4"/></svg>Add child</span><span class="kbd">Tab</span></div>
+  <div class="mi"><span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 10 4 15l5 5"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>Add sibling</span><span class="kbd">⏎</span></div>
+  <div class="mi"><span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>Edit</span><span class="kbd">Space</span></div>
+  <div class="mi"><span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M12 3v18"/></svg>Turn into</span><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div>
+  <div class="msep"></div>
+  <div class="mi on"><span class="ai-txt"><svg class="ic ai-ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3.5 12.7 9.3 18.5 11 12.7 12.7 11 18.5 9.3 12.7 3.5 11 9.3 9.3Z"/><path d="M18.5 3v4M16.5 5h4"/></svg>Rewrite with AI</span><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div>
+  <div class="mi"><span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Copy as Markdown</span><span class="kbd">⌘⇧C</span></div>
+  <div class="msep"></div>
+  <div class="mi mi-danger"><span><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Delete</span><span class="kbd">⌫</span></div>
+<div class="menu menu-sub" role="menu">
+  <div class="mi on"><span>Make shorter</span></div>
+  <div class="mi"><span>Expand into children</span></div>
+  <div class="mi"><span>Fix spelling and grammar</span></div>
+  <div class="mi"><span>Make it a question</span></div>
+  <div class="msep"></div>
+  <div class="mi"><span>Custom instruction…</span></div>
+</div>
+</div></div><div class="orow " style="padding-left:32px"><i class="guide" style="left:47px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-3)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span class="otext">Workshops</span></div><div class="orow " style="padding-left:56px"><i class="guide" style="left:47px"></i><i class="guide" style="left:71px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc"><i class="dot" style="background:var(--branch-3)"></i></span><span class="otext">Kids' planting day</span></div><div class="orow " style="padding-left:56px"><i class="guide" style="left:47px"></i><i class="guide" style="left:71px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc"><i class="dot" style="background:var(--branch-3)"></i></span><span class="otext">Composting for beginners</span></div><div class="orow o-l1 " style="padding-left:8px"><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-4)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="otext">Calendar</span><span class="collapsed-count">2</span></div></div>
+        <button class="o-add"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>Add a branch</button>
+      </div>
+    </div>
+  </main>
+</div></div></div></section>
+  <section class="frame"><div class="frame-label"><span class="frame-letter">C</span><b>Generate a map</b><span>AI dialog with live draft preview</span></div><div class="scale scale-d"><div class="shot">
+<div class="app app-solo" style="width:1280px;height:760px">
+  <div class="canvas canvas-surface" style="inset:0"><div class="map "><svg class="wires" aria-hidden="true"><path d="M323.0 360.0 C351.0 360.0 351.0 298.0 379.0 298.0" style="stroke:var(--branch-1);stroke-width:3"/><path d="M323.0 360.0 C351.0 360.0 351.0 360.0 379.0 360.0" style="stroke:var(--branch-2);stroke-width:3"/><path d="M323.0 360.0 C351.0 360.0 351.0 422.0 379.0 422.0" style="stroke:var(--branch-3);stroke-width:3"/></svg><div class="n n-root" style="left:120px;top:336px;width:203px;">Lisbon in 3 days</div><div class="n n-l1" style="left:379px;top:280px;width:137px;--b:var(--branch-1);">Day 1: Alfama</div><div class="n n-l1" style="left:379px;top:342px;width:128px;--b:var(--branch-2);">Day 2: Belém</div><div class="n n-l1" style="left:379px;top:404px;width:137px;--b:var(--branch-3);">Day 3: Sintra</div></div></div>
+  <div class="scrim"></div>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="gd-title">
+    <div class="dlg-head">
+      <span class="ai-badge"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3.5 12.7 9.3 18.5 11 12.7 12.7 11 18.5 9.3 12.7 3.5 11 9.3 9.3Z"/><path d="M18.5 3v4M16.5 5h4"/></svg></span>
+      <div><h3 id="gd-title">Generate a map</h3><p>Describe a topic. You can edit everything afterwards.</p></div>
+      <button class="icon-btn" aria-label="Close"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="tabs" role="tablist"><button role="tab" aria-selected="true" class="tab on">From a prompt</button><button role="tab" aria-selected="false" class="tab">Summarize pasted text</button></div>
+    <label class="field-label" for="gd-prompt">What should the map be about?</label>
+    <div class="textarea" id="gd-prompt">A 3-day trip to Lisbon in November with food, viewpoints, and a backup plan for rainy days<span class="caret" aria-hidden="true"></span></div>
+    <div class="chips" aria-label="Examples"><button class="chip">Study plan for a biology exam</button><button class="chip">Pros and cons of moving city</button><button class="chip">Wedding to-do list</button></div>
+    <div class="opts">
+      <div><span class="field-label">Depth</span><div class="tg"><button class="tg-item">2</button><button class="tg-item on">3</button><button class="tg-item">4</button></div></div>
+      <div><span class="field-label">Main branches</span><div class="tg"><button class="tg-item on">Auto</button><button class="tg-item">4</button><button class="tg-item">6</button><button class="tg-item">8</button></div></div>
+      <div><span class="field-label">Language</span><button class="select"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>English<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
+      <div><span class="field-label">Add to</span><button class="select">New note<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
+    </div>
+    <div class="preview" aria-live="polite">
+      <div class="pv-head"><svg class="ic ai-ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3.5 12.7 9.3 18.5 11 12.7 12.7 11 18.5 9.3 12.7 3.5 11 9.3 9.3Z"/><path d="M18.5 3v4M16.5 5h4"/></svg>Drafting<span class="dots"><i></i><i></i><i></i></span></div>
+      <div class="pv-row l0">Lisbon in November</div>
+      <div class="pv-row l1"><i class="dot" style="background:var(--branch-1)"></i>Day 1: Alfama and Baixa</div>
+      <div class="pv-row l2">Miradouro de Santa Luzia at sunset</div>
+      <div class="pv-row l2">Lunch: bifanas near Rossio</div>
+      <div class="pv-row l1"><i class="dot" style="background:var(--branch-2)"></i>Day 2: Belém</div>
+      <div class="pv-row l2 shimmer-row"><span class="shimmer" style="width:58%"></span></div>
+      <div class="pv-row l2 shimmer-row"><span class="shimmer" style="width:40%"></span></div>
+    </div>
+    <div class="dlg-foot">
+      <span class="fine">Your prompt is sent to Google Gemini. Notes stay on this device.</span>
+      <button class="btn btn-ghost">Cancel</button>
+      <button class="btn btn-primary"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3.5 12.7 9.3 18.5 11 12.7 12.7 11 18.5 9.3 12.7 3.5 11 9.3 9.3Z"/><path d="M18.5 3v4M16.5 5h4"/></svg>Generate map<span class="kbd kbd-on-primary">⌘⏎</span></button>
+    </div>
+  </div>
+</div></div></div></section>
+  <section class="frame"><div class="frame-label"><span class="frame-letter">D</span><b>Mobile, 390 px</b><span>Outline with suggestion chips above the keyboard, and the library as a left sheet</span></div>
+    <div class="phones"><div class="scale scale-p">
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span class="sb-icons"><i></i><i></i><i></i></span></div>
+  <header class="m-top">
+    <button class="icon-btn" aria-label="Open library"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <div class="m-title"><span>Community garden</span><span class="sync sync-local m-sync"><svg class="ic " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12H2M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1ZM6 16h.01M10 16h.01"/></svg>Local only</span></div>
+    <div class="seg seg-icon" role="radiogroup" aria-label="View"><button class="seg-item on" aria-label="Outline"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12h-8M21 6H8M21 18h-8M3 6v4a2 2 0 0 0 2 2h3M3 10v6a2 2 0 0 0 2 2h3"/></svg></button><button class="seg-item" aria-label="Mind map"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="2.5"/><path d="M7.5 12c4 0 4-6 8-6M7.5 12c4 0 4 6 8 6M7.5 12h8"/><circle cx="18.5" cy="6" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/><circle cx="18.5" cy="18" r="1.6"/></svg></button></div>
+  </header>
+  <div class="m-body">
+    <div class="otree"><div class="orow o-l1 " style="padding-left:8px"><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-1)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="otext">Site</span><span class="collapsed-count">4</span></div><div class="orow o-l1 " style="padding-left:8px"><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-2)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="otext">Budget</span><span class="collapsed-count">3</span></div><div class="orow o-l1 " style="padding-left:8px"><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-3)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span class="otext">People</span></div><div class="orow " style="padding-left:32px"><i class="guide" style="left:47px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc"><i class="dot" style="background:var(--branch-3)"></i></span><span class="otext">Volunteer rota</span></div><div class="orow " style="padding-left:32px"><i class="guide" style="left:47px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-3)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="otext">Workshops</span><span class="collapsed-count">2</span></div><div class="orow o-l1 " style="padding-left:8px"><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-4)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span class="otext">Calendar</span></div><div class="orow " style="padding-left:32px"><i class="guide" style="left:47px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc"><i class="dot" style="background:var(--branch-4)"></i></span><span class="otext">March: soil prep</span></div><div class="orow " style="padding-left:32px"><i class="guide" style="left:47px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc"><i class="dot" style="background:var(--branch-4)"></i></span><span class="otext">May: first planting</span></div><div class="orow is-editing" style="padding-left:32px"><i class="guide" style="left:47px"></i><span class="grip"></span><span class="disc"><i class="dot" style="background:var(--branch-4)"></i></span><span class="otext">June: harv<span class="caret"></span><span class="ghost">est festival</span></span></div></div>
+  </div>
+  <div class="m-accessory">
+    <div class="m-sugs" role="listbox" aria-label="Suggestions">
+      <span class="ai-ic"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3.5 12.7 9.3 18.5 11 12.7 12.7 11 18.5 9.3 12.7 3.5 11 9.3 9.3Z"/><path d="M18.5 3v4M16.5 5h4"/></svg></span>
+      <button class="sug on">June: harvest festival</button><button class="sug">June: open garden day</button><button class="sug">June: watering rota</button>
+    </div>
+    <div class="m-tools">
+      <button class="icon-btn" aria-label="Outdent"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12H11M21 6H11M21 18H11M7 8l-4 4 4 4"/></svg></button>
+      <button class="icon-btn" aria-label="Indent, make child"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12H11M21 6H11M21 18H11M3 8l4 4-4 4"/></svg></button>
+      <button class="icon-btn" aria-label="Add sibling"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 10 4 15l5 5"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg></button>
+      <button class="icon-btn ai-ic" aria-label="Rewrite with AI"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3.5 12.7 9.3 18.5 11 12.7 12.7 11 18.5 9.3 12.7 3.5 11 9.3 9.3Z"/><path d="M18.5 3v4M16.5 5h4"/></svg></button>
+      <button class="icon-btn" aria-label="Insert image"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L5 21"/></svg></button>
+      <button class="m-done">Done</button>
+    </div>
+  </div>
+  <div class="kb" aria-hidden="true"><div class="kb-row"><i>q</i><i>w</i><i>e</i><i>r</i><i>t</i><i>y</i><i>u</i><i>i</i><i>o</i><i>p</i></div><div class="kb-row"><i>a</i><i>s</i><i>d</i><i>f</i><i>g</i><i>h</i><i>j</i><i>k</i><i>l</i></div><div class="kb-row"><i class="k-wide">⇧</i><i>z</i><i>x</i><i>c</i><i>v</i><i>b</i><i>n</i><i>m</i><i class="k-wide">⌫</i></div><div class="kb-row"><i class="k-wide">123</i><i class="k-space">space</i><i class="k-wide k-ret">return</i></div></div>
+</div></div><div class="scale scale-p">
+<div class="phone">
+  <div class="status-bar"><span>9:41</span><span class="sb-icons"><i></i><i></i><i></i></span></div>
+  <header class="m-top">
+    <button class="icon-btn" aria-label="Open library"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <div class="m-title"><span>Community garden</span></div>
+    <div class="seg seg-icon"><button class="seg-item on"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12h-8M21 6H8M21 18h-8M3 6v4a2 2 0 0 0 2 2h3M3 10v6a2 2 0 0 0 2 2h3"/></svg></button><button class="seg-item"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="2.5"/><path d="M7.5 12c4 0 4-6 8-6M7.5 12c4 0 4 6 8 6M7.5 12h8"/><circle cx="18.5" cy="6" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/><circle cx="18.5" cy="18" r="1.6"/></svg></button></div>
+  </header>
+  <div class="m-body">
+    <div class="otree"><div class="orow o-l1 " style="padding-left:8px"><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-1)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span class="otext">Site</span></div><div class="orow " style="padding-left:32px"><i class="guide" style="left:47px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc"><i class="dot" style="background:var(--branch-1)"></i></span><span class="otext">Raised beds ×8</span></div><div class="orow " style="padding-left:32px"><i class="guide" style="left:47px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc"><i class="dot" style="background:var(--branch-1)"></i></span><span class="otext">Shed &amp; tool wall</span></div><div class="orow o-l1 " style="padding-left:8px"><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-2)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span><span class="otext">Budget</span></div><div class="orow " style="padding-left:32px"><i class="guide" style="left:47px"></i><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc"><i class="dot" style="background:var(--branch-2)"></i></span><span class="otext">Council grant £1,200</span></div><div class="orow o-l1 " style="padding-left:8px"><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-3)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="otext">People</span></div><div class="orow o-l1 " style="padding-left:8px"><span class="grip"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg></span><span class="disc" style="color:var(--branch-4)"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></span><span class="otext">Calendar</span></div></div>
+  </div>
+  <div class="scrim scrim-phone"></div>
+  <div class="sheet" role="dialog" aria-label="Library">
+    <div class="sheet-inner">
+<aside class="sidebar" aria-label="Library">
+  <div class="sb-head">
+    <svg class="mark" width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="var(--mark-ink, var(--primary))" stroke-width="2.6" stroke-linecap="round"><path d="M11 16.5C16 16.5 16 7 24.5 7"/><path d="M11 16.5C16.5 16.5 18 15.6 26.5 15.6"/><path d="M11 16.5C16 16.5 16.5 24.6 22.5 24.6"/></g><circle cx="8" cy="16.5" r="4.6" fill="var(--mark-ink, var(--primary))"/><circle cx="25.2" cy="7" r="2.9" fill="var(--ai)"/><circle cx="27" cy="15.6" r="2.1" fill="var(--mark-ink, var(--primary))"/><circle cx="23" cy="24.6" r="2.1" fill="var(--mark-ink, var(--primary))"/></svg><span class="sb-name">MindNote Web</span>
+    <button class="icon-btn" aria-label="Settings"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></button><button class="icon-btn" aria-label="Close library"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+  <button class="search-trigger"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7.5"/><path d="m20.5 20.5-4.2-4.2"/></svg><span>Search notes</span><span class="kbd">⌘K</span></button>
+  <div class="sb-actions">
+    <button class="btn btn-primary btn-sm"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>New note</button>
+    <button class="btn btn-ai btn-sm"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3.5 12.7 9.3 18.5 11 12.7 12.7 11 18.5 9.3 12.7 3.5 11 9.3 9.3Z"/><path d="M18.5 3v4M16.5 5h4"/></svg>Generate</button>
+  </div>
+  <nav class="sb-nav">
+    <a class="nav-row" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg><span>All notes</span><span class="count">47</span></a>
+    <a class="nav-row" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Recent</span></a>
+    <a class="nav-row" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="7" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/><rect x="15" y="14" width="6" height="7" rx="1.5"/></svg><span>Templates</span></a>
+    <div class="sb-label">Folders <button class="icon-btn icon-btn-xs" aria-label="New folder"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button></div>
+    <a class="nav-row is-open" href="#"><svg class="ic chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 19a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/></svg><span>Garden club</span><span class="count">5</span></a>
+    <div class="note-list"><a class="note-row is-active" href="#"><span class="note-title">Community garden</span><span class="note-meta">17 nodes, edited just now</span></a><a class="note-row" href="#"><span class="note-title">Seed swap flyer</span><span class="note-meta">9 nodes, yesterday</span></a><a class="note-row" href="#"><span class="note-title">Grant application</span><span class="note-meta">31 nodes, 12 Oct</span></a><a class="note-row" href="#"><span class="note-title">Volunteer FAQ</span><span class="note-meta">14 nodes, 3 Oct</span></a><a class="note-row" href="#"><span class="note-title">Tool inventory</span><span class="note-meta">22 nodes, 28 Sep</span></a></div>
+    <a class="nav-row" href="#"><svg class="ic chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 19a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/></svg><span>Work</span><span class="count">18</span></a>
+    <a class="nav-row" href="#"><svg class="ic chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 19a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/></svg><span>Reading notes</span><span class="count">24</span></a>
+    <a class="nav-row" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Recycle Bin</span><span class="count">3</span></a>
+  </nav>
+  <div class="sb-foot">
+    <button class="account-chip"><span class="avatar"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12H2M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1ZM6 16h.01M10 16h.01"/></svg></span>
+      <span class="acc-text"><span class="acc-name">Guest</span><span class="acc-sub">Sign in with Google to sync</span></span></button>
+  </div>
+</aside></div>
+  </div>
+</div></div></div></section>
+  <section class="frame"><div class="frame-label"><span class="frame-letter">E</span><b>Dark theme</b><span>Frame A with the .dark class, signed in and synced</span></div><div class="scale scale-d"><div class="shot">
+<div class="app dark" style="width:1280px;height:800px">
+  
+<aside class="sidebar" aria-label="Library">
+  <div class="sb-head">
+    <svg class="mark" width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="var(--mark-ink, var(--primary))" stroke-width="2.6" stroke-linecap="round"><path d="M11 16.5C16 16.5 16 7 24.5 7"/><path d="M11 16.5C16.5 16.5 18 15.6 26.5 15.6"/><path d="M11 16.5C16 16.5 16.5 24.6 22.5 24.6"/></g><circle cx="8" cy="16.5" r="4.6" fill="var(--mark-ink, var(--primary))"/><circle cx="25.2" cy="7" r="2.9" fill="var(--ai)"/><circle cx="27" cy="15.6" r="2.1" fill="var(--mark-ink, var(--primary))"/><circle cx="23" cy="24.6" r="2.1" fill="var(--mark-ink, var(--primary))"/></svg><span class="sb-name">MindNote Web</span>
+    <button class="icon-btn" aria-label="Settings"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></button><button class="icon-btn" aria-label="Collapse sidebar"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg></button>
+  </div>
+  <button class="search-trigger"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7.5"/><path d="m20.5 20.5-4.2-4.2"/></svg><span>Search notes</span><span class="kbd">⌘K</span></button>
+  <div class="sb-actions">
+    <button class="btn btn-primary btn-sm"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>New note</button>
+    <button class="btn btn-ai btn-sm"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3.5 12.7 9.3 18.5 11 12.7 12.7 11 18.5 9.3 12.7 3.5 11 9.3 9.3Z"/><path d="M18.5 3v4M16.5 5h4"/></svg>Generate</button>
+  </div>
+  <nav class="sb-nav">
+    <a class="nav-row" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg><span>All notes</span><span class="count">47</span></a>
+    <a class="nav-row" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Recent</span></a>
+    <a class="nav-row" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="7" rx="1.5"/><rect x="3" y="14" width="8" height="7" rx="1.5"/><rect x="15" y="14" width="6" height="7" rx="1.5"/></svg><span>Templates</span></a>
+    <div class="sb-label">Folders <button class="icon-btn icon-btn-xs" aria-label="New folder"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button></div>
+    <a class="nav-row is-open" href="#"><svg class="ic chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 19a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/></svg><span>Garden club</span><span class="count">5</span></a>
+    <div class="note-list"><a class="note-row is-active" href="#"><span class="note-title">Community garden</span><span class="note-meta">17 nodes, edited just now</span></a><a class="note-row" href="#"><span class="note-title">Seed swap flyer</span><span class="note-meta">9 nodes, yesterday</span></a><a class="note-row" href="#"><span class="note-title">Grant application</span><span class="note-meta">31 nodes, 12 Oct</span></a><a class="note-row" href="#"><span class="note-title">Volunteer FAQ</span><span class="note-meta">14 nodes, 3 Oct</span></a><a class="note-row" href="#"><span class="note-title">Tool inventory</span><span class="note-meta">22 nodes, 28 Sep</span></a></div>
+    <a class="nav-row" href="#"><svg class="ic chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 19a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/></svg><span>Work</span><span class="count">18</span></a>
+    <a class="nav-row" href="#"><svg class="ic chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 19a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/></svg><span>Reading notes</span><span class="count">24</span></a>
+    <a class="nav-row" href="#"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Recycle Bin</span><span class="count">3</span></a>
+  </nav>
+  <div class="sb-foot">
+    <button class="account-chip"><span class="avatar"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12H2M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1ZM6 16h.01M10 16h.01"/></svg></span>
+      <span class="acc-text"><span class="acc-name">Rosa Alvarez</span><span class="acc-sub">Synced with Google</span></span></button>
+  </div>
+</aside>
+  <main class="editor">
+    
+<header class="topbar">
+  <div class="crumbs"><span class="crumb-muted">Garden club</span><svg class="ic crumb-sep" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg><span class="crumb-current">Community garden</span></div>
+  <div class="seg" role="radiogroup" aria-label="View"><button role="radio" aria-checked="false" class="seg-item"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12h-8M21 6H8M21 18h-8M3 6v4a2 2 0 0 0 2 2h3M3 10v6a2 2 0 0 0 2 2h3"/></svg>Outline</button><button role="radio" aria-checked="true" class="seg-item on"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="2.5"/><path d="M7.5 12c4 0 4-6 8-6M7.5 12c4 0 4 6 8 6M7.5 12h8"/><circle cx="18.5" cy="6" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/><circle cx="18.5" cy="18" r="1.6"/></svg>Mind map</button></div>
+  <div class="tb-right">
+    <span class="sync sync-synced"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 1 1 0 9Z"/><path d="m9 14 2 2 4-4"/></svg>Synced</span>
+    <button class="btn btn-ghost btn-sm"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export</button>
+    <button class="icon-btn" aria-label="More"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+  </div>
+</header>
+    <div class="canvas canvas-surface">
+      
+<div class="float float-top" role="toolbar" aria-label="Map controls">
+  <div class="tg" role="radiogroup" aria-label="Expand to level">
+    <button class="tg-item on">All</button><button class="tg-item">L1</button><button class="tg-item">L2</button><button class="tg-item">L3</button>
+  </div>
+  <span class="vsep"></span>
+  <button class="tool-btn" aria-label="Map style"><span class="swatches"><i style="background:var(--branch-1)"></i><i style="background:var(--branch-2)"></i><i style="background:var(--branch-3)"></i></span>Ballpoint<svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+  <span class="vsep"></span>
+  <button class="tool-btn" aria-label="Restore view"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.8 9.8 0 0 0-6.7 2.7L3 8"/><path d="M3 3v5h5"/></svg>Restore view</button>
+</div>
+<div class="float float-bl" role="toolbar" aria-label="Zoom">
+  <button class="icon-btn" aria-label="Zoom out"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><span class="zoom">100%</span><button class="icon-btn" aria-label="Zoom in"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button>
+  <span class="vsep"></span><button class="icon-btn" aria-label="Fit to screen"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
+</div>
+<div class="float float-br"><span class="kbd">?</span><span class="hint">Shortcuts</span></div>
+      <div class="map "><svg class="wires" aria-hidden="true"><path d="M259.0 366.0 C287.0 366.0 287.0 190.0 315.0 190.0" style="stroke:var(--branch-1);stroke-width:3"/><path d="M259.0 366.0 C287.0 366.0 287.0 306.0 315.0 306.0" style="stroke:var(--branch-2);stroke-width:3"/><path d="M259.0 366.0 C287.0 366.0 287.0 412.5 315.0 412.5" style="stroke:var(--branch-3);stroke-width:3"/><path d="M259.0 366.0 C287.0 366.0 287.0 542.0 315.0 542.0" style="stroke:var(--branch-4);stroke-width:3"/><path d="M376.0 190.0 C398.0 190.0 398.0 164.0 420.0 164.0" style="stroke:var(--branch-1);stroke-width:2"/><path d="M376.0 190.0 C398.0 190.0 398.0 204.0 420.0 204.0" style="stroke:var(--branch-1);stroke-width:2"/><path d="M376.0 190.0 C398.0 190.0 398.0 244.0 420.0 244.0" style="stroke:var(--branch-1);stroke-width:2"/><path d="M516.0 244.0 C534.0 244.0 534.0 244.0 552.0 244.0" style="stroke:var(--branch-1);stroke-width:1.75"/><path d="M393.0 306.0 C415.0 306.0 415.0 300.0 437.0 300.0" style="stroke:var(--branch-2);stroke-width:2"/><path d="M393.0 306.0 C415.0 306.0 415.0 340.0 437.0 340.0" style="stroke:var(--branch-2);stroke-width:2"/><path d="M393.0 412.5 C415.0 412.5 415.0 396.0 437.0 396.0" style="stroke:var(--branch-3);stroke-width:2"/><path d="M393.0 412.5 C415.0 412.5 415.0 457.0 437.0 457.0" style="stroke:var(--branch-3);stroke-width:2"/><path d="M512.0 457.0 C530.0 457.0 530.0 436.0 548.0 436.0" style="stroke:var(--branch-3);stroke-width:1.75"/><path d="M512.0 457.0 C530.0 457.0 530.0 464.0 548.0 464.0" style="stroke:var(--branch-3);stroke-width:1.75"/><path d="M410.0 542.0 C432.0 542.0 432.0 536.0 454.0 536.0" style="stroke:var(--branch-4);stroke-width:2"/><path d="M410.0 542.0 C432.0 542.0 432.0 576.0 454.0 576.0" style="stroke:var(--branch-4);stroke-width:2"/></svg><div class="n n-root" style="left:56px;top:342px;width:203px;">Community garden</div><div class="n n-l1" style="left:315px;top:172px;width:61px;--b:var(--branch-1);">Site</div><div class="n n-leaf" style="left:420px;top:135px;width:110px;--b:var(--branch-1);">Raised beds ×8</div><div class="n n-leaf" style="left:420px;top:175px;width:124px;--b:var(--branch-1);">Shed &amp; tool wall</div><div class="n n-leaf" style="left:420px;top:215px;width:96px;--b:var(--branch-1);">Water access</div><div class="n n-leaf" style="left:552px;top:215px;width:96px;--b:var(--branch-1);">Rain barrels</div><div class="n n-l1" style="left:315px;top:288px;width:78px;--b:var(--branch-2);">Budget</div><div class="n n-leaf" style="left:437px;top:271px;width:152px;--b:var(--branch-2);">Council grant £1,200</div><div class="n n-leaf" style="left:437px;top:311px;width:110px;--b:var(--branch-2);">Seed swap fund</div><div class="n n-l1" style="left:315px;top:394px;width:78px;--b:var(--branch-3);">People</div><div class="n n-leaf" style="left:437px;top:367px;width:110px;--b:var(--branch-3);">Volunteer rota</div><div class="n n-leaf" style="left:437px;top:428px;width:75px;--b:var(--branch-3);">Workshops</div><div class="n n-leaf" style="left:548px;top:407px;width:138px;--b:var(--branch-3);">Kids&#x27; planting day</div><div class="n n-edit" style="left:548px;top:447px;width:236px;--b:var(--branch-3);"><span>Composting for beg</span><span class="caret" aria-hidden="true"></span><span class="ghost">inners</span><span class="kbd kbd-ai" title="Tab accepts suggestion">Tab</span></div><div class="n n-l1" style="left:315px;top:524px;width:95px;--b:var(--branch-4);">Calendar</div><div class="n n-leaf" style="left:454px;top:507px;width:124px;--b:var(--branch-4);">March: soil prep</div><div class="n n-leaf" style="left:454px;top:547px;width:145px;--b:var(--branch-4);">May: first planting</div></div>
+      
+<div class="ta" role="listbox" aria-label="Suggestions" style="left:548px;top:489px">
+  <div class="ta-head"><svg class="ic ai-ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3.5 12.7 9.3 18.5 11 12.7 12.7 11 18.5 9.3 12.7 3.5 11 9.3 9.3Z"/><path d="M18.5 3v4M16.5 5h4"/></svg><span>Suggestions from <b>Workshops</b> and 1 sibling</span></div>
+  <div class="ta-item on" role="option" aria-selected="true"><span>Composting for beg<b>inners</b></span><span class="kbd">⏎</span></div>
+  <div class="ta-item" role="option"><span>Composting with <b>kitchen scraps</b></span></div>
+  <div class="ta-item" role="option"><span>Compost bins: <b>build day</b></span></div>
+  <div class="ta-item ta-local" role="option"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg><span>Compost rota</span><span class="ta-src">Allotment 2025</span></div>
+  <div class="ta-foot"><span><span class="kbd">↑</span><span class="kbd">↓</span>choose</span><span><span class="kbd">⏎</span>insert</span><span><span class="kbd">Tab</span>accept</span><span><span class="kbd">Esc</span>close</span></div>
+</div>
+    </div>
+  </main>
+</div></div></div></section>
+  <section class="frame"><div class="frame-label"><span class="frame-letter">F</span><b>Marketing landing, hero</b><span>Display face Bricolage Grotesque; the product's own two views are the hero image</span></div><div class="scale scale-d"><div class="shot">
+<div class="site" style="width:1280px">
+  <nav class="site-nav">
+    <a class="site-brand" href="#"><svg class="mark" width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="var(--mark-ink, var(--primary))" stroke-width="2.6" stroke-linecap="round"><path d="M11 16.5C16 16.5 16 7 24.5 7"/><path d="M11 16.5C16.5 16.5 18 15.6 26.5 15.6"/><path d="M11 16.5C16 16.5 16.5 24.6 22.5 24.6"/></g><circle cx="8" cy="16.5" r="4.6" fill="var(--mark-ink, var(--primary))"/><circle cx="25.2" cy="7" r="2.9" fill="var(--ai)"/><circle cx="27" cy="15.6" r="2.1" fill="var(--mark-ink, var(--primary))"/><circle cx="23" cy="24.6" r="2.1" fill="var(--mark-ink, var(--primary))"/></svg><span>MindNote Web</span></a>
+    <div class="site-links"><a href="#">How it works</a><a href="#">Templates</a><a href="#">Privacy</a></div>
+    <a class="btn btn-outline" href="#">Open the app</a>
+  </nav>
+  <section class="hero">
+    <div class="hero-copy">
+      <h1>Every note is a list and a map.</h1>
+      <div class="hero-side">
+      <p class="lede">Write an outline, flip it into a mind map, flip it back. Tab branches a thought, Enter continues it, and suggestions follow what the rest of your map is about.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary btn-lg" href="#">Start a note</a>
+        <a class="btn btn-ghost btn-lg" href="#"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>Import Markdown</a>
+      </div>
+      <p class="hero-fine">Free in your browser. Works offline. No account until you want sync.</p>
+      </div>
+    </div>
+    <div class="hero-stage canvas-surface">
+      <div class="hero-toggle seg"><button class="seg-item"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12h-8M21 6H8M21 18h-8M3 6v4a2 2 0 0 0 2 2h3M3 10v6a2 2 0 0 0 2 2h3"/></svg>Outline</button><button class="seg-item on"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="2.5"/><path d="M7.5 12c4 0 4-6 8-6M7.5 12c4 0 4 6 8 6M7.5 12h8"/><circle cx="18.5" cy="6" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/><circle cx="18.5" cy="18" r="1.6"/></svg>Mind map</button></div>
+      <div class="hero-outline">
+        <div class="ho-title">Heat islands</div>
+        <div class="ho-row"><i class="dot" style="background:var(--branch-1)"></i>Causes</div>
+        <div class="ho-row ho-2">Asphalt and dark roofs</div>
+        <div class="ho-row ho-2">Lost tree cover</div>
+        <div class="ho-row"><i class="dot" style="background:var(--branch-2)"></i>Effects</div>
+        <div class="ho-row ho-2">Hotter nights</div>
+        <div class="ho-row"><i class="dot" style="background:var(--branch-3)"></i>Fixes</div>
+        <div class="ho-row ho-2">Cool roofs</div>
+      </div>
+      <svg class="hero-arrow" width="120" height="80" viewBox="0 0 120 80" aria-hidden="true"><path d="M6 14c34-10 70 0 92 40" fill="none" stroke="var(--muted-foreground)" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="2 6"/><path d="M90 50l9 6 2-11" fill="none" stroke="var(--muted-foreground)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="hero-map"><div class="map "><svg class="wires" aria-hidden="true"><path d="M202.0 224.5 C230.0 224.5 230.0 118.0 258.0 118.0" style="stroke:var(--branch-1);stroke-width:3"/><path d="M202.0 224.5 C230.0 224.5 230.0 214.0 258.0 214.0" style="stroke:var(--branch-2);stroke-width:3"/><path d="M202.0 224.5 C230.0 224.5 230.0 331.0 258.0 331.0" style="stroke:var(--branch-3);stroke-width:3"/><path d="M336.0 118.0 C358.0 118.0 358.0 112.0 380.0 112.0" style="stroke:var(--branch-1);stroke-width:2"/><path d="M336.0 118.0 C358.0 118.0 358.0 152.0 380.0 152.0" style="stroke:var(--branch-1);stroke-width:2"/><path d="M344.0 214.0 C366.0 214.0 366.0 208.0 388.0 208.0" style="stroke:var(--branch-2);stroke-width:2"/><path d="M344.0 214.0 C366.0 214.0 366.0 248.0 388.0 248.0" style="stroke:var(--branch-2);stroke-width:2"/><path d="M328.0 331.0 C350.0 331.0 350.0 304.0 372.0 304.0" style="stroke:var(--branch-3);stroke-width:2"/><path d="M328.0 331.0 C350.0 331.0 350.0 344.0 372.0 344.0" style="stroke:var(--branch-3);stroke-width:2"/><path d="M328.0 331.0 C350.0 331.0 350.0 372.0 372.0 372.0" style="stroke:var(--branch-3);stroke-width:2"/></svg><div class="n n-root" style="left:40px;top:200px;width:162px;">Heat islands</div><div class="n n-l1" style="left:258px;top:100px;width:78px;--b:var(--branch-1);">Causes</div><div class="n n-leaf" style="left:380px;top:83px;width:166px;--b:var(--branch-1);">Asphalt and dark roofs</div><div class="n n-leaf" style="left:380px;top:123px;width:117px;--b:var(--branch-1);">Lost tree cover</div><div class="n n-l1" style="left:258px;top:196px;width:86px;--b:var(--branch-2);">Effects</div><div class="n n-leaf" style="left:388px;top:179px;width:103px;--b:var(--branch-2);">Hotter nights</div><div class="n n-leaf" style="left:388px;top:219px;width:152px;--b:var(--branch-2);">Heat-related illness</div><div class="n n-l1" style="left:258px;top:313px;width:70px;--b:var(--branch-3);">Fixes</div><div class="n n-leaf" style="left:372px;top:275px;width:82px;--b:var(--branch-3);">Cool roofs</div><div class="n n-leaf" style="left:372px;top:315px;width:96px;--b:var(--branch-3);">Street trees</div><div class="n n-edit" style="left:372px;top:355px;width:149px;--b:var(--branch-3);"><span>Pocket par</span><span class="caret" aria-hidden="true"></span><span class="ghost">ks</span><span class="kbd kbd-ai" title="Tab accepts suggestion">Tab</span></div></div></div>
+    </div>
+  </section>
+  <section class="proof">
+    <div><h4>Keyboard first</h4><p>Tab to branch, Enter for the next idea, Space to edit. Your hands stay on the keys.</p></div>
+    <div><h4>Suggestions with context</h4><p>Each node suggests completions from its parents and siblings, and falls back to your own notes offline.</p></div>
+    <div><h4>Yours by default</h4><p>Notes live on this device. Sign in with Google only when you want them on your other devices.</p></div>
+  </section>
+</div></div></div></section>
+</main>
+</body>
+</html>

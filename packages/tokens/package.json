@@ -1,0 +1,8 @@
+{
+  "name": "@mindnote/tokens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared design tokens (shadcn / Tailwind v4 CSS variables) for the app and marketing site.",
+  "exports": { "./tokens.css": "./tokens.css" },
+  "files": ["tokens.css"]
+}

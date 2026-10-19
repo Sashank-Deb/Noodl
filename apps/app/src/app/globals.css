@@ -1,0 +1,153 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@mindnote/tokens/tokens.css";
+
+/* Next/font exposes Onest as --font-onest (see layout.tsx). */
+
+html,
+body {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+/* ---- Canvas -------------------------------------------------------------- */
+.map-canvas {
+  background-color: var(--canvas);
+  background-image: radial-gradient(var(--canvas-dot) 1.2px, transparent 1.3px);
+  cursor: default;
+}
+.map-canvas:active {
+  cursor: grabbing;
+}
+
+.float-bar {
+  background: var(--canvas-toolbar);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--canvas-shadow);
+}
+
+/* ---- Map nodes (DESIGN.md §6) ------------------------------------------- */
+.map-node {
+  color: var(--node-fg);
+  --b: var(--branch);
+  cursor: default;
+}
+.map-node-root {
+  background: var(--node-root-bg);
+  color: var(--node-root-fg);
+  border-radius: 14px;
+  letter-spacing: -0.01em;
+  text-align: center;
+  box-shadow:
+    0 2px 0 oklch(0 0 0 / 0.12),
+    0 10px 24px -12px oklch(0.22 0.03 264 / 0.5);
+}
+.map-node-l1 {
+  border-radius: 10px;
+  text-align: center;
+  background: color-mix(in oklch, var(--b) 13%, var(--node-bg));
+  border: 1.5px solid color-mix(in oklch, var(--b) 60%, var(--node-bg));
+  box-shadow: 0 1px 0 color-mix(in oklch, var(--b) 30%, transparent);
+}
+.map-node-leaf {
+  border-radius: 0;
+  box-shadow: inset 0 -2px 0 var(--b);
+}
+.map-node-boxed {
+  border-radius: 8px;
+  background: var(--node-bg);
+  border: 1px solid var(--node-border);
+  box-shadow: inset 3px 0 0 var(--b);
+}
+.map-node-editing {
+  z-index: 3;
+  background: var(--node-bg) !important;
+  color: var(--node-fg) !important;
+  border: 1px solid var(--node-border);
+  border-radius: 9px !important;
+  text-align: left;
+  box-shadow:
+    0 0 0 2px var(--node-selected),
+    0 0 0 6px var(--node-selected-halo) !important;
+}
+.map-node-selected:not(.map-node-editing) {
+  z-index: 2;
+  outline: 2px solid var(--node-selected);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 7px var(--node-selected-halo);
+}
+.map-node-leaf.map-node-selected:not(.map-node-editing) {
+  box-shadow:
+    inset 0 -2px 0 var(--b),
+    0 0 0 7px var(--node-selected-halo);
+  border-radius: 6px;
+}
+.map-node-drop {
+  background: var(--node-drop) !important;
+  outline: 2px dashed var(--node-selected);
+  outline-offset: 3px;
+}
+.map-node a {
+  color: var(--primary);
+}
+
+/* ---- Outline drag indicators ------------------------------------------- */
+.outline-drop-inside {
+  background: var(--node-drop);
+}
+.outline-drop-before {
+  box-shadow: inset 0 2px 0 var(--node-selected);
+}
+.outline-drop-after {
+  box-shadow: inset 0 -2px 0 var(--node-selected);
+}
+
+/* ---- AI affordances ------------------------------------------------------ */
+.ai-shimmer {
+  background: linear-gradient(90deg, var(--muted) 0%, var(--ai-shimmer) 45%, var(--muted) 90%);
+  background-size: 200% 100%;
+  animation: ai-shim 1.4s var(--ease-in-out) infinite;
+}
+@keyframes ai-shim {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+.kbd-ai {
+  display: inline-grid;
+  place-items: center;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 5px;
+  border: 1px solid color-mix(in oklch, var(--ai) 60%, var(--card));
+  border-bottom-width: 2px;
+  background: var(--ai-soft);
+  color: var(--ai-strong);
+  font: 500 10.5px/1 var(--font-mono);
+  vertical-align: 2px;
+}
+.kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  background: var(--card);
+  font: 500 11px/1 var(--font-mono);
+  color: var(--muted-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-shimmer {
+    animation: none;
+    background: var(--ai-soft);
+  }
+}
