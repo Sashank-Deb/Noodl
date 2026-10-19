@@ -44,8 +44,14 @@ const toUser = (u: User): AuthUser => ({
   photoURL: (u.user_metadata?.avatar_url as string) ?? (u.user_metadata?.picture as string) ?? null,
 });
 
-/** Where Supabase sends people back after Google sign-in. */
-const redirectTo = () => `${window.location.origin}/app/`;
+/**
+ * Where Supabase sends people back after Google sign-in. Must match an entry in
+ * Supabase → Authentication → URL Configuration → Redirect URLs.
+ * Local runs (localhost) return to themselves so testing keeps working.
+ */
+const AUTH_REDIRECT_URL = process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL || "https://noodl-iota.vercel.app/app/";
+const redirectTo = () =>
+  /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? `${window.location.origin}/app/` : AUTH_REDIRECT_URL;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
