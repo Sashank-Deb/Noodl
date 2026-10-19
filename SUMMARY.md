@@ -121,7 +121,7 @@ On macOS, `Start noodl.command` / `Dev noodl.command` at the repo root are doubl
 
 Without env vars the app runs fully local: no sign-in, no sync, local typeahead only.
 
-Env vars (see `.env.example`): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (public), `GEMINI_API_KEY` + optional `GEMINI_MODEL` (server only), `NEXT_PUBLIC_SITE_URL`; local dev only: `NEXT_PUBLIC_AI_ENDPOINT`, `AI_ALLOWED_ORIGINS`.
+Env vars (see `.env.example`): `NEXT_PUBLIC_Noodl_NOODLSUPABASE_URL`, `NEXT_PUBLIC_Noodl_NOODLSUPABASE_PUBLISHABLE_KEY` (public), `GEMINI_API_KEY` + optional `GEMINI_MODEL` (server only), `NEXT_PUBLIC_SITE_URL`; local dev only: `NEXT_PUBLIC_AI_ENDPOINT`, `AI_ALLOWED_ORIGINS`.
 
 **How it was verified.** Playwright (Python) end-to-end runs against the static builds checked:
 - map rendering, Tab/Enter node creation, ghost-text accept, picking a suggestion with ↑↓ and Enter, ideas mode

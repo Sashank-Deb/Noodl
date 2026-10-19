@@ -5,10 +5,16 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// Names match the Vercel ↔ Supabase integration (project "Noodl", prefix "NOODL").
+// Next.js inlines NEXT_PUBLIC_* at build time, so each name must be written out literally.
+// The older NEXT_PUBLIC_SUPABASE_* names still work as a fallback.
+const url = process.env.NEXT_PUBLIC_Noodl_NOODLSUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 // Supabase calls this the "publishable" (formerly "anon") key. It is public by design;
 // row-level security in supabase/migrations protects the data.
-const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const key =
+  process.env.NEXT_PUBLIC_Noodl_NOODLSUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export const supabaseConfigured = Boolean(url && key);
 

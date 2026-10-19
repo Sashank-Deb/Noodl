@@ -11,7 +11,8 @@
  *    free Gemini quota; Gemini's own 429s are passed through.
  *
  * Env: GEMINI_API_KEY (required), GEMINI_MODEL (default gemini-3.1-flash-lite),
- *      SUPABASE_URL + SUPABASE_PUBLISHABLE_KEY (or the NEXT_PUBLIC_ / ANON_KEY variants),
+ *      NEXT_PUBLIC_Noodl_NOODLSUPABASE_URL + NEXT_PUBLIC_Noodl_NOODLSUPABASE_PUBLISHABLE_KEY
+ *      (older SUPABASE_* / NEXT_PUBLIC_SUPABASE_* names also accepted),
  *      AI_ALLOWED_ORIGINS (optional, comma-separated, for cross-origin local dev).
  */
 
@@ -114,9 +115,13 @@ async function verifyUser(token, env) {
   const hit = tokenCache.get(token);
   const now = Date.now();
   if (hit && hit.until > now) return hit.uid;
-  const url = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = env.NEXT_PUBLIC_Noodl_NOODLSUPABASE_URL || env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;
   const key =
-    env.SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_ANON_KEY || env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    env.NEXT_PUBLIC_Noodl_NOODLSUPABASE_PUBLISHABLE_KEY ||
+    env.SUPABASE_PUBLISHABLE_KEY ||
+    env.SUPABASE_ANON_KEY ||
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) throw Object.assign(new Error("Sign-in is not configured on the server"), { status: 500 });
   const res = await fetch(`${url.replace(/\/$/, "")}/auth/v1/user`, { headers: { apikey: key, authorization: `Bearer ${token}` } });
   if (!res.ok) return null;
