@@ -9,10 +9,13 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Sidebar } from "@/components/library/sidebar";
 import { Editor, MOD } from "@/components/editor/editor";
-import { GenerateDialog } from "@/components/dialogs/generate-dialog";
-import { TemplatesDialog } from "@/components/dialogs/templates-dialog";
-import { SettingsDialog } from "@/components/dialogs/settings-dialog";
-import { SearchDialog } from "@/components/dialogs/search-dialog";
+import dynamic from "next/dynamic";
+
+// Dialogs are code-split: they load the first time they're opened.
+const GenerateDialog = dynamic(() => import("@/components/dialogs/generate-dialog").then((m) => m.GenerateDialog), { ssr: false });
+const TemplatesDialog = dynamic(() => import("@/components/dialogs/templates-dialog").then((m) => m.TemplatesDialog), { ssr: false });
+const SettingsDialog = dynamic(() => import("@/components/dialogs/settings-dialog").then((m) => m.SettingsDialog), { ssr: false });
+const SearchDialog = dynamic(() => import("@/components/dialogs/search-dialog").then((m) => m.SearchDialog), { ssr: false });
 import { Mark } from "@/components/mark";
 import { useEditor } from "@/store/editor-store";
 import { useSettings } from "@/context/settings";
@@ -294,10 +297,10 @@ export function AppShell() {
         }}
       />
 
-      <GenerateDialog open={genOpen} onOpenChange={setGenOpen} onCreate={fromOutline} />
-      <TemplatesDialog open={tplOpen} onOpenChange={setTplOpen} onPick={(t) => (t.id === "blank" ? (setTplOpen(false), newNote()) : fromOutline(t.outline))} />
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-      <SearchDialog
+      {genOpen && <GenerateDialog open={genOpen} onOpenChange={setGenOpen} onCreate={fromOutline} />}
+      {tplOpen && <TemplatesDialog open={tplOpen} onOpenChange={setTplOpen} onPick={(t) => (t.id === "blank" ? (setTplOpen(false), newNote()) : fromOutline(t.outline))} />}
+      {settingsOpen && <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />}
+      {searchOpen && <SearchDialog
         open={searchOpen}
         onOpenChange={setSearchOpen}
         actions={{
@@ -309,7 +312,7 @@ export function AppShell() {
           settings: () => setSettingsOpen(true),
           toggleTheme: () => setTheme(resolvedTheme === "dark" ? "light" : "dark"),
         }}
-      />
+      />}
 
       {dragOver && (
         <div className="pointer-events-none fixed inset-0 z-50 grid place-items-center bg-background/80 backdrop-blur-sm">

@@ -115,7 +115,7 @@ export async function stopSync() {
 }
 
 /** Returns 1 if a conflict copy was created. */
-async function mergeRemote(remote: Note): Promise<number> {
+export async function mergeRemote(remote: Note): Promise<number> {
   const local = await db().notes.get(remote.id);
   if (!local) {
     await db().notes.put({ ...remote, syncedAt: remote.updatedAt });

@@ -31,7 +31,7 @@ export function SyncChip() {
           aria-live="polite"
           tabIndex={0}
           className="mr-1 inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-[13px] font-medium"
-          style={{ color: cfg.color, background: `color-mix(in oklch, ${cfg.color} 12%, var(--background))` }}
+          style={{ color: cfg.color, background: `color-mix(in srgb, ${cfg.color} 14%, var(--background))` }}
         >
           <Icon className={cn("size-3.5", s === "syncing" && "motion-safe:animate-spin")} aria-hidden />
           <span className="hidden sm:inline">{cfg.label}</span>
