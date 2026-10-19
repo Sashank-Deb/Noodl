@@ -111,7 +111,7 @@ const AI_TOOLS: { title: string; body: string; how: string }[] = [
   },
   {
     title: "Rewrite a node",
-    body: "Make it shorter, more specific or clearer, fix spelling and grammar, or turn it into a question. The new text replaces the old straight away, with Undo in the toast and a version snapshot taken first.",
+    body: "Make it shorter, more specific or clearer, fix spelling and grammar, turn it into a question, or give your own instruction. You see the old and new text together and choose Replace, Insert below or Discard.",
     how: "⌘J, or the AI menu on a selected node",
   },
   {
@@ -172,6 +172,7 @@ export default function FeaturesPage() {
                 </li>
                 <li>Collapse any branch, or expand the whole map to a level with ⌥1, ⌥2, ⌥3 and ⌥0.</li>
                 <li>Three map styles: Ballpoint (curved branches, the default), Elbow, and Index card.</li>
+                <li>Branches grow to the right, or set the layout to Balanced to spread them on both sides.</li>
                 <li>
                   Nodes can hold text, links, images or small tables you edit inline. Paste an image to add it as a
                   node; images stay on the device that added them.
@@ -219,12 +220,12 @@ export default function FeaturesPage() {
                   and words you have written in any of your notes, labelled “From your notes”.
                 </li>
                 <li>
-                  <strong>Your call.</strong> One switch in Settings turns AI off entirely; local suggestions keep
-                  working.
+                  <strong>Your call.</strong> Set the suggestion delay (150–600 ms), stop Tab from accepting (→ still
+                  works), or turn AI off entirely; local suggestions keep working.
                 </li>
                 <li>
-                  <strong>On phones and tablets</strong>, the same dropdown appears under the node; tap a suggestion
-                  to use it.
+                  <strong>On phones</strong>, suggestions appear as chips above the keyboard, next to buttons for
+                  indent, outdent and a new sibling; tap a chip to use it.
                 </li>
               </ul>
             </div>
@@ -238,9 +239,9 @@ export default function FeaturesPage() {
           AI that drafts, then waits for you
         </h2>
         <p className="lede mt-6 max-w-[60ch]">
-          AI features use Google Gemini through Firebase and are marked in marigold. Typeahead and generated maps wait
-          for you to accept them; rewrites and expansions apply at once, with Undo and a version snapshot taken first,
-          so you can always go back.
+          AI features use Google Gemini through Firebase and are marked in marigold. Typeahead, generated maps and
+          rewrites wait for you to accept them. Expanding a node into ideas applies at once, with Undo and a version
+          snapshot taken first, so you can always go back.
         </p>
         <ul className="grid-cards mt-10">
           {AI_TOOLS.map((t) => (
@@ -281,9 +282,9 @@ export default function FeaturesPage() {
               Images stay on the device that added them and are not synced.
             </p>
             <p>
-              <strong>Conflicts never lose work.</strong> If the same note changed on two devices, the newer version
-              is kept and the other is saved next to it as a separate “(conflict copy)” note, and the sync chip shows
-              Needs review until you have looked.
+              <strong>Conflicts never lose work.</strong> If the same note changed on two devices, the sync chip shows
+              Needs review. Open it to see both versions side by side, with the differences highlighted, and keep one,
+              the other, or both.
             </p>
             <p>
               <strong>Safety nets.</strong> Deleted notes stay in the Recycle Bin for 30 days. Each note keeps its last

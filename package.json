@@ -7,6 +7,7 @@
     "dev:marketing": "pnpm --filter marketing dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
-    "test": "pnpm -r test"
+    "test": "pnpm --filter app test",
+    "test:rules": "pnpm --filter firestore-rules-tests emulator:test"
   }
 }

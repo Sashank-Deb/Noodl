@@ -49,7 +49,7 @@ import { ancestorsText, flattenVisible, newId, safeUrl, toOutline } from "@/lib/
 import { download, fromIndentedText, safeFilename, toHTML, toJSON, toMarkdown, toPlainText } from "@/lib/io";
 import { aiAvailable, expandNode, rewriteNode, type RewriteMode } from "@/lib/ai/ai";
 import type { MapStyle } from "@/lib/types";
-import { MindMapView, type Viewport } from "./mindmap-view";
+import { MindMapView, getLastLayout, type Viewport } from "./mindmap-view";
 import { OutlineView } from "./outline-view";
 import type { NodeAction } from "./node-input";
 import { SyncChip } from "./sync-chip";
@@ -374,17 +374,29 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
           return;
         }
         case "ArrowLeft":
+        case "ArrowRight": {
           e.preventDefault();
-          if (st.view === "outline" && node.children.length && !node.collapsed) return st.toggleCollapse(sel, true);
-          if (node.parentId) st.select(node.parentId);
-          return;
-        case "ArrowRight":
-          e.preventDefault();
+          // On the left side of a balanced map, ← goes outward (to children).
+          const side = st.view === "map" ? getLastLayout()?.boxes[sel]?.side ?? 1 : 1;
+          let towardChild = e.key === "ArrowRight";
+          if (side === -1) towardChild = !towardChild;
+          if (side === 0) towardChild = true; // root: ← / → pick the left / right branches
+          if (!towardChild) {
+            if (st.view === "outline" && node.children.length && !node.collapsed) return st.toggleCollapse(sel, true);
+            if (node.parentId) st.select(node.parentId);
+            return;
+          }
           if (node.children.length) {
             if (node.collapsed) return st.toggleCollapse(sel, false);
-            st.select(node.children[0]);
+            const kids = st.view === "map" && !node.parentId && side === 0 && e.key === "ArrowLeft"
+              ? node.children.filter((c) => getLastLayout()?.boxes[c]?.side === -1)
+              : st.view === "map" && !node.parentId
+                ? node.children.filter((c) => (getLastLayout()?.boxes[c]?.side ?? 1) === 1)
+                : node.children;
+            if (kids[0]) st.select(kids[0]);
           }
           return;
+        }
       }
     };
     window.addEventListener("keydown", onKey);
@@ -392,25 +404,42 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
   }, [copySubtree]);
 
   // ---- AI node actions -------------------------------------------------------
-  const runRewrite = async (mode: RewriteMode) => {
+  // Rewrite shows a preview first: Replace / Insert below / Discard.
+  const [rewrite, setRewrite] = useState<RewriteState | null>(null);
+  const runRewrite = async (mode: RewriteMode, custom?: string) => {
     const st = useEditor.getState();
     const n = st.note;
-    const id = st.selectedId;
-    if (!n || !id || !n.nodes[id].text.trim()) return toast("Select a node with text first");
+    const id = rewrite?.id ?? st.selectedId;
+    if (!n || !id || !n.nodes[id]?.text.trim()) return toast("Select a node with text first");
+    if (mode === "custom" && !custom) return setRewrite({ id, before: n.nodes[id].text, mode, stage: "prompt" });
+    setRewrite({ id, before: n.nodes[id].text, mode, custom, stage: "loading" });
     setAiBusy(true);
-    await takeSnapshot(n, "Before AI rewrite");
     try {
-      const text = await rewriteNode(n.nodes[id].text, mode, ancestorsText(n, id));
+      const text = await rewriteNode(n.nodes[id].text, mode, ancestorsText(n, id), custom);
       if (!text) throw new Error("Empty response");
-      const before = n.nodes[id].text;
-      st.setText(id, text);
-      useEditor.setState({ lastCoalesce: null });
-      toast("Rewrote node", { description: `“${truncate(before)}” → “${truncate(text)}”`, action: { label: "Undo", onClick: () => useEditor.getState().undo() } });
+      setRewrite({ id, before: n.nodes[id].text, mode, custom, stage: "ready", after: text });
     } catch (e) {
+      setRewrite(null);
       toast.error(aiErrorMessage(e));
     } finally {
       setAiBusy(false);
     }
+  };
+
+  const applyRewrite = async (how: "replace" | "insert") => {
+    const r = rewrite;
+    const st = useEditor.getState();
+    if (!r?.after || !st.note?.nodes[r.id]) return setRewrite(null);
+    await takeSnapshot(st.note, "Before AI rewrite");
+    if (how === "replace") {
+      st.setText(r.id, r.after);
+      useEditor.setState({ lastCoalesce: null });
+    } else {
+      st.addSibling(r.id, r.after);
+      st.edit(null);
+    }
+    setRewrite(null);
+    toast(how === "replace" ? "Rewrote node" : "Added below", { action: { label: "Undo", onClick: () => useEditor.getState().undo() } });
   };
 
   const runExpand = async () => {
@@ -620,6 +649,16 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
           </div>
         )}
 
+        {rewrite && (
+          <RewritePanel
+            state={rewrite}
+            onCancel={() => setRewrite(null)}
+            onRun={(custom) => void runRewrite("custom", custom)}
+            onRetry={() => void runRewrite(rewrite.mode, rewrite.custom)}
+            onApply={(how) => void applyRewrite(how)}
+          />
+        )}
+
         {/* Toolbar: floats over the canvas in map view, sits in flow above the outline. */}
         <div
           data-map-ui
@@ -671,6 +710,8 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
                     <DropdownMenuItem onSelect={() => runRewrite("grammar")}>Fix spelling and grammar</DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => runRewrite("clearer")}>Make it clearer</DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => runRewrite("question")}>Make it a question</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={() => runRewrite("custom")}>Custom instruction…</DropdownMenuItem>
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
                 <DropdownMenuSeparator />
@@ -682,6 +723,97 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
             </DropdownMenu>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+interface RewriteState {
+  id: string;
+  before: string;
+  after?: string;
+  mode: RewriteMode;
+  custom?: string;
+  stage: "prompt" | "loading" | "ready";
+}
+
+function RewritePanel({
+  state,
+  onCancel,
+  onRun,
+  onRetry,
+  onApply,
+}: {
+  state: RewriteState;
+  onCancel: () => void;
+  onRun: (custom: string) => void;
+  onRetry: () => void;
+  onApply: (how: "replace" | "insert") => void;
+}) {
+  const [instruction, setInstruction] = useState("");
+  return (
+    <div
+      data-map-ui
+      role="dialog"
+      aria-label="AI rewrite"
+      className="absolute bottom-16 left-1/2 z-20 w-[min(520px,calc(100%-24px))] -translate-x-1/2 rounded-2xl border bg-popover p-3 shadow-xl"
+      onKeyDown={(e) => {
+        if (e.key === "Escape") {
+          e.stopPropagation();
+          onCancel();
+        }
+        if (e.key === "Enter" && state.stage === "ready" && !(e.target instanceof HTMLInputElement)) {
+          e.preventDefault();
+          onApply("replace");
+        }
+      }}
+    >
+      <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-(--ai-strong)">
+        <Sparkles className="size-3.5 text-(--ai)" /> Rewrite with AI
+      </p>
+      <p className="text-sm text-muted-foreground line-through decoration-muted-foreground/50">{state.before}</p>
+      {state.stage === "prompt" && (
+        <form
+          className="mt-2 flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (instruction.trim()) onRun(instruction.trim());
+          }}
+        >
+          <input
+            autoFocus
+            value={instruction}
+            onChange={(e) => setInstruction(e.target.value)}
+            placeholder="e.g. Make it sound friendlier"
+            aria-label="Rewrite instruction"
+            className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          />
+          <Button type="submit" size="sm" className="h-9">
+            Rewrite
+          </Button>
+        </form>
+      )}
+      {state.stage === "loading" && <div className="ai-shimmer mt-2 h-9 rounded-lg" aria-label="Rewriting…" />}
+      {state.stage === "ready" && (
+        <p className="mt-2 rounded-lg bg-(--ai-soft) px-3 py-2 text-sm text-foreground">{state.after}</p>
+      )}
+      <div className="mt-3 flex flex-wrap justify-end gap-2">
+        <Button variant="ghost" size="sm" onClick={onCancel}>
+          Discard <kbd className="ml-1 text-[11px] opacity-60">Esc</kbd>
+        </Button>
+        {state.stage === "ready" && (
+          <>
+            <Button variant="ghost" size="sm" onClick={onRetry}>
+              Try again
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => onApply("insert")}>
+              Insert below
+            </Button>
+            <Button size="sm" autoFocus onClick={() => onApply("replace")}>
+              Replace <kbd className="ml-1 text-[11px] opacity-70">⏎</kbd>
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -821,7 +953,6 @@ function isTyping(t: EventTarget | null) {
 function countItems(items: { children?: unknown[] }[]): number {
   return items.reduce((s, i) => s + 1 + countItems((i.children as { children?: unknown[] }[]) ?? []), 0);
 }
-const truncate = (s: string, n = 32) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
 export function aiErrorMessage(e: unknown) {
   const m = String((e as Error)?.message ?? e);
   if (/rate|429|quota/i.test(m)) return "AI is busy (free quota). Try again in a minute.";

@@ -155,7 +155,7 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
               {opts.inTrash
                 ? `Deleted ${relativeTime(n.deletedAt!)}`
                 : `${countNodes(n)} nodes, ${relativeTime(n.updatedAt)}${opts.showFolder && n.folderId ? ` · ${folderName(n.folderId) ?? ""}` : ""}`}
-              {n.conflictOf && " · conflict copy"}
+              {n.conflictOf && " · needs review"}
             </span>
           </button>
         )}

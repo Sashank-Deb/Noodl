@@ -10,7 +10,7 @@ import { NodeBody, TableEditor } from "./node-content";
 
 type Drop = { target: string; where: "before" | "after" | "inside" } | null;
 
-export function OutlineView({ onAction }: { onAction: (id: string, a: NodeAction, e: React.KeyboardEvent) => void }) {
+export function OutlineView({ onAction }: { onAction: (id: string, a: NodeAction, e?: React.KeyboardEvent) => void }) {
   const note = useEditor((s) => s.note);
   const [drag, setDrag] = useState<{ id: string; drop: Drop } | null>(null);
 
@@ -80,7 +80,7 @@ export function OutlineView({ onAction }: { onAction: (id: string, a: NodeAction
 interface RowProps {
   id: string;
   depth: number;
-  onAction: (id: string, a: NodeAction, e: React.KeyboardEvent) => void;
+  onAction: (id: string, a: NodeAction, e?: React.KeyboardEvent) => void;
   onDragStart: (id: string, e: React.PointerEvent) => void;
   drop: "before" | "after" | "inside" | null;
   dragging: boolean;
@@ -91,7 +91,7 @@ const OutlineRow = memo(function OutlineRow({ id, depth, onAction, onDragStart, 
   const editing = useEditor((s) => s.editingId === id);
   const selected = useEditor((s) => s.selectedId === id);
   const bi = useEditor((s) => (s.note?.nodes[id] ? branchIndex(s.note, id) : 0));
-  const act = useCallback((a: NodeAction, e: React.KeyboardEvent) => onAction(id, a, e), [id, onAction]);
+  const act = useCallback((a: NodeAction, e?: React.KeyboardEvent) => onAction(id, a, e), [id, onAction]);
   if (!node) return null;
   const isRoot = depth === 0;
   const hasKids = node.children.length > 0;

@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/context/settings";
@@ -101,11 +102,31 @@ export function SettingsDialog({ open, onOpenChange, initialTab = "general" }: {
                 <ToggleGroupItem value="boxed">Card</ToggleGroupItem>
               </ToggleGroup>
             </Row>
+            <Row label="Map layout" hint="Balanced puts branches on both sides of the central topic.">
+              <ToggleGroup type="single" variant="outline" size="sm" value={settings.mapLayout} onValueChange={(v) => v && update({ mapLayout: v as typeof settings.mapLayout })}>
+                <ToggleGroupItem value="right">Right</ToggleGroupItem>
+                <ToggleGroupItem value="balanced">Balanced</ToggleGroupItem>
+              </ToggleGroup>
+            </Row>
           </TabsContent>
 
           <TabsContent value="ai" className="divide-y">
             <Row label="AI suggestions" hint={aiAvailable() ? "Typeahead, Generate and Rewrite. Prompts and the current branch's text are sent to Google Gemini." : "AI isn't configured for this deployment. Typeahead uses your own notes."} htmlFor="ai-switch">
               <Switch id="ai-switch" checked={settings.aiEnabled} disabled={!aiAvailable()} onCheckedChange={(v) => update({ aiEnabled: v })} />
+            </Row>
+            <Row label="Suggestion delay" hint={`Wait ${settings.typeaheadDelay} ms after you stop typing. Longer saves AI quota.`}>
+              <Slider
+                className="w-40"
+                min={150}
+                max={600}
+                step={50}
+                value={[settings.typeaheadDelay]}
+                onValueChange={([v]) => update({ typeaheadDelay: v })}
+                aria-label="Suggestion delay in milliseconds"
+              />
+            </Row>
+            <Row label="Tab accepts suggestions" hint="When off, Tab always adds a child; → still accepts." htmlFor="tab-switch">
+              <Switch id="tab-switch" checked={settings.tabAccepts} onCheckedChange={(v) => update({ tabAccepts: v })} />
             </Row>
             <p className="pt-3 text-xs text-muted-foreground">With AI off, suggestions still appear from text you&apos;ve already written. Nothing leaves this device.</p>
           </TabsContent>

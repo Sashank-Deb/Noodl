@@ -61,6 +61,11 @@ export interface Settings {
   aiEnabled: boolean;
   syncEnabled: boolean;
   defaultView: ViewMode;
+  /** Typeahead debounce in ms (150–600). */
+  typeaheadDelay: number;
+  /** Tab accepts visible ghost text (→ always does). */
+  tabAccepts: boolean;
+  mapLayout: "right" | "balanced";
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -69,4 +74,7 @@ export const DEFAULT_SETTINGS: Settings = {
   aiEnabled: true,
   syncEnabled: true,
   defaultView: "map",
+  typeaheadDelay: 350,
+  tabAccepts: true,
+  mapLayout: "right",
 };

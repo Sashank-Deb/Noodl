@@ -5,10 +5,15 @@ import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor } from "@/store/editor-store";
 import { branchIndex, depthOf, isAncestor } from "@/lib/tree";
-import { connectorPath, layoutTree, measureText, type Box } from "@/lib/layout";
+import { connectorPath, layoutTree, measureText, type Box, type LayoutResult } from "@/lib/layout";
+import { useSettings } from "@/context/settings";
 import type { MapStyle, MindNode, Note } from "@/lib/types";
 import { NodeInput, type NodeAction } from "./node-input";
 import { NodeBody, TableEditor } from "./node-content";
+
+/** Last computed layout, so keyboard navigation knows which side a branch grows on. */
+let lastLayout: LayoutResult | null = null;
+export const getLastLayout = () => lastLayout;
 
 export interface Viewport {
   x: number;
@@ -108,7 +113,7 @@ export function useMapLayout(
 }
 
 interface MapProps {
-  onAction: (id: string, a: NodeAction, e: React.KeyboardEvent) => void;
+  onAction: (id: string, a: NodeAction, e?: React.KeyboardEvent) => void;
   viewport: Viewport;
   setViewport: React.Dispatch<React.SetStateAction<Viewport>>;
   contentRef: React.RefObject<HTMLDivElement | null>;
@@ -123,6 +128,14 @@ export function MindMapView({
   const note = useEditor((s) => s.note);
   const fitRequest = useEditor((s) => s.fitRequest);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState({ w: 1200, h: 800 });
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setSize({ w: e.contentRect.width, h: e.contentRect.height }));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const [family, setFamily] = useState(() =>
     typeof document === "undefined"
       ? "system-ui, sans-serif"
@@ -143,7 +156,15 @@ export function MindMapView({
   }, []);
 
   const editingId = useEditor((s) => s.editingId);
-  const layout = useMapLayout(note, family, editingId);
+  const { settings } = useSettings();
+  const layout = useMapLayout(note, family, editingId, settings.mapLayout === "balanced");
+  useEffect(() => {
+    lastLayout = layout;
+  }, [layout]);
+  // Re-fit when switching between right-side and balanced layouts.
+  useEffect(() => {
+    useEditor.getState().requestFit();
+  }, [settings.mapLayout]);
 
   const fit = useCallback(() => {
     const el = containerRef.current;
@@ -367,7 +388,23 @@ export function MindMapView({
 
   if (!note || !layout) return null;
   const { boxes, bounds } = layout;
-  const ids = Object.keys(boxes);
+  const allIds = Object.keys(boxes);
+  // Large maps: only render nodes near the viewport (DESIGN.md §4.3).
+  const CULL_AT = 300;
+  const margin = 300 / viewport.k;
+  const view = {
+    x1: -viewport.x / viewport.k - margin,
+    y1: -viewport.y / viewport.k - margin,
+    x2: (size.w - viewport.x) / viewport.k + margin,
+    y2: (size.h - viewport.y) / viewport.k + margin,
+  };
+  const near = (b: Box) => b.x + b.w >= view.x1 && b.x <= view.x2 && b.y + b.h >= view.y1 && b.y <= view.y2;
+  const st = useEditor.getState();
+  const ids =
+    allIds.length > CULL_AT
+      ? allIds.filter((id) => near(boxes[id]) || id === st.editingId || id === st.selectedId || id === dragging?.target)
+      : allIds;
+  const visible = new Set(ids);
 
   return (
     <div
@@ -421,9 +458,10 @@ export function MindMapView({
               <g
                 transform={`translate(${-bounds.minX + 40}, ${-bounds.minY + 40})`}
               >
-                {ids.map((id) => {
+                {allIds.map((id) => {
                   const n = note.nodes[id];
                   if (!n?.parentId || !boxes[n.parentId]) return null;
+                  if (!visible.has(id) && !visible.has(n.parentId)) return null;
                   const bi = branchIndex(note, id);
                   return (
                     <path
@@ -518,7 +556,7 @@ interface NodeProps {
   offsetX: number;
   offsetY: number;
   mapStyle: MapStyle;
-  onAction: (id: string, a: NodeAction, e: React.KeyboardEvent) => void;
+  onAction: (id: string, a: NodeAction, e?: React.KeyboardEvent) => void;
   onDragStart: (id: string, e: React.PointerEvent) => void;
   dropTarget: boolean;
   beingDragged: boolean;
@@ -544,7 +582,7 @@ const MapNode = memo(function MapNode({
   const editing = useEditor((s) => s.editingId === id);
   const color = `var(--branch-${(bi % 8) + 1})`;
   const act = useCallback(
-    (a: NodeAction, e: React.KeyboardEvent) => onAction(id, a, e),
+    (a: NodeAction, e?: React.KeyboardEvent) => onAction(id, a, e),
     [id, onAction],
   );
 
@@ -576,6 +614,7 @@ const MapNode = memo(function MapNode({
           padding: `0 ${editing ? 10 : styleFor(depth).padX}px`,
           "--branch": color,
           font: styleFor(depth).css,
+          textAlign: box.side === -1 && depth >= 2 ? "right" : undefined,
         } as React.CSSProperties
       }
       onPointerDown={(e) => {

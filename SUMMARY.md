@@ -25,6 +25,9 @@ packages/tokens   @noodl/tokens: shared shadcn/Tailwind v4 CSS variables (light 
 packages/brand    noodl brand kit: logos, app icons, favicons, social preview, README with colours
 design/           DESIGN.md (UX spec, source of truth), tokens.css, mockups.html (static frames)
 scripts/build-site.sh   Builds both apps into dist/ (marketing at /, app at /app/)
+scripts/serve-dist.mjs  Zero-dependency local server for dist/ (mirrors firebase.json routing)
+tests/firestore-rules   Security rules tests (@firebase/rules-unit-testing, emulator)
+Start/Dev noodl.command macOS double-click launchers; TESTING.md manual checklist
 firebase.json     Hosting (dist/, headers, CSP report-only, /app/** rewrite) + Firestore
 firestore.rules   Owner-only access to users/{uid}/notes and users/{uid}/folders
 .github/workflows ci.yml (lint, test, build, LHCI) and deploy.yml (Firebase Hosting on main)
@@ -105,10 +108,14 @@ pnpm install
 pnpm dev                    # app → http://localhost:3000/app/
 pnpm dev:marketing          # marketing site
 pnpm test                   # vitest (apps/app): 27 tests on tree ops, layout, import/export, sanitising, local suggest, sync merge/encoding
+pnpm test:rules             # Firestore rules tests (tests/firestore-rules) on the emulator; needs Java + network. CI runs them
 pnpm lint                   # eslint (React Compiler rules on). Must be clean
 ./scripts/build-site.sh     # → dist/ (serve with: cd dist && python3 -m http.server 4320)
 firebase deploy             # needs .firebaserc (copy .firebaserc.example)
+node scripts/serve-dist.mjs dist   # serve dist/ like Firebase Hosting (port 4320)
 ```
+
+On macOS, `Start noodl.command` / `Dev noodl.command` at the repo root are double-click launchers; `TESTING.md` is the manual test checklist. The owner's working copy is in `~/Desktop/Mindnote/noodl`.
 
 Without env vars the app runs fully local: no sign-in, no sync, local typeahead only.
 
@@ -120,6 +127,8 @@ Marketing env var: `NEXT_PUBLIC_SITE_URL`.
 - the Generate dialog, then exporting Markdown and PNG
 - persistence across reload, outline view, undo
 - the keyboard scoping fix, version history restore, focus mode, the `?` shortcuts list
+- rewrite preview (Insert below, custom instruction + Replace), balanced layout, conflict review (Keep both), phone accessory bar chips
+- a 776-node map (culling renders ~230 nodes at fit zoom)
 - mobile and dark mode
 
 Gemini was **mocked** by intercepting `**/*generateContent*`; the test build used fake Firebase env values. **Real Firebase (Auth, Firestore rules, AI Logic, App Check) has not been exercised yet.** The setup steps are in README.md under "Turning on Firebase".
@@ -136,22 +145,15 @@ Gemini was **mocked** by intercepting `**/*generateContent*`; the test build use
 
 ## 6. Status and next steps (priority order)
 
-Done: everything described in section 3, plus a code review pass that fixed 12 defects in sync, persistence, undo, keyboard scoping, URL sanitising and empty-node delete.
+Done: everything described in section 3, plus a code review pass that fixed 12 defects in sync, persistence, undo, keyboard scoping, URL sanitising and empty-node delete. Also done: phone keyboard accessory bar with suggestion chips, side-by-side conflict review dialog (`components/dialogs/conflicts-dialog.tsx`), AI rewrite preview with Replace / Insert below / Discard and custom instructions, balanced layout setting, typeahead delay slider and "Tab accepts" toggle, viewport culling above 300 nodes, Firestore rules tests (written; run in CI only — the emulator can't be downloaded in the build container, so they have **not been run yet**).
 
 1. **Set up a real Firebase project**, following README "Turning on Firebase".
    - Enable Google + email-link sign-in, create Firestore and deploy the rules, enable AI Logic (Gemini Developer API), and register App Check with reCAPTCHA v3 and **enforce** it.
    - Set GitHub repo variables and the `FIREBASE_SERVICE_ACCOUNT` secret for `deploy.yml`.
    - Then test sign-in, two-device sync, conflicts, the email link and real Gemini suggestions.
-2. **Firestore rules tests** with the emulator (`@firebase/rules-unit-testing`).
+2. **Run the Firestore rules tests** (`pnpm test:rules`, or let CI run them) and fix anything they catch.
 3. **Brand alignment.** The noodl logo and icons are applied, but the UI theme still uses the original "ballpoint blue + marigold AI" tokens. Decide whether to move the primary/accent colours to the brand palette (ink #151515, butter #FFF4CC, noodle gold #FFB83D, warm white #FFFDF7). If so, update `packages/tokens/tokens.css` and check AA contrast.
 4. **Privacy page** (`apps/marketing/src/app/privacy/page.tsx`) is a draft with `[Reviewer: …]` placeholders: the Gemini data-use terms and a contact address. It needs legal review before launch.
-5. **Not built yet** from DESIGN.md:
-   - mobile keyboard accessory bar with suggestion chips
-   - multi-select / marquee selection
-   - side-by-side conflict resolution dialog (today a conflict copy is created)
-   - rewrite preview with Replace / Insert below
-   - balanced map layout and extra map styles
-   - a settings slider for the typeahead delay
-   - render virtualisation for maps over 500 nodes
+5. **Not built yet** from DESIGN.md: multi-select / marquee selection, extra map styles (Monochrome, Highlighter, Sketch), ⌥→ accept-next-word, inline bold/italic marks, animated layout transitions.
 6. **Performance.** The app's initial JS is about 300 KB gzipped, mostly React and Next. The Firebase SDKs are already lazy-loaded. Possible next steps: more code-splitting of the export libraries (they're already dynamic), and measuring the app itself with Lighthouse.
 7. **Custom domain.** Update `NEXT_PUBLIC_SITE_URL` (default `https://noodl.web.app`) and add the domain to Firebase Auth's authorized domains.

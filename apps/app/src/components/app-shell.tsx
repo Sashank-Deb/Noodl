@@ -16,9 +16,11 @@ const GenerateDialog = dynamic(() => import("@/components/dialogs/generate-dialo
 const TemplatesDialog = dynamic(() => import("@/components/dialogs/templates-dialog").then((m) => m.TemplatesDialog), { ssr: false });
 const SettingsDialog = dynamic(() => import("@/components/dialogs/settings-dialog").then((m) => m.SettingsDialog), { ssr: false });
 const HistoryDialog = dynamic(() => import("@/components/dialogs/history-dialog").then((m) => m.HistoryDialog), { ssr: false });
+const ConflictsDialog = dynamic(() => import("@/components/dialogs/conflicts-dialog").then((m) => m.ConflictsDialog), { ssr: false });
 const SearchDialog = dynamic(() => import("@/components/dialogs/search-dialog").then((m) => m.SearchDialog), { ssr: false });
 import { Mark } from "@/components/mark";
 import { persistEditor, useEditor } from "@/store/editor-store";
+import { useUI } from "@/store/ui-store";
 import { useSettings } from "@/context/settings";
 import { db, getNote, kvGet, kvSet, purgeRecycleBin, saveNote, takeSnapshot } from "@/lib/db";
 import { schedulePush } from "@/lib/sync";
@@ -67,6 +69,7 @@ export function AppShell() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [settingsTab, setSettingsTab] = useState("general");
+  const conflictsOpen = useUI((s) => s.conflictsOpen);
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const note = useEditor((s) => s.note);
@@ -334,6 +337,7 @@ export function AppShell() {
       {genOpen && <GenerateDialog open={genOpen} onOpenChange={setGenOpen} onCreate={fromOutline} />}
       {tplOpen && <TemplatesDialog open={tplOpen} onOpenChange={setTplOpen} onPick={(t) => (t.id === "blank" ? (setTplOpen(false), newNote()) : fromOutline(t.outline))} />}
       {settingsOpen && <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} initialTab={settingsTab} />}
+      {conflictsOpen && <ConflictsDialog open={conflictsOpen} onOpenChange={(o) => useUI.getState().setConflictsOpen(o)} />}
       {historyOpen && <HistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} onOpenNote={(id) => void open(id)} />}
       {searchOpen && <SearchDialog
         open={searchOpen}

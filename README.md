@@ -98,20 +98,24 @@ Without any environment variables the app runs fully local: no sign-in, no sync,
 
 ## Features
 
-- Outline ↔ mind map on the same note, instant switch (`⇧⌘M`)
-- AI typeahead on every node: ghost text (Tab / → to accept), up to 5 suggestions (↑ ↓, Enter), ideas for empty nodes, local fallback offline / rate-limited / AI off
-- Generate a map from a prompt, summarize pasted text into a map, rewrite a node, expand a node into ideas
-- Keyboard-first: Tab child, Enter sibling, Space edit, arrows to navigate, ⌥↑↓ reorder, ⌥0–3 levels, ⌘Z/⇧⌘Z, copy/paste branches as indented text
-- Drag nodes to reparent (map) or reorder (outline); pan, pinch/ctrl-wheel zoom, fit, double-click to reset
-- Node types: text, link, image (local), table
+- Outline ↔ mind map on the same note, instant switch (`⇧⌘M`); right-side or balanced map layout
+- AI typeahead on every node: ghost text (Tab / → to accept), up to 5 suggestions (↑ ↓, Enter), ideas for empty nodes, local fallback offline / rate-limited / AI off; adjustable delay and Tab behaviour; suggestion chips above the keyboard on phones
+- Generate a map from a prompt, summarize pasted text into a map, rewrite a node with a preview (Replace / Insert below / Discard, preset or custom instruction), expand a node into ideas
+- Keyboard-first: Tab child, Enter sibling, Space edit, arrows to navigate, ⌥↑↓ reorder, ⌥0–3 levels, ⌘J AI, ⌘. focus mode, ⌘Z/⇧⌘Z, copy/paste branches as indented text
+- Drag nodes to reparent (map) or reorder (outline); pan, pinch/ctrl-wheel zoom, fit, double-click to reset; large maps render only what's on screen
+- Node types: text, link, image (local), table (editable inline)
 - Map styles: Ballpoint (curved), Elbow, Index card; light/dark themes
 - Library: folders, search across notes and nodes (⌘K), templates, recycle bin (30 days), duplicate, move
+- Version history: last 20 snapshots per note on the device, restore in place or as a copy
 - Export PNG, JPEG, PDF, Markdown, HTML, plain text, JSON; import Markdown/JSON (also drag-and-drop); full backup/restore
-- Works offline (service worker + IndexedDB); guest mode by default; Google / email-link sign-in for sync with conflict copies
+- Works offline (service worker + IndexedDB); guest mode by default; Google / email-link sign-in for sync; side-by-side conflict review
+
+## Run it locally
+
+- macOS: double-click `Start noodl.command` (serves the production build at http://localhost:4320/app/) or `Dev noodl.command` (hot reload at http://localhost:3000/app/). See `TESTING.md` for a manual test checklist.
+- Anywhere: `pnpm install && ./scripts/build-site.sh && node scripts/serve-dist.mjs dist`
 
 ## Not yet built (good next steps)
 
-- Per-note version history / snapshots (design §4.10); today there's undo, the recycle bin, conflict copies and full backups
-- Mobile keyboard accessory bar with suggestion chips (design §8); mobile currently uses the same dropdown
-- Multi-select and marquee selection; "Sketch" map style
-- Firestore rules unit tests with the emulator
+- Multi-select and marquee selection; "Sketch" / "Monochrome" map styles
+- Brand theme pass (UI colours still use the original blue + marigold tokens)

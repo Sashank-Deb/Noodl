@@ -11,9 +11,10 @@
  *  - Empty node + pause → AI "ideas" for this position (no ghost text).
  *  - Debounced, cached and rate-limited so the free Gemini quota lasts.
  */
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { Popover as P } from "radix-ui";
-import { History, Loader2, Sparkles, WifiOff } from "lucide-react";
+import { CornerDownLeft, History, IndentDecrease, IndentIncrease, Loader2, Sparkles, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor } from "@/store/editor-store";
 import { ancestorsText, siblingTexts } from "@/lib/tree";
@@ -46,7 +47,7 @@ interface Props {
   nodeId: string;
   className?: string;
   placeholder?: string;
-  onAction: (a: NodeAction, e: React.KeyboardEvent) => void;
+  onAction: (a: NodeAction, e?: React.KeyboardEvent) => void;
   /** Outline rows are always rendered as inputs; only the focused one runs suggestions. */
   autoFocus?: boolean;
   ariaLabel?: string;
@@ -73,6 +74,8 @@ export function NodeInput({ nodeId, className, placeholder, onAction, autoFocus,
   const [acceptedFor, setAcceptedFor] = useState<string | null>(null);
   const listId = useId();
   const useAI = settings.aiEnabled && aiAvailable();
+  const phone = usePhone();
+  const delay = Math.min(600, Math.max(150, settings.typeaheadDelay ?? TYPEAHEAD.debounceMs));
 
   // Auto-grow fallback for browsers without `field-sizing: content`.
   useLayoutEffect(() => {
@@ -128,13 +131,13 @@ export function NodeInput({ nodeId, className, placeholder, onAction, autoFocus,
           if (!ctrl.signal.aborted) setLoadingFor(null);
         }
       },
-      cached ? 0 : ideasMode ? TYPEAHEAD.ideasDelayMs : TYPEAHEAD.debounceMs,
+      cached ? 0 : ideasMode ? Math.max(TYPEAHEAD.ideasDelayMs, delay * 2) : delay,
     );
     return () => {
       clearTimeout(t);
       ctrl.abort();
     };
-  }, [wantsAI, context, value, ideasMode]);
+  }, [wantsAI, context, value, ideasMode, delay]);
 
   // Merge: AI results still matching what's typed, then local ones.
   const items = useMemo<Suggestion[]>(() => {
@@ -199,7 +202,7 @@ export function NodeInput({ nodeId, className, placeholder, onAction, autoFocus,
           return;
         }
         e.preventDefault();
-        if (ghost) return accept(value + ghost);
+        if (ghost && settings.tabAccepts !== false) return accept(value + ghost);
         if (listOpen && active >= 0) return accept(items[active].text);
         onAction("child", e);
         return;
@@ -252,7 +255,17 @@ export function NodeInput({ nodeId, className, placeholder, onAction, autoFocus,
   const status = loading ? "loading" : !useAI ? "local" : aiStatus === "rate-limited" || aiStatus === "offline" ? aiStatus : "ai";
 
   return (
-    <P.Root open={open}>
+    <>
+    {phone && focused && (
+      <AccessoryBar
+        items={items}
+        loading={loading}
+        onPick={accept}
+        onAction={(a) => onAction(a)}
+        canOutdent={!!context && context.path.length > 1}
+      />
+    )}
+    <P.Root open={open && !phone}>
       <P.Anchor asChild>
         <div className={cn("relative grid w-full", className)} data-node-input>
           {/* Ghost layer — mirrors the textarea's text so the completion lines up. */}
@@ -375,5 +388,107 @@ export function NodeInput({ nodeId, className, placeholder, onAction, autoFocus,
         </P.Content>
       </P.Portal>
     </P.Root>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Phones: suggestions become chips in a bar that sits on top of the keyboard,
+// with buttons for the keys a touch keyboard doesn't have (DESIGN.md §8).
+// ---------------------------------------------------------------------------
+const PHONE_QUERY = "(max-width: 640px) and (pointer: coarse)";
+function usePhone() {
+  return useSyncExternalStore(
+    (cb) => {
+      const mq = window.matchMedia(PHONE_QUERY);
+      mq.addEventListener("change", cb);
+      return () => mq.removeEventListener("change", cb);
+    },
+    () => window.matchMedia(PHONE_QUERY).matches,
+    () => false,
+  );
+}
+
+function useKeyboardInset() {
+  return useSyncExternalStore(
+    (cb) => {
+      const vv = window.visualViewport;
+      vv?.addEventListener("resize", cb);
+      vv?.addEventListener("scroll", cb);
+      return () => {
+        vv?.removeEventListener("resize", cb);
+        vv?.removeEventListener("scroll", cb);
+      };
+    },
+    () => {
+      const vv = window.visualViewport;
+      return vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
+    },
+    () => 0,
+  );
+}
+
+function AccessoryBar({
+  items,
+  loading,
+  onPick,
+  onAction,
+  canOutdent,
+}: {
+  items: Suggestion[];
+  loading: boolean;
+  onPick: (t: string) => void;
+  onAction: (a: NodeAction) => void;
+  canOutdent: boolean;
+}) {
+  const inset = useKeyboardInset();
+  const keep = (e: React.PointerEvent) => e.preventDefault(); // keep focus (and the keyboard) in the node
+  const btn = "grid h-10 min-w-11 place-items-center rounded-lg px-2 text-sm font-medium active:bg-accent disabled:opacity-40";
+  return createPortal(
+    <div
+      data-accessory-bar
+      className="fixed inset-x-0 z-50 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+      style={{ bottom: inset }}
+      onPointerDown={keep}
+    >
+      {(items.length > 0 || loading) && (
+        <div className="flex gap-1.5 overflow-x-auto px-2 pt-2" role="listbox" aria-label="Suggestions">
+          {loading && !items.length && <span className="ai-shimmer h-8 w-28 shrink-0 rounded-full" />}
+          {items.map((s, i) => (
+            <button
+              key={s.text}
+              type="button"
+              role="option"
+              aria-selected={i === 0}
+              onPointerDown={keep}
+              onClick={() => onPick(s.text)}
+              className={cn(
+                "flex h-8 shrink-0 items-center gap-1 rounded-full border px-3 text-sm whitespace-nowrap",
+                i === 0 && "border-(--ai) bg-(--ai-soft) text-(--ai-strong)",
+              )}
+            >
+              {s.source === "ai" ? <Sparkles className="size-3 text-(--ai)" aria-hidden /> : <History className="size-3 text-muted-foreground" aria-hidden />}
+              {s.text}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="flex items-center gap-1 px-2 py-1.5">
+        <button type="button" className={btn} onPointerDown={keep} onClick={() => onAction("outdent")} disabled={!canOutdent} aria-label="Outdent">
+          <IndentDecrease className="size-5" />
+        </button>
+        <button type="button" className={btn} onPointerDown={keep} onClick={() => onAction("child")} aria-label="Add child (indent)">
+          <IndentIncrease className="size-5" />
+        </button>
+        <button type="button" className={btn} onPointerDown={keep} onClick={() => onAction("sibling")} aria-label="New sibling">
+          <CornerDownLeft className="size-5" />
+        </button>
+        <span className="flex-1" />
+        <button type="button" className={cn(btn, "px-4 text-primary")} onPointerDown={keep} onClick={() => onAction("exit")}>
+          Done
+        </button>
+      </div>
+    </div>,
+    document.body,
   );
 }
