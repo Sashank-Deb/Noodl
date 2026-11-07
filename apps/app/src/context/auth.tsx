@@ -5,7 +5,7 @@
  * never download supabase-js unless they open sign-in, signed in before on
  * this device, or land here from a sign-in redirect.
  */
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { getSupabase, supabaseConfigured } from "@/lib/supabase";
 import { startSync, stopSync } from "@/lib/sync";
@@ -135,10 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await sb.auth.signOut();
   }, []);
 
-  const value = useMemo(
-    () => ({ user, loading, configured: supabaseConfigured, signInWithGoogle, signOut }),
-    [user, loading, signInWithGoogle, signOut],
-  );
+  const value = { user, loading, configured: supabaseConfigured, signInWithGoogle, signOut };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

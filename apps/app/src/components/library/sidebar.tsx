@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { toast } from "sonner";
 import {
@@ -88,8 +88,8 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
   const { settings } = useSettings();
   const aiReady = useAIAvailable();
 
-  const live = useMemo(() => (notes ?? []).filter((n) => !n.deletedAt).sort((a, b) => b.updatedAt - a.updatedAt), [notes]);
-  const trash = useMemo(() => (notes ?? []).filter((n) => n.deletedAt).sort((a, b) => (b.deletedAt ?? 0) - (a.deletedAt ?? 0)), [notes]);
+  const live = (notes ?? []).filter((n) => !n.deletedAt).sort((a, b) => b.updatedAt - a.updatedAt);
+  const trash = (notes ?? []).filter((n) => n.deletedAt).sort((a, b) => (b.deletedAt ?? 0) - (a.deletedAt ?? 0));
   const folderName = (id: string | null) => folders?.find((f) => f.id === id)?.name;
 
   const list = section === "trash" ? trash : section === "recent" ? live.slice(0, 10) : live;

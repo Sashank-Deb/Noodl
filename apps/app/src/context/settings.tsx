@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { getSettings, setSettings as persist } from "@/lib/db";
 import { DEFAULT_SETTINGS, type Settings } from "@/lib/types";
@@ -40,7 +40,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [setTheme],
   );
 
-  const value = useMemo(() => ({ settings, ready, update }), [settings, ready, update]);
+  const value = { settings, ready, update };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

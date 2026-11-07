@@ -11,7 +11,7 @@
  *  - Empty node + pause → AI "ideas" for this position (no ghost text).
  *  - Debounced, cached and rate-limited so the free AI quota lasts.
  */
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Popover as P } from "radix-ui";
 import { CornerDownLeft, History, IndentDecrease, IndentIncrease, Loader2, Sparkles, WifiOff } from "lucide-react";
@@ -100,17 +100,17 @@ export function NodeInput({ nodeId, className, placeholder, onAction, autoFocus,
     if (!focused || !s.note?.nodes[nodeId]) return null;
     return JSON.stringify({ path: ancestorsText(s.note, nodeId), siblings: siblingTexts(s.note, nodeId), isRoot: !s.note.nodes[nodeId].parentId });
   });
-  const context = useMemo(() => (ctx ? (JSON.parse(ctx) as { path: string[]; siblings: string[]; isRoot: boolean }) : null), [ctx]);
+  const context = ctx ? (JSON.parse(ctx) as { path: string[]; siblings: string[]; isRoot: boolean }) : null;
 
   const trimmed = value.trim();
   const ideasMode = !trimmed && !!context && !context.isRoot;
   const wantsAI = !!context && useAI && !composing && acceptedFor !== value && (ideasMode || trimmed.length >= TYPEAHEAD.minChars);
 
   // Local suggestions are instant and free.
-  const local = useMemo<Suggestion[]>(() => {
+  const local: Suggestion[] = (() => {
     if (!context || !trimmed) return [];
     return localIndex.suggest(value, new Set(context.siblings), TYPEAHEAD.max).map((text) => ({ text, source: "local" as const }));
-  }, [context, value, trimmed]);
+  })();
 
   // AI suggestions: debounced, cached, aborted on every keystroke.
   useEffect(() => {
@@ -141,7 +141,7 @@ export function NodeInput({ nodeId, className, placeholder, onAction, autoFocus,
   }, [wantsAI, context, value, ideasMode, delay]);
 
   // Merge: AI results still matching what's typed, then local ones.
-  const items = useMemo<Suggestion[]>(() => {
+  const items: Suggestion[] = (() => {
     if (!context || acceptedFor === value) return [];
     const lower = value.toLowerCase();
     const aiList =
@@ -158,7 +158,7 @@ export function NodeInput({ nodeId, className, placeholder, onAction, autoFocus,
       out.push(s);
     }
     return out.slice(0, TYPEAHEAD.max);
-  }, [ai, local, value, trimmed, context, acceptedFor]);
+  })();
 
   const loading = loadingFor === value && wantsAI;
   const open = focused && items.length > 0 && dismissedFor !== value;

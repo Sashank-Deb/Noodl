@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { FileText, LayoutTemplate, Moon, Plus, Settings2, Sparkles, Upload } from "lucide-react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -21,7 +21,7 @@ export function SearchDialog({ open, onOpenChange, actions }: { open: boolean; o
   const notes = useLiveQuery(() => (open ? db().notes.filter((n) => !n.deletedAt).toArray() : []), [open]);
   const [q, setQ] = useState("");
 
-  const nodeHits = useMemo(() => {
+  const nodeHits = (() => {
     const query = q.trim().toLowerCase();
     if (query.length < 2 || !notes) return [];
     const out: { noteId: string; nodeId: string; text: string; path: string }[] = [];
@@ -34,7 +34,7 @@ export function SearchDialog({ open, onOpenChange, actions }: { open: boolean; o
       }
     }
     return out;
-  }, [q, notes]);
+  })();
 
   const run = (fn: () => void) => {
     onOpenChange(false);

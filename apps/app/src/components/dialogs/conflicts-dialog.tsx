@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { toast } from "sonner";
 import { TriangleAlert } from "lucide-react";
@@ -55,7 +55,7 @@ export function ConflictsDialog({ open, onOpenChange }: { open: boolean; onOpenC
     return out;
   }, [open]);
   const [idx, setIdx] = useState(0);
-  const pair = useMemo(() => pairs?.[Math.min(idx, (pairs?.length ?? 1) - 1)], [pairs, idx]);
+  const pair = pairs?.[Math.min(idx, (pairs?.length ?? 1) - 1)];
 
   const done = (msg: string) => {
     schedulePush();
