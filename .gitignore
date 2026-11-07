@@ -6,3 +6,4 @@ dist/
 !.env.example
 .lighthouseci/
 .vercel/
+package-lock.json
