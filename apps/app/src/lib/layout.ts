@@ -33,13 +33,21 @@ export interface LayoutOptions {
   /** Extra space between first-level subtrees. */
   groupGap?: number;
   balanced?: boolean;
+  /**
+   * Remembered split index for balanced mode: children[0..splitIndex-1] go
+   * right, the rest go left. When provided, the greedy rebalance is skipped
+   * and this split is used directly, so collapsing/expanding a node never
+   * moves children between sides. The caller (useMapLayout) stores the last
+   * computed split and passes it back on re-layout.
+   */
+  balancedSplit?: number;
 }
 
 export function layoutTree(
   note: Note,
   measure: (node: MindNode, depth: number) => Size,
   opts: LayoutOptions = {},
-): LayoutResult {
+): LayoutResult & { /** The split index used for balanced mode (right = [0..split), left = [split..n)). */ balancedSplit?: number } {
   const hg = opts.hGap ?? 56;
   const hGap = (d: number) => (typeof hg === "function" ? hg(d) : hg);
   const vGap = opts.vGap ?? 14;
@@ -91,19 +99,27 @@ export function layoutTree(
   boxes[root.id] = rootBox;
   const kids = visibleChildren(root);
 
+  let computedSplit: number | undefined;
   if (opts.balanced && kids.length > 1) {
-    // Greedy split that balances total subtree height on both sides, keeping order.
-    const total = kids.reduce((s, c) => s + subH[c], 0);
-    let acc = 0;
-    let split = kids.length;
-    for (let i = 0; i < kids.length; i++) {
-      if (acc + subH[kids[i]] / 2 > total / 2) {
-        split = i;
-        break;
+    let split: number;
+    if (opts.balancedSplit != null && opts.balancedSplit >= 1 && opts.balancedSplit <= kids.length - 1) {
+      // Reuse the remembered split so collapsing/expanding doesn't move nodes.
+      split = opts.balancedSplit;
+    } else {
+      // Greedy split that balances total subtree height on both sides, keeping order.
+      const total = kids.reduce((s, c) => s + subH[c], 0);
+      let acc = 0;
+      split = kids.length;
+      for (let i = 0; i < kids.length; i++) {
+        if (acc + subH[kids[i]] / 2 > total / 2) {
+          split = i;
+          break;
+        }
+        acc += subH[kids[i]];
       }
-      acc += subH[kids[i]];
+      split = Math.max(1, Math.min(split, kids.length - 1));
     }
-    split = Math.max(1, Math.min(split, kids.length - 1));
+    computedSplit = split;
     place(kids.slice(0, split), rootBox, 1);
     place(kids.slice(split), rootBox, -1);
   } else {
@@ -120,7 +136,7 @@ export function layoutTree(
     maxX = Math.max(maxX, b.x + b.w);
     maxY = Math.max(maxY, b.y + b.h);
   }
-  return { boxes, bounds: { minX, minY, maxX, maxY } };
+  return { boxes, bounds: { minX, minY, maxX, maxY }, balancedSplit: computedSplit };
 }
 
 /** Where a connector meets a node: underlined leaves anchor on the underline, pills at the middle. */

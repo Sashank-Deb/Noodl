@@ -70,6 +70,7 @@ export function useMapLayout(
   family: string,
   editingId: string | null,
   balanced = false,
+  balancedSplit?: number,
 ) {
   if (!note) return null;
   return layoutTree(
@@ -118,6 +119,7 @@ export function useMapLayout(
       vGap: 10,
       groupGap: 16,
       balanced,
+      balancedSplit,
     },
   );
 }
@@ -167,7 +169,15 @@ export function MindMapView({
 
   const editingId = useEditor((s) => s.editingId);
   const { settings } = useSettings();
-  const layout = useMapLayout(note, family, editingId, settings.mapLayout === "balanced");
+  const splitRef = useRef<number | undefined>(undefined);
+  const balanced = settings.mapLayout === "balanced";
+  const layout = useMapLayout(note, family, editingId, balanced, splitRef.current);
+  // Remember the split so collapsing/expanding doesn't move nodes between sides.
+  if (layout?.balancedSplit != null) splitRef.current = layout.balancedSplit;
+  // Reset the remembered split when switching layout mode, opening a different note,
+  // or when the number of root children changes (structural add/remove should rebalance).
+  const rootKidCount = note ? (note.nodes[note.rootId]?.children.length ?? 0) : 0;
+  useEffect(() => { splitRef.current = undefined; }, [balanced, note?.id, rootKidCount]);
   useEffect(() => {
     lastLayout = layout;
   }, [layout]);

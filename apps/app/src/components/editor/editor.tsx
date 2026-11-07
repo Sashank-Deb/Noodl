@@ -93,7 +93,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
       setSaving(false);
     }
   }, []);
-  const { settings } = useSettings();
+  const { settings, update: updateSettings } = useSettings();
   const { resolvedTheme, setTheme } = useTheme();
   const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, k: 1 });
   const contentRef = useRef<HTMLDivElement>(null);
@@ -686,7 +686,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
                 variant="ghost"
                 size="icon"
                 className="size-8"
-                onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+                onClick={() => updateSettings({ theme: resolvedTheme === "dark" ? "light" : "dark" })}
                 aria-label={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               >
                 {resolvedTheme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}

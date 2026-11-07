@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { db, saveNote, softDeleteNote, takeSnapshot } from "@/lib/db";
-import { schedulePush } from "@/lib/sync";
 import { toOutline, type OutlineItem } from "@/lib/tree";
 import type { Note } from "@/lib/types";
 import { persistEditor, useEditor } from "@/store/editor-store";
@@ -58,7 +57,6 @@ export function ConflictsDialog({ open, onOpenChange }: { open: boolean; onOpenC
   const pair = pairs?.[Math.min(idx, (pairs?.length ?? 1) - 1)];
 
   const done = (msg: string) => {
-    schedulePush();
     toast(msg);
     if ((pairs?.length ?? 0) <= 1) onOpenChange(false);
   };

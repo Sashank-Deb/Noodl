@@ -10,7 +10,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useAuth } from "@/context/auth";
-import { schedulePush, useSyncStatus } from "@/lib/sync";
+import { syncNow, useSyncStatus } from "@/lib/sync";
 import { clearLocalData } from "@/lib/db";
 import { persistEditor, useEditor } from "@/store/editor-store";
 import {
@@ -189,7 +189,7 @@ export function AccountChip() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => schedulePush(0)}
+                  onClick={() => void syncNow()}
                 >
                   <RefreshCw className="size-3.5" /> Sync now
                 </Button>

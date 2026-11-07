@@ -14,7 +14,6 @@ import { useAuth } from "@/context/auth";
 import { aiConfigured, useAIAvailable } from "@/lib/ai/ai";
 import { exportBackup, importBackup, type Backup } from "@/lib/db";
 import { download } from "@/lib/io";
-import { schedulePush } from "@/lib/sync";
 import { MOD } from "@/components/editor/editor";
 
 function Row({ label, hint, children, htmlFor }: { label: string; hint?: string; children: React.ReactNode; htmlFor?: string }) {
@@ -162,7 +161,6 @@ export function SettingsDialog({ open, onOpenChange, initialTab = "general" }: {
                     if (!f) return;
                     try {
                       const n = await importBackup(JSON.parse(await f.text()) as Backup);
-                      schedulePush();
                       toast(`Restored ${n} notes`);
                     } catch (err) {
                       toast.error((err as Error).message || "That file isn't a noodl backup");

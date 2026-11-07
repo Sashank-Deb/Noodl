@@ -44,7 +44,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { db, deleteFolder, hardDeleteNote, restoreNote, saveFolder, saveNote, softDeleteNote } from "@/lib/db";
-import { recordHardDelete, schedulePush } from "@/lib/sync";
+import { recordHardDelete } from "@/lib/sync";
 import { cloneNote, countNodes, newId } from "@/lib/tree";
 import { download, safeFilename, toJSON } from "@/lib/io";
 import type { Folder as FolderT, Note } from "@/lib/types";
@@ -101,12 +101,11 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
 
   const deleteNote = async (n: Note) => {
     await softDeleteNote(n.id);
-    schedulePush();
     toast("Moved to Recycle Bin", {
       action: {
         label: "Undo",
         onClick: () => {
-          void restoreNote(n.id).then(() => schedulePush());
+          void restoreNote(n.id);
         },
       },
     });
@@ -116,7 +115,6 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
     const src = useEditor.getState().note?.id === n.id ? useEditor.getState().note! : n;
     const copy = cloneNote(src, `${src.title} (copy)`);
     await saveNote(copy);
-    schedulePush();
     onOpen(copy.id);
   };
 
@@ -125,7 +123,6 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
     await saveFolder(f);
     setOpen((o) => ({ ...o, [f.id]: true }));
     setRenaming(f.id);
-    schedulePush();
   };
 
   const noteRow = (n: Note, opts: { showFolder?: boolean; inTrash?: boolean } = {}) => (
@@ -162,7 +159,7 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
         )}
         {opts.inTrash ? (
           <div className="flex shrink-0 gap-0.5">
-            <Button variant="ghost" size="icon" className="size-7" aria-label={`Restore ${n.title}`} onClick={() => void restoreNote(n.id).then(() => { schedulePush(); toast(`Restored ${n.title}`); })}>
+            <Button variant="ghost" size="icon" className="size-7" aria-label={`Restore ${n.title}`} onClick={() => void restoreNote(n.id).then(() => { toast(`Restored ${n.title}`); })}>
               <Undo2 className="size-3.5" />
             </Button>
             <Button variant="ghost" size="icon" className="size-7 text-destructive" aria-label={`Delete ${n.title} forever`} onClick={() => void hardDeleteNote(n.id).then(() => recordHardDelete(n.id))}>
@@ -298,7 +295,7 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
                         initial={f.name}
                         onDone={(v) => {
                           setRenaming(null);
-                          if (v !== null) void saveFolder({ ...f, name: v.trim() || "Untitled folder", updatedAt: Date.now() }).then(() => schedulePush());
+                          if (v !== null) void saveFolder({ ...f, name: v.trim() || "Untitled folder", updatedAt: Date.now() });
                         }}
                       />
                     ) : (
@@ -372,7 +369,7 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
               onClick={() => {
                 if (!confirmFolder) return;
                 const id = confirmFolder.id;
-                void deleteFolder(id).then(() => schedulePush());
+                void deleteFolder(id);
                 setConfirmFolder(null);
               }}
             >
@@ -391,7 +388,6 @@ async function renameNote(n: Note, title: string) {
   if (st.note?.id === n.id) st.setText(n.rootId, t);
   else {
     await saveNote({ ...n, title: t, updatedAt: Date.now(), nodes: { ...n.nodes, [n.rootId]: { ...n.nodes[n.rootId], text: t } } });
-    schedulePush();
   }
 }
 
@@ -403,7 +399,6 @@ async function moveNoteTo(n: Note, folderId: string | null) {
     });
   } else {
     await saveNote({ ...n, folderId, updatedAt: Date.now() });
-    schedulePush();
   }
 }
 

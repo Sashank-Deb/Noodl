@@ -233,14 +233,13 @@ export async function mergeRemote(remote: Note): Promise<number> {
     winner === remote ? { ...remote, syncedAt: remote.updatedAt } : { ...local, syncedAt: remote.updatedAt },
     copy,
   ]);
-  schedulePush();
+  // Conflict copy needs pushing — user will click Sync.
   return 1;
 }
 
 // --- Push -----------------------------------------------------------------------
 const onOnline = () => {
   void pull();
-  schedulePush(0);
 };
 const onVisible = () => {
   if (document.visibilityState === "visible") void pull();
@@ -358,5 +357,5 @@ export async function recordHardDelete(id: string) {
   const k = keyFor(uid, "pendingDeletes");
   const list = (await kvGet<string[]>(k)) ?? [];
   await kvSet(k, [...new Set([...list, id])]);
-  schedulePush();
+  // Hard delete is recorded; user will push via Sync button.
 }

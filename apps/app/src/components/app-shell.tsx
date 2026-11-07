@@ -57,8 +57,8 @@ function setUrlNote(id: string | null) {
 }
 
 export function AppShell() {
-  const { settings, ready } = useSettings();
-  const { resolvedTheme, setTheme } = useTheme();
+  const { settings, ready, update } = useSettings();
+  const { resolvedTheme } = useTheme();
   const desktop = useIsDesktop();
   const aiReady = useAIAvailable();
   const [sidebarPinned, setSidebarPinned] = useState(true);
@@ -356,7 +356,7 @@ export function AppShell() {
             setSettingsTab("general");
             setSettingsOpen(true);
           },
-          toggleTheme: () => setTheme(resolvedTheme === "dark" ? "light" : "dark"),
+          toggleTheme: () => update({ theme: resolvedTheme === "dark" ? "light" : "dark" }),
         }}
       />}
 
@@ -378,33 +378,30 @@ function EmptyState({ onNew, onGenerate, onImport, onMenu }: { onNew: () => void
   const aiReady = useAIAvailable();
   return (
     <div className="map-canvas grid h-full place-items-center p-6" style={{ backgroundSize: "22px 22px" }}>
-      <div className="max-w-sm text-center">
-        <Mark size={44} className="mx-auto mb-4" />
-        <h1 className="text-2xl font-bold tracking-tight">Start with one idea.</h1>
-        <p className="mt-2 text-muted-foreground">Type a topic and press Tab to branch it. Everything stays on this device.</p>
-        <div className="mt-5 flex flex-col items-center gap-2">
-          <div className="flex flex-wrap justify-center gap-2">
-            <Button onClick={onNew}>
-              <Plus className="size-4" /> New note
-            </Button>
-            <Button variant="outline" onClick={onImport}>
-              <Upload className="size-4" /> Import
-            </Button>
-          </div>
+      <div className="flex max-w-sm flex-col items-center text-center">
+        <Mark size={48} className="mb-5" />
+        <h1 className="text-[26px] font-extrabold tracking-[-0.04em]">Start with one idea.</h1>
+        <p className="mt-2.5 max-w-xs text-[15px] leading-relaxed text-muted-foreground">
+          Type a topic and press <kbd className="kbd">Tab</kbd> to branch it. Everything stays on this device.
+        </p>
+        <div className="mt-6 flex w-full max-w-xs flex-col gap-2.5">
+          <Button onClick={onNew} size="lg" className="h-11 w-full rounded-xl text-[15px]">
+            <Plus className="size-4" /> New note
+          </Button>
+          <Button variant="outline" onClick={onImport} size="lg" className="h-11 w-full rounded-xl text-[15px]">
+            <Upload className="size-4" /> Import
+          </Button>
           {settings.aiEnabled && aiReady && (
-            <Button variant="outline" onClick={onGenerate} className="w-full max-w-xs">
-              <Sparkles className="size-4 text-(--ai)" /> Generate with AI
+            <Button variant="outline" onClick={onGenerate} size="lg" className="h-11 w-full rounded-xl border-0 bg-(--ai-soft) text-(--ai-strong) shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--ai)_55%,transparent)] hover:bg-(--ai-soft) hover:brightness-[0.98] text-[15px]">
+              <Sparkles className="size-4" /> Generate with AI
             </Button>
           )}
-          <p className="mt-1 max-w-xs text-xs text-muted-foreground/70">
-            Import accepts Markdown or noodl JSON. JSON must follow the noodl export structure — use Export &gt; JSON from an existing note as a reference.
-          </p>
         </div>
-        <button type="button" onClick={onMenu} className="mt-4 text-sm text-primary underline-offset-4 hover:underline lg:hidden">
+        <button type="button" onClick={onMenu} className="mt-5 text-sm font-medium text-primary underline-offset-4 hover:underline">
           Open library
         </button>
-        <p className="mt-6 text-xs text-muted-foreground">
-          Tip: press <kbd className="kbd">{MOD}K</kbd> to search, <kbd className="kbd">⌥N</kbd> for a new note.
+        <p className="mt-6 text-xs text-muted-foreground/60">
+          <kbd className="kbd">{MOD}K</kbd> search · <kbd className="kbd">⌥N</kbd> new note · Markdown &amp; JSON import
         </p>
       </div>
     </div>
