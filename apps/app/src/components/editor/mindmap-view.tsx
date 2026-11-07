@@ -1,13 +1,25 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Minus, Plus } from "lucide-react";
+import { flushSync } from "react-dom";
+import { CornerDownLeft, Ellipsis, Link2, Minus, Plus, Table2, Trash2, Type } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useEditor } from "@/store/editor-store";
 import { branchIndex, depthOf, isAncestor } from "@/lib/tree";
 import { connectorPath, layoutTree, measureText, type Box, type LayoutResult } from "@/lib/layout";
 import { useSettings } from "@/context/settings";
 import type { MapStyle, MindNode, Note } from "@/lib/types";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { NodeInput, type NodeAction } from "./node-input";
 import { NodeBody, TableEditor } from "./node-content";
 
@@ -609,9 +621,80 @@ const MapNode = memo(function MapNode({
     [id, onAction],
   );
 
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pointerDownPos = useRef<{ x: number; y: number; time: number } | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didLongPress = useRef(false);
+
   if (!node) return null;
   const isRoot = depth === 0;
   const boxed = mapStyle === "boxed";
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (e.button !== 0 || editing) return;
+    pointerDownPos.current = { x: e.clientX, y: e.clientY, time: Date.now() };
+    didLongPress.current = false;
+
+    // Detect touch / mouse hold (450ms) -> trigger 3 dots options menu
+    longPressTimer.current = setTimeout(() => {
+      didLongPress.current = true;
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(40);
+      }
+      useEditor.getState().select(id);
+      setMenuOpen(true);
+    }, 450);
+
+    if (!isRoot) onDragStart(id, e);
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!pointerDownPos.current) return;
+    const dist = Math.hypot(e.clientX - pointerDownPos.current.x, e.clientY - pointerDownPos.current.y);
+    if (dist > 8) {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+    }
+  };
+
+  const onPointerUp = (e: React.PointerEvent) => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+
+    if (didLongPress.current) {
+      didLongPress.current = false;
+      pointerDownPos.current = null;
+      return;
+    }
+
+    if (pointerDownPos.current) {
+      const dist = Math.hypot(e.clientX - pointerDownPos.current.x, e.clientY - pointerDownPos.current.y);
+      pointerDownPos.current = null;
+
+      if (dist < 8) {
+        // Clean tap/click -> auto trigger focus and open keyboard
+        e.stopPropagation();
+        (e.currentTarget.closest("[data-editor-surface]") as HTMLElement | null)?.focus({ preventScroll: true });
+        useEditor.getState().select(id);
+        flushSync(() => {
+          useEditor.getState().edit(id);
+        });
+      }
+    }
+  };
+
+  const onPointerCancel = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    pointerDownPos.current = null;
+    didLongPress.current = false;
+  };
 
   return (
     <div
@@ -619,7 +702,7 @@ const MapNode = memo(function MapNode({
       data-id={id}
       data-selected={selected || undefined}
       className={cn(
-        "map-node absolute flex flex-col justify-center rounded-xl transition-[box-shadow,opacity] duration-150 motion-reduce:transition-none",
+        "map-node absolute flex flex-col justify-center rounded-xl",
         isRoot && "map-node-root",
         depth === 1 && (boxed ? "map-node-boxed" : "map-node-l1"),
         (depth === 2 || depth === 3) && (boxed ? "map-node-boxed" : "map-node-l2"),
@@ -642,19 +725,15 @@ const MapNode = memo(function MapNode({
           transition: beingDragged ? "none" : undefined,
         } as React.CSSProperties
       }
-      onPointerDown={(e) => {
-        if (e.button !== 0 || editing) return;
-        e.stopPropagation();
-        (e.currentTarget.closest("[data-editor-surface]") as HTMLElement | null)?.focus({ preventScroll: true });
-        useEditor.getState().select(id);
-        if (!isRoot) onDragStart(id, e);
-      }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
       onContextMenu={(e) => {
-        // On touch long-press, trigger the Turn Into menu via a custom event
-        if ("ontouchstart" in window) {
-          e.preventDefault();
-          window.dispatchEvent(new CustomEvent("noodl:turn-into", { detail: { id } }));
-        }
+        e.preventDefault();
+        e.stopPropagation();
+        useEditor.getState().select(id);
+        setMenuOpen(true);
       }}
       onDoubleClick={(e) => {
         e.stopPropagation();
@@ -676,6 +755,8 @@ const MapNode = memo(function MapNode({
       ) : (
         <NodeBody node={node} />
       )}
+
+      {/* Collapse button */}
       {node.children.length > 0 && !isRoot && (
         <button
           type="button"
@@ -707,6 +788,108 @@ const MapNode = memo(function MapNode({
           )}
         </button>
       )}
+
+      {/* Intuitive "Add child node at next level" button when selected */}
+      {selected && !editing && (
+        <button
+          type="button"
+          data-map-ui
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            useEditor.getState().addChild(id);
+          }}
+          aria-label="Add child at next level"
+          title="Add child (Tab)"
+          className={cn(
+            "absolute top-1/2 -translate-y-1/2 grid size-6 place-items-center rounded-full border-2 bg-background text-xs font-semibold shadow-sm hover:scale-110 active:scale-95 transition-all z-20 cursor-pointer",
+            box.side === -1
+              ? node.children.length > 0 && !isRoot
+                ? "-left-9"
+                : "-left-4"
+              : node.children.length > 0 && !isRoot
+                ? "-right-9"
+                : "-right-4",
+          )}
+          style={{ borderColor: color, color }}
+        >
+          <Plus className="size-3.5" strokeWidth={2.5} />
+        </button>
+      )}
+
+      {/* 3 dots options menu trigger & popup */}
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            data-map-ui
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(true);
+            }}
+            aria-label="Node options"
+            title="Options"
+            className={cn(
+              "absolute -top-3.5 right-1 grid size-6 place-items-center rounded-full border bg-background text-muted-foreground shadow-sm hover:bg-accent hover:text-foreground transition-opacity z-20 cursor-pointer",
+              selected && !editing ? "opacity-100" : "opacity-0 pointer-events-none",
+            )}
+          >
+            <Ellipsis className="size-3.5" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-48 z-50">
+          <DropdownMenuItem onSelect={() => useEditor.getState().addChild(id)}>
+            <Plus className="size-4" /> Add child
+          </DropdownMenuItem>
+          {!isRoot && (
+            <DropdownMenuItem onSelect={() => useEditor.getState().addSibling(id)}>
+              <CornerDownLeft className="size-4" /> Add sibling
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Type className="size-4" /> Turn into…
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem onSelect={() => useEditor.getState().updateNode(id, { type: "text", url: undefined, table: undefined })}>
+                <Type className="size-4" /> Text
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => {
+                window.dispatchEvent(new CustomEvent("noodl:turn-into", { detail: { id, type: "link" } }));
+              }}>
+                <Link2 className="size-4" /> Link
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => {
+                useEditor.getState().updateNode(id, { type: "table", table: [["Column 1", "Column 2"], ["", ""], ["", ""]] });
+                useEditor.getState().edit(id);
+              }}>
+                <Table2 className="size-4" /> Table
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          {!isRoot && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onSelect={() => {
+                  useEditor.getState().remove(id);
+                  toast("Deleted node", {
+                    action: {
+                      label: "Undo",
+                      onClick: () => useEditor.getState().undo(),
+                    },
+                  });
+                }}
+              >
+                <Trash2 className="size-4" /> Delete node
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 });

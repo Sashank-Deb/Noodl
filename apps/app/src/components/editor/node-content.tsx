@@ -100,6 +100,14 @@ export function TableEditor({ nodeId }: { nodeId: string }) {
               {Array.from({ length: cols }, (_, c) => (
                 <td key={c} className={`border border-border p-0 ${r === 0 ? "bg-muted font-medium" : ""}`}>
                   <input
+                    type="text"
+                    name="table-cell"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    data-1p-ignore="true"
+                    data-lpignore="true"
+                    data-bwignore="true"
+                    data-form-type="other"
                     value={row[c] ?? ""}
                     aria-label={`Row ${r + 1}, column ${c + 1}`}
                     onChange={(e) => set(table.map((rr, i) => (i === r ? Array.from({ length: cols }, (_, j) => (j === c ? e.target.value : rr[j] ?? "")) : rr)))}

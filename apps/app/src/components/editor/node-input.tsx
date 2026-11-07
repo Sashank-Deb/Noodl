@@ -75,7 +75,7 @@ export function NodeInput({ nodeId, className, placeholder, onAction, autoFocus,
   const listId = useId();
   const aiReady = useAIAvailable();
   const useAI = settings.aiEnabled && aiReady;
-  const phone = usePhone();
+  const touch = useTouchDevice();
   const delay = Math.min(600, Math.max(150, settings.typeaheadDelay ?? TYPEAHEAD.debounceMs));
 
   // Auto-grow fallback for browsers without `field-sizing: content`.
@@ -257,7 +257,7 @@ export function NodeInput({ nodeId, className, placeholder, onAction, autoFocus,
 
   return (
     <>
-    {phone && focused && (
+    {touch && focused && (
       <AccessoryBar
         items={items}
         loading={loading}
@@ -266,7 +266,7 @@ export function NodeInput({ nodeId, className, placeholder, onAction, autoFocus,
         canOutdent={!!context && context.path.length > 1}
       />
     )}
-    <P.Root open={open && !phone}>
+    <P.Root open={open && !touch}>
       <P.Anchor asChild>
         <div className={cn("relative grid w-full", className)} data-node-input>
           {/* Ghost layer — mirrors the textarea's text so the completion lines up. */}
@@ -282,8 +282,16 @@ export function NodeInput({ nodeId, className, placeholder, onAction, autoFocus,
           <textarea
             ref={ref}
             rows={1}
-            value={value}
+            name="node-text"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="sentences"
             spellCheck
+            data-1p-ignore="true"
+            data-lpignore="true"
+            data-bwignore="true"
+            data-form-type="other"
+            value={value}
             placeholder={placeholder}
             aria-label={ariaLabel ?? "Node text"}
             role="combobox"
@@ -394,18 +402,19 @@ export function NodeInput({ nodeId, className, placeholder, onAction, autoFocus,
 }
 
 // ---------------------------------------------------------------------------
-// Phones: suggestions become chips in a bar that sits on top of the keyboard,
+// Touch devices (iPads, phones): suggestions become chips in a bar that sits on top of the keyboard,
 // with buttons for the keys a touch keyboard doesn't have (DESIGN.md §8).
 // ---------------------------------------------------------------------------
-const PHONE_QUERY = "(max-width: 640px) and (pointer: coarse)";
-function usePhone() {
+const TOUCH_QUERY = "(pointer: coarse)";
+function useTouchDevice() {
   return useSyncExternalStore(
     (cb) => {
-      const mq = window.matchMedia(PHONE_QUERY);
+      if (typeof window === "undefined") return () => {};
+      const mq = window.matchMedia(TOUCH_QUERY);
       mq.addEventListener("change", cb);
       return () => mq.removeEventListener("change", cb);
     },
-    () => window.matchMedia(PHONE_QUERY).matches,
+    () => typeof window !== "undefined" && window.matchMedia(TOUCH_QUERY).matches,
     () => false,
   );
 }

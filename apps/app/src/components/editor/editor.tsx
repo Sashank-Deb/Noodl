@@ -742,6 +742,14 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
               onSubmit={(e) => { e.preventDefault(); submitLink(linkInput.url); }}
             >
               <input
+                type="url"
+                name="custom-link-url"
+                autoComplete="off"
+                autoCorrect="off"
+                data-1p-ignore="true"
+                data-lpignore="true"
+                data-bwignore="true"
+                data-form-type="other"
                 autoFocus
                 value={linkInput.url}
                 onChange={(e) => setLinkInput({ ...linkInput, url: e.target.value })}
@@ -887,6 +895,14 @@ function RewritePanel({
           }}
         >
           <input
+            type="text"
+            name="ai-instruction"
+            autoComplete="off"
+            autoCorrect="off"
+            data-1p-ignore="true"
+            data-lpignore="true"
+            data-bwignore="true"
+            data-form-type="other"
             autoFocus
             value={instruction}
             onChange={(e) => setInstruction(e.target.value.slice(0, AI_LIMITS.custom))}

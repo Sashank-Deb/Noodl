@@ -450,9 +450,19 @@ function RenameInput({ initial, onDone: done }: { initial: string; onDone: (v: s
   };
   return (
     <input
+      type="text"
+      name="item-title"
+      autoComplete="off"
+      autoCorrect="off"
+      autoCapitalize="sentences"
+      spellCheck={false}
+      data-1p-ignore="true"
+      data-lpignore="true"
+      data-bwignore="true"
+      data-form-type="other"
       autoFocus
       value={v}
-      aria-label="Name"
+      aria-label="Title"
       maxLength={200}
       onChange={(e) => setV(e.target.value)}
       onFocus={(e) => e.currentTarget.select()}
