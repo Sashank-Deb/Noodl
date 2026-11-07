@@ -20,11 +20,6 @@ export default function PrivacyPage() {
         title="Your notes, and where they go."
         lede="The short version: your notes stay in your browser unless you sign in to sync or use an AI feature. There are no ads and no tracking cookies."
       >
-        <p className="mt-6">
-          <span className="draft-banner" role="note">
-            Draft — have this reviewed before launch
-          </span>
-        </p>
       </PageHeader>
 
       <div className="container-site pb-20">

@@ -43,7 +43,7 @@ Set it at build time for a custom domain, e.g. `NEXT_PUBLIC_SITE_URL=https://noo
 | `/templates/` | The six app templates with build-time SVG mini maps; "Use template" → `/app/?template=<id>`. |
 | `/use-cases/` | Index of the three guides. |
 | `/use-cases/students/`, `/use-cases/meeting-notes/`, `/use-cases/writers/` | Long-form guides (~600–800 words each). |
-| `/privacy/` | Privacy notice — **marked "Draft — have this reviewed before launch"**, with two `[Reviewer: …]` placeholders (Gemini data-use terms, contact address). |
+| `/privacy/` | Privacy notice —, with two `[Reviewer: …]` placeholders (Gemini data-use terms, contact address). |
 | `/blog/` + `/blog/outline-or-mind-map/`, `/blog/how-ai-typeahead-works/` | Posts are TSX pages; metadata lives in `src/lib/posts.ts`. |
 | `404.html` | Custom not-found page (`noindex`). Vercel serves it automatically for unknown paths. |
 | `sitemap.xml`, `robots.txt`, `manifest.webmanifest`, `icon.svg`, `apple-icon.png`, `icon-192/512.png`, `**/opengraph-image.png` | Generated at build time. |
