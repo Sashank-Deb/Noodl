@@ -26,6 +26,7 @@ const MAX_K = 2.5;
 
 /** Node anatomy per depth (DESIGN.md §6). */
 export const NODE_STYLE = [
+  // Depth 0: root
   {
     font: (f: string) => `650 17px ${f}`,
     css: "650 17px/22px var(--font-sans)",
@@ -34,6 +35,7 @@ export const NODE_STYLE = [
     minH: 48,
     maxW: 280,
   },
+  // Depth 1: L1 — pill with colored bg
   {
     font: (f: string) => `600 15px ${f}`,
     css: "600 15px/20px var(--font-sans)",
@@ -42,6 +44,16 @@ export const NODE_STYLE = [
     minH: 36,
     maxW: 240,
   },
+  // Depth 2–3: L2/L3 — smaller boxed style
+  {
+    font: (f: string) => `500 14px ${f}`,
+    css: "500 14px/20px var(--font-sans)",
+    lh: 20,
+    padX: 10,
+    minH: 32,
+    maxW: 260,
+  },
+  // Depth 4+: leaf — underline
   {
     font: (f: string) => `450 14px ${f}`,
     css: "450 14px/20px var(--font-sans)",
@@ -51,7 +63,7 @@ export const NODE_STYLE = [
     maxW: 280,
   },
 ];
-export const styleFor = (depth: number) => NODE_STYLE[Math.min(depth, 2)];
+export const styleFor = (depth: number) => NODE_STYLE[Math.min(depth, 3)];
 
 export function useMapLayout(
   note: Note | null,
@@ -599,7 +611,8 @@ const MapNode = memo(function MapNode({
         "map-node absolute flex flex-col justify-center rounded-xl transition-[box-shadow,opacity] duration-150 motion-reduce:transition-none",
         isRoot && "map-node-root",
         depth === 1 && (boxed ? "map-node-boxed" : "map-node-l1"),
-        depth >= 2 && (boxed ? "map-node-boxed" : "map-node-leaf"),
+        (depth === 2 || depth === 3) && (boxed ? "map-node-boxed" : "map-node-l2"),
+        depth >= 4 && (boxed ? "map-node-boxed" : "map-node-leaf"),
         selected && "map-node-selected",
         editing && "map-node-editing",
         dropTarget && "map-node-drop",
@@ -623,6 +636,13 @@ const MapNode = memo(function MapNode({
         (e.currentTarget.closest("[data-editor-surface]") as HTMLElement | null)?.focus({ preventScroll: true });
         useEditor.getState().select(id);
         if (!isRoot) onDragStart(id, e);
+      }}
+      onContextMenu={(e) => {
+        // On touch long-press, trigger the Turn Into menu via a custom event
+        if ("ontouchstart" in window) {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent("noodl:turn-into", { detail: { id } }));
+        }
       }}
       onDoubleClick={(e) => {
         e.stopPropagation();
@@ -664,7 +684,7 @@ const MapNode = memo(function MapNode({
             box.side === -1 ? "-left-3" : "-right-3",
             node.collapsed
               ? "size-6 opacity-100"
-              : "size-4 opacity-0 hover:opacity-100 focus-visible:opacity-100 [.map-node:hover_&]:opacity-100",
+              : "map-collapse-btn size-4 opacity-0 hover:opacity-100 focus-visible:opacity-100 [.map-node:hover_&]:opacity-100",
           )}
           style={{ borderColor: color, color }}
         >

@@ -76,5 +76,5 @@ export const DEFAULT_SETTINGS: Settings = {
   defaultView: "map",
   typeaheadDelay: 350,
   tabAccepts: true,
-  mapLayout: "right",
+  mapLayout: "balanced",
 };

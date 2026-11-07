@@ -125,7 +125,7 @@ export function layoutTree(
 
 /** Where a connector meets a node: underlined leaves anchor on the underline, pills at the middle. */
 export const anchorY = (b: Box, underlineLeaves: boolean) =>
-  underlineLeaves && b.depth >= 2 ? b.y + b.h - 1 : b.y + b.h / 2;
+  underlineLeaves && b.depth >= 4 ? b.y + b.h - 1 : b.y + b.h / 2;
 
 /**
  * Cubic bezier with horizontal tangents (k = Δx/2) from the parent's outgoing

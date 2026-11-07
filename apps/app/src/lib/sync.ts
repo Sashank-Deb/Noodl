@@ -135,7 +135,7 @@ export async function startSync(userId: string) {
   window.addEventListener("online", onOnline);
   document.addEventListener("visibilitychange", onVisible);
   await pull(gen);
-  schedulePush(0);
+  // Don't auto-push on start; user must click Sync.
 }
 
 export async function stopSync() {
@@ -333,6 +333,23 @@ async function pushNow() {
     pushing = false;
     if (pushAgain) schedulePush(500);
   }
+}
+
+/** Check if there are any local changes not yet pushed to the cloud. */
+export async function hasDirtyNotes(): Promise<boolean> {
+  if (!uid) return false;
+  const dirty = await db().notes.filter((n) => n.updatedAt > (n.syncedAt ?? 0)).count();
+  const dirtyFolders = await db().folders.filter((x) => x.updatedAt > (x.syncedAt ?? 0)).count();
+  const delKey = keyFor(uid, "pendingDeletes");
+  const pendingDeletes = (await kvGet<string[]>(delKey)) ?? [];
+  return dirty > 0 || dirtyFolders > 0 || pendingDeletes.length > 0;
+}
+
+/** Manual sync: pull then push. Called by the Sync button. */
+export async function syncNow(): Promise<void> {
+  if (!uid || !sb) return;
+  await pull();
+  await pushNow();
 }
 
 /** Record a permanent delete so it also disappears from the cloud. */

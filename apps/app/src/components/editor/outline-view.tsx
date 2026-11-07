@@ -163,7 +163,7 @@ const OutlineRow = memo(function OutlineRow({ id, depth, onAction, onDragStart, 
         />
       </span>
       <div
-        className={cn("min-w-0 flex-1 cursor-text pl-1.5 leading-6", depth === 1 ? "text-[15px] font-medium" : "text-[15px]")}
+        className={cn("min-w-0 flex-1 cursor-text pl-1.5 leading-6", depth === 1 ? "text-[15px] font-medium" : depth <= 3 ? "text-[15px] font-normal" : "text-[14px]")}
         onClick={() => !editing && useEditor.getState().edit(id)}
       >
         {editing ? (

@@ -23,7 +23,7 @@ import { persistEditor, useEditor } from "@/store/editor-store";
 import { useUI } from "@/store/ui-store";
 import { useSettings } from "@/context/settings";
 import { db, getNote, kvGet, kvSet, purgeRecycleBin, saveNote, takeSnapshot } from "@/lib/db";
-import { schedulePush } from "@/lib/sync";
+// Cloud sync is now manual via the Sync button
 import { createNote, noteFromOutline, type OutlineItem } from "@/lib/tree";
 import { TEMPLATES, WELCOME } from "@/lib/templates";
 import { fromJSON, fromMarkdown } from "@/lib/io";
@@ -107,7 +107,6 @@ export function AppShell() {
   const createAndOpen = useCallback(
     async (n: Note, editRoot = false) => {
       await saveNote(n);
-      schedulePush();
       await open(n.id);
       if (editRoot) useEditor.getState().edit(n.rootId);
       else useEditor.getState().requestFit();
@@ -162,7 +161,11 @@ export function AppShell() {
         if ((await db().notes.count()) === 0) await saveNote(noteFromOutline(WELCOME));
       }
       const tpl = params.get("template");
-      if (params.get("new")) return newNote();
+      if (params.get("new")) {
+        // Clear the query param but don't create a note — let EmptyState show.
+        setUrlNote(null);
+        return;
+      }
       if (params.get("generate")) {
         setGenOpen(true);
       }
@@ -379,18 +382,23 @@ function EmptyState({ onNew, onGenerate, onImport, onMenu }: { onNew: () => void
         <Mark size={44} className="mx-auto mb-4" />
         <h1 className="text-2xl font-bold tracking-tight">Start with one idea.</h1>
         <p className="mt-2 text-muted-foreground">Type a topic and press Tab to branch it. Everything stays on this device.</p>
-        <div className="mt-5 flex flex-wrap justify-center gap-2">
-          <Button onClick={onNew}>
-            <Plus className="size-4" /> New note
-          </Button>
+        <div className="mt-5 flex flex-col items-center gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button onClick={onNew}>
+              <Plus className="size-4" /> New note
+            </Button>
+            <Button variant="outline" onClick={onImport}>
+              <Upload className="size-4" /> Import
+            </Button>
+          </div>
           {settings.aiEnabled && aiReady && (
-            <Button variant="outline" onClick={onGenerate}>
+            <Button variant="outline" onClick={onGenerate} className="w-full max-w-xs">
               <Sparkles className="size-4 text-(--ai)" /> Generate with AI
             </Button>
           )}
-          <Button variant="ghost" onClick={onImport}>
-            <Upload className="size-4" /> Import
-          </Button>
+          <p className="mt-1 max-w-xs text-xs text-muted-foreground/70">
+            Import accepts Markdown or noodl JSON. JSON must follow the noodl export structure — use Export &gt; JSON from an existing note as a reference.
+          </p>
         </div>
         <button type="button" onClick={onMenu} className="mt-4 text-sm text-primary underline-offset-4 hover:underline lg:hidden">
           Open library

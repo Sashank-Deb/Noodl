@@ -46,7 +46,7 @@ import { cn } from "@/lib/utils";
 import { persistEditor, useEditor } from "@/store/editor-store";
 import { useSettings } from "@/context/settings";
 import { saveImageAsset, takeSnapshot } from "@/lib/db";
-import { schedulePush } from "@/lib/sync";
+// schedulePush removed — cloud sync is now manual via the Sync button
 import { ancestorsText, flattenVisible, newId, safeUrl, toOutline } from "@/lib/tree";
 import { download, fromIndentedText, safeFilename, toHTML, toJSON, toMarkdown, toPlainText } from "@/lib/io";
 import { AI_LIMITS, expandNode, rewriteNode, useAIAvailable, type RewriteMode } from "@/lib/ai/ai";
@@ -83,8 +83,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
     setSaving(true);
     try {
       await persistEditor();
-      schedulePush(0);
-      toast.success("Saved");
+      toast.success("Saved locally");
     } catch {
       toast.error("Couldn't save. Your changes are still here; try again.");
     } finally {
@@ -98,6 +97,20 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
   const aiReady = useAIAvailable();
   const [aiMenuOpen, setAiMenuOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+
+  // Long-press on touch → open Turn Into menu
+  const [turnIntoMenuOpen, setTurnIntoMenuOpen] = useState(false);
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const id = (e as CustomEvent).detail?.id;
+      if (id) {
+        useEditor.getState().select(id);
+        setTurnIntoMenuOpen(true);
+      }
+    };
+    window.addEventListener("noodl:turn-into", handler);
+    return () => window.removeEventListener("noodl:turn-into", handler);
+  }, []);
 
   // ⌘J → AI menu, ⌘⇧E → export menu.
   useEffect(() => {
@@ -131,11 +144,11 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
     return () => clearInterval(t);
   }, []);
 
-  // ---- Autosave (debounced) → IndexedDB → optional cloud push ------------
+  // ---- Autosave (debounced) → IndexedDB only (cloud push is manual) --------
   useEffect(() => {
     if (!revision) return;
     const t = setTimeout(() => {
-      void persistEditor().then((saved) => saved && schedulePush());
+      void persistEditor();
     }, 400);
     return () => clearTimeout(t);
   }, [revision]);
@@ -484,6 +497,8 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
   };
 
   // ---- Node type / media -------------------------------------------------------
+  const [linkInput, setLinkInput] = useState<{ id: string; url: string } | null>(null);
+
   const turnInto = (type: "text" | "link" | "table" | "image") => {
     const st = useEditor.getState();
     const id = st.selectedId;
@@ -498,11 +513,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
       return;
     }
     if (type === "link") {
-      const url = window.prompt("Link URL", n.nodes[id].url ?? "https://");
-      if (!url) return;
-      const safe = safeUrl(url);
-      if (!safe) return toast.error("Use an http(s) or mailto link");
-      st.updateNode(id, { type: "link", url: safe });
+      setLinkInput({ id, url: n.nodes[id].url ?? "https://" });
       return;
     }
     if (type === "table") {
@@ -511,6 +522,14 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
       return;
     }
     st.updateNode(id, { type: "text", url: undefined, table: undefined });
+  };
+
+  const submitLink = (url: string) => {
+    if (!linkInput) return;
+    const safe = safeUrl(url);
+    if (!safe) { toast.error("Use an http(s) or mailto link"); return; }
+    useEditor.getState().updateNode(linkInput.id, { type: "link", url: safe });
+    setLinkInput(null);
   };
 
   // ---- Export ----------------------------------------------------------------
@@ -689,6 +708,35 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
           </div>
         )}
 
+        {linkInput && (
+          <div
+            data-map-ui
+            role="dialog"
+            aria-label="Add link"
+            className="absolute bottom-16 left-1/2 z-20 w-[min(400px,calc(100%-24px))] -translate-x-1/2 rounded-2xl border bg-popover p-3 shadow-xl"
+            onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setLinkInput(null); } }}
+          >
+            <p className="mb-2 flex items-center gap-1.5 text-xs font-medium">
+              <Link2 className="size-3.5" /> Link URL
+            </p>
+            <form
+              className="flex gap-2"
+              onSubmit={(e) => { e.preventDefault(); submitLink(linkInput.url); }}
+            >
+              <input
+                autoFocus
+                value={linkInput.url}
+                onChange={(e) => setLinkInput({ ...linkInput, url: e.target.value })}
+                placeholder="https://example.com"
+                aria-label="Link URL"
+                className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              />
+              <Button type="submit" size="sm" className="h-9">Add</Button>
+              <Button type="button" variant="ghost" size="sm" className="h-9" onClick={() => setLinkInput(null)}>Cancel</Button>
+            </form>
+          </div>
+        )}
+
         {rewrite && (
           <RewritePanel
             state={rewrite}
@@ -727,7 +775,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
             </>
           )}
           <Sep />
-          <NodeTypeMenu onPick={turnInto} />
+          <NodeTypeMenu onPick={turnInto} open={turnIntoMenuOpen} onOpenChange={setTurnIntoMenuOpen} />
           {ai && (
             <DropdownMenu open={aiMenuOpen} onOpenChange={setAiMenuOpen}>
               <DropdownMenuTrigger asChild>
@@ -930,13 +978,14 @@ function StylePicker() {
   );
 }
 
-function NodeTypeMenu({ onPick }: { onPick: (t: "text" | "link" | "table" | "image") => void }) {
+function NodeTypeMenu({ onPick, open, onOpenChange }: { onPick: (t: "text" | "link" | "table" | "image") => void; open?: boolean; onOpenChange?: (o: boolean) => void }) {
   const hasSel = useEditor((s) => !!s.selectedId);
+  const selType = useEditor((s) => { const id = s.selectedId; return id && s.note?.nodes[id] ? s.note.nodes[id].type : null; });
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-[30px] gap-1.5 px-2.5 text-[13px]" disabled={!hasSel} aria-label="Node type">
-          <Type className="size-3.5" />
+        <Button variant={hasSel ? "outline" : "ghost"} size="sm" className="h-[30px] gap-1.5 px-2.5 text-[13px] font-semibold" disabled={!hasSel} aria-label="Node type">
+          {selType === "link" ? <Link2 className="size-3.5" /> : <Type className="size-3.5" />}
           <span className="hidden lg:inline">Turn into</span>
         </Button>
       </DropdownMenuTrigger>
