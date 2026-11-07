@@ -24,6 +24,8 @@ import {
   History,
   Focus,
   Keyboard,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -42,6 +44,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { persistEditor, useEditor } from "@/store/editor-store";
 import { useSettings } from "@/context/settings";
@@ -91,6 +94,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
     }
   }, []);
   const { settings } = useSettings();
+  const { resolvedTheme, setTheme } = useTheme();
   const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, k: 1 });
   const contentRef = useRef<HTMLDivElement>(null);
   const [aiBusy, setAiBusy] = useState(false);
@@ -676,6 +680,20 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
               <DropdownMenuItem onSelect={onImport}>Import…</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8"
+                onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+                aria-label={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {resolvedTheme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{resolvedTheme === "dark" ? "Light mode" : "Dark mode"}</TooltipContent>
+          </Tooltip>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="size-8" aria-label="More">

@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { hasDirtyNotes, syncNow, useSyncStatus } from "@/lib/sync";
-import { persistEditor } from "@/store/editor-store";
+import { persistEditor, useEditor } from "@/store/editor-store";
 import { useAuth } from "@/context/auth";
 import { useSettings } from "@/context/settings";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,11 @@ export function SyncChip() {
   const { user } = useAuth();
   const { settings } = useSettings();
   const { state, lastSyncedAt } = useSyncStatus();
-  const conflicts = useLiveQuery(() => db().notes.filter((n) => !!n.conflictOf && !n.deletedAt).count(), []) ?? 0;
+  const activeNoteId = useEditor((s) => s.note?.id ?? null);
+  const conflicts = useLiveQuery(
+    () => activeNoteId ? db().notes.filter((n) => n.conflictOf === activeNoteId && !n.deletedAt).count() : 0,
+    [activeNoteId],
+  ) ?? 0;
   const [syncing, setSyncing] = useState(false);
   const [hasUnsyncedLocal, setHasUnsyncedLocal] = useState(false);
   const signedIn = !!user && settings.syncEnabled;
