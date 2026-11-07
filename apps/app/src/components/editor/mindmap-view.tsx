@@ -493,6 +493,7 @@ export function MindMapView({
                             : 1.75
                       }
                       strokeLinecap="round"
+                      className="map-connector"
                     />
                   );
                 })}
@@ -628,6 +629,7 @@ const MapNode = memo(function MapNode({
           "--branch": color,
           font: styleFor(depth).css,
           textAlign: box.side === -1 && depth >= 2 ? "right" : undefined,
+          transition: beingDragged ? "none" : undefined,
         } as React.CSSProperties
       }
       onPointerDown={(e) => {

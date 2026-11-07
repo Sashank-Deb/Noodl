@@ -33,6 +33,7 @@ body {
   color: var(--node-fg);
   --b: var(--branch);
   cursor: default;
+  transition: left 260ms var(--ease-out), top 260ms var(--ease-out), width 260ms var(--ease-out), min-height 260ms var(--ease-out), opacity 200ms var(--ease-out);
 }
 .map-node-root {
   background: var(--node-root-bg);
@@ -101,6 +102,9 @@ body {
     width: 1.25rem !important;
     height: 1.25rem !important;
   }
+}
+.map-connector {
+  transition: d 260ms var(--ease-out);
 }
 .map-node a {
   color: var(--primary);
