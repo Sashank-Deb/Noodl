@@ -298,9 +298,21 @@ async function pushNow() {
     };
 
     await write(dirtyFolders, async (fo) => {
-      const { syncedAt: _s, ...data } = fo;
-      void _s;
-      await upsert("folders", fo.id, data as unknown as Record<string, unknown>, fo.updatedAt, fo.deletedAt);
+      // Only push real folder fields; skip rows that look like notes (corrupt data).
+      if ("nodes" in fo || "rootId" in fo) {
+        console.warn(`Skipping corrupt folder row ${fo.id} (looks like a note)`);
+        await db().folders.delete(fo.id);
+        return;
+      }
+      const data: Record<string, unknown> = {
+        id: fo.id,
+        name: fo.name,
+        createdAt: fo.createdAt,
+        updatedAt: fo.updatedAt,
+      };
+      if (fo.deletedAt != null) data.deletedAt = fo.deletedAt;
+      if ("color" in fo) data.color = (fo as Record<string, unknown>).color;
+      await upsert("folders", fo.id, data, fo.updatedAt, fo.deletedAt);
       await db().folders.update(fo.id, { syncedAt: fo.updatedAt });
     });
 

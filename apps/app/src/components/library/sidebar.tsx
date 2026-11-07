@@ -84,6 +84,7 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [renaming, setRenaming] = useState<string | null>(null);
   const [confirmFolder, setConfirmFolder] = useState<FolderT | null>(null);
+  const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
   const [dropFolder, setDropFolder] = useState<string | null>(null);
   const { settings } = useSettings();
   const aiReady = useAIAvailable();
@@ -348,6 +349,14 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
           <ul className="space-y-px">{list.map((n) => noteRow(n, { showFolder: true, inTrash: section === "trash" }))}</ul>
         )}
 
+        {section === "trash" && trash.length > 0 && (
+          <div className="mt-2 px-2">
+            <Button variant="ghost" size="sm" className="w-full gap-1.5 text-destructive hover:text-destructive" onClick={() => setConfirmEmptyTrash(true)}>
+              <Trash2 className="size-3.5" /> Empty recycle bin
+            </Button>
+          </div>
+        )}
+
         <div className="mt-3">{navRow("trash", <Trash2 className="size-4" />, "Recycle Bin", trash.length)}</div>
       </nav>
 
@@ -374,6 +383,35 @@ export function Sidebar({ activeId, onOpen, onNew, onGenerate, onTemplates, onSe
               }}
             >
               Delete folder
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmEmptyTrash} onOpenChange={setConfirmEmptyTrash}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Empty recycle bin?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {trash.length} note{trash.length === 1 ? "" : "s"}. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={() => {
+                void (async () => {
+                  for (const n of trash) {
+                    await hardDeleteNote(n.id);
+                    void recordHardDelete(n.id);
+                  }
+                  toast(`Permanently deleted ${trash.length} note${trash.length === 1 ? "" : "s"}`);
+                })();
+                setConfirmEmptyTrash(false);
+              }}
+            >
+              Delete all
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
