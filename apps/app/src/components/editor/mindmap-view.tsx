@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditor } from "@/store/editor-store";
@@ -72,56 +72,58 @@ export function useMapLayout(
   balanced = false,
   balancedSplit?: number,
 ) {
-  if (!note) return null;
-  return layoutTree(
-    note,
-    (n: MindNode, depth: number) => {
-      const st = styleFor(depth);
-      const t = measureText(n.text || "Untitled", st.font(family), st.maxW);
-      const lines = Math.max(1, Math.round(t.h / 20));
-      // +4: borders and sub-pixel rounding so measured text never wraps unexpectedly.
-      let w =
-        Math.max(depth === 0 ? 96 : 28, t.w) +
-        st.padX * 2 +
-        4 +
-        (n.type === "link" ? 18 : 0);
-      let h = Math.max(st.minH, lines * st.lh + (st.minH - st.lh));
-      if (n.id === editingId) {
-        // Room for the caret, ghost text and the Tab chip while typing.
-        w = Math.max(w + 56, 180);
-        h = Math.max(h, 34);
-      }
-      if (n.type === "image" && n.assetId) {
-        w = Math.max(w, 160 + st.padX * 2 + 12);
-        h += 132;
-      }
-      if (n.type === "table" && n.table?.length) {
-        const cols = Math.max(...n.table.map((r) => r.length));
-        const colW = Array.from(
-          { length: cols },
-          (_, c) =>
-            Math.max(
-              ...n.table!.map(
-                (r) => measureText(r[c] ?? "", `400 12px ${family}`, 160).w,
-              ),
-            ) + 14,
-        );
-        w = Math.max(
-          w,
-          colW.reduce((a, b) => a + b, 0) + st.padX * 2 + cols + 12,
-        );
-        h += n.table.length * 21 + 12;
-      }
-      return { w: Math.ceil(w), h: Math.ceil(h) };
-    },
-    {
-      hGap: (d) => (d === 0 ? 56 : d === 1 ? 44 : 36),
-      vGap: 10,
-      groupGap: 16,
-      balanced,
-      balancedSplit,
-    },
-  );
+  return useMemo(() => {
+    if (!note) return null;
+    return layoutTree(
+      note,
+      (n: MindNode, depth: number) => {
+        const st = styleFor(depth);
+        const t = measureText(n.text || "Untitled", st.font(family), st.maxW);
+        const lines = Math.max(1, Math.round(t.h / 20));
+        // +4: borders and sub-pixel rounding so measured text never wraps unexpectedly.
+        let w =
+          Math.max(depth === 0 ? 96 : 28, t.w) +
+          st.padX * 2 +
+          4 +
+          (n.type === "link" ? 18 : 0);
+        let h = Math.max(st.minH, lines * st.lh + (st.minH - st.lh));
+        if (n.id === editingId) {
+          // Room for the caret, ghost text and the Tab chip while typing.
+          w = Math.max(w + 56, 180);
+          h = Math.max(h, 34);
+        }
+        if (n.type === "image" && n.assetId) {
+          w = Math.max(w, 160 + st.padX * 2 + 12);
+          h += 132;
+        }
+        if (n.type === "table" && n.table?.length) {
+          const cols = Math.max(...n.table.map((r) => r.length));
+          const colW = Array.from(
+            { length: cols },
+            (_, c) =>
+              Math.max(
+                ...n.table!.map(
+                  (r) => measureText(r[c] ?? "", `400 12px ${family}`, 160).w,
+                ),
+              ) + 14,
+          );
+          w = Math.max(
+            w,
+            colW.reduce((a, b) => a + b, 0) + st.padX * 2 + cols + 12,
+          );
+          h += n.table.length * 21 + 12;
+        }
+        return { w: Math.ceil(w), h: Math.ceil(h) };
+      },
+      {
+        hGap: (d) => (d === 0 ? 56 : d === 1 ? 44 : 36),
+        vGap: 10,
+        groupGap: 16,
+        balanced,
+        balancedSplit,
+      },
+    );
+  }, [note, family, editingId, balanced, balancedSplit]);
 }
 
 interface MapProps {
