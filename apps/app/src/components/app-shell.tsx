@@ -85,7 +85,17 @@ export function AppShell() {
         toast.error("That note isn't available.");
         return;
       }
-      useEditor.getState().load(n, settings.defaultView);
+      // Always open in mindmap view.
+      useEditor.getState().load(n, "map");
+      // On a new device (note never opened locally), expand only L1 so
+      // the user sees root children but not deeply nested nodes.
+      const localKey = `noodl:opened:${id}`;
+      try {
+        if (!localStorage.getItem(localKey)) {
+          useEditor.getState().expandToLevel(1);
+          localStorage.setItem(localKey, "1");
+        }
+      } catch { /* private browsing */ }
       void takeSnapshot(n, "Opened");
       if (nodeId && n.nodes[nodeId]) {
         // Expand ancestors so the node is visible, then select it.
@@ -101,7 +111,7 @@ export function AppShell() {
       setUrlNote(id);
       setSheetOpen(false);
     },
-    [settings.defaultView],
+    [],
   );
 
   const createAndOpen = useCallback(
