@@ -25,6 +25,7 @@ import { NodeBody, TableEditor } from "./node-content";
 
 /** Last computed layout, so keyboard navigation knows which side a branch grows on. */
 let lastLayout: LayoutResult | null = null;
+const _splitCache: { key: string; split: number | undefined } = { key: "", split: undefined };
 export const getLastLayout = () => lastLayout;
 
 export interface Viewport {
@@ -183,18 +184,23 @@ export function MindMapView({
 
   const editingId = useEditor((s) => s.editingId);
   const { settings } = useSettings();
-  const splitRef = useRef<number | undefined>(undefined);
   const balanced = settings.mapLayout === "balanced";
-  const layout = useMapLayout(note, family, editingId, balanced, splitRef.current);
-  // Remember the split so collapsing/expanding doesn't move nodes between sides.
-  if (layout?.balancedSplit != null) splitRef.current = layout.balancedSplit;
-  // Reset the remembered split when switching layout mode, opening a different note,
-  // or when the number of root children changes (structural add/remove should rebalance).
   const rootKidCount = note ? (note.nodes[note.rootId]?.children.length ?? 0) : 0;
-  useEffect(() => { splitRef.current = undefined; }, [balanced, note?.id, rootKidCount]);
+  // Remember the balanced split so collapsing/expanding doesn't move nodes between sides.
+  // Module-level cache: only READ during render, WRITE in useEffect (external state).
+  const splitKey = `${balanced}:${note?.id}:${rootKidCount}`;
+  const splitForLayout = _splitCache.key === splitKey ? _splitCache.split : undefined;
+  const layout = useMapLayout(note, family, editingId, balanced, splitForLayout);
   useEffect(() => {
+    if (layout?.balancedSplit != null) {
+      _splitCache.key = splitKey;
+      _splitCache.split = layout.balancedSplit;
+    } else if (_splitCache.key !== splitKey) {
+      _splitCache.key = splitKey;
+      _splitCache.split = undefined;
+    }
     lastLayout = layout;
-  }, [layout]);
+  }, [layout, splitKey]);
   // Re-fit when switching between right-side and balanced layouts.
   useEffect(() => {
     useEditor.getState().requestFit();

@@ -94,7 +94,7 @@ export function Editor({ folderName, sidebarOpen, onToggleSidebar, onOpenGenerat
     }
   }, []);
   const { settings, update: updateSettings } = useSettings();
-  const { resolvedTheme, setTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, k: 1 });
   const contentRef = useRef<HTMLDivElement>(null);
   const [aiBusy, setAiBusy] = useState(false);
