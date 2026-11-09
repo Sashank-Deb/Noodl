@@ -34,8 +34,6 @@ interface EditorState {
   /** Swap in a newer stored version (e.g. from sync) without resetting the view. */
   reload: (note: Note) => void;
   apply: (recipe: (n: Draft<Note>) => void, coalesceKey?: string) => void;
-  /** Like apply but does NOT bump updatedAt — for local-only state like collapse. */
-  applyLocal: (recipe: (n: Draft<Note>) => void) => void;
   undo: () => void;
   redo: () => void;
   select: (id: string | null) => void;
@@ -119,19 +117,6 @@ export const useEditor = create<EditorState>((set, get) => ({
     });
   },
 
-  applyLocal: (recipe) => {
-    const { note, revision } = get();
-    if (!note) return;
-    const next = produce(note, (d) => {
-      recipe(d);
-      // Do NOT bump updatedAt — this is local-only state (collapse etc.)
-    });
-    if (next === note) return;
-    // Bump revision so autosave writes to IndexedDB, but keep the same
-    // updatedAt so it won't be marked dirty for cloud sync.
-    set({ note: next, revision: revision + 1 });
-  },
-
   undo: () => {
     const { past, note, future, revision, selectedId } = get();
     if (!past.length || !note) return;
@@ -205,13 +190,13 @@ export const useEditor = create<EditorState>((set, get) => ({
   moveUpDown: (id, delta) => get().apply((n) => void T.moveUpDown(n as Note, id, delta)),
 
   toggleCollapse: (id, value) =>
-    get().applyLocal((n) => {
+    get().apply((n) => {
       const node = n.nodes[id];
       if (node && node.children.length) node.collapsed = value ?? !node.collapsed;
     }),
 
   expandToLevel: (level) => {
-    get().applyLocal((n) => T.expandToLevel(n as Note, level));
+    get().apply((n) => T.expandToLevel(n as Note, level));
     get().requestFit();
   },
 

@@ -94,7 +94,6 @@ export function AccountChip() {
   } = useAuth();
   const { lastSyncedAt } = useSyncStatus();
   const [busy, setBusy] = useState(false);
-  const [syncing, setSyncing] = useState(false);
   const [confirmOut, setConfirmOut] = useState(false);
 
   const doSignOut = async (keep: boolean) => {
@@ -190,21 +189,9 @@ export function AccountChip() {
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={syncing}
-                  onClick={async () => {
-                    setSyncing(true);
-                    try {
-                      await persistEditor();
-                      await syncNow();
-                      toast.success("Synced to cloud");
-                    } catch {
-                      toast.error("Sync failed. Your changes are safe locally.");
-                    } finally {
-                      setSyncing(false);
-                    }
-                  }}
+                  onClick={() => void syncNow()}
                 >
-                  {syncing ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />} {syncing ? "Syncing…" : "Sync now"}
+                  <RefreshCw className="size-3.5" /> Sync now
                 </Button>
                 <Button
                   size="sm"
